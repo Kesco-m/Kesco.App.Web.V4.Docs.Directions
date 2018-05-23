@@ -1,0 +1,474 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="btnGO" xml:space="preserve">
+    <value>Execute</value>
+  </data>
+  <data name="hAccessEml" xml:space="preserve">
+    <value>Access to the data, necessary for the employee for work</value>
+  </data>
+  <data name="hDadaEml" xml:space="preserve">
+    <value>Data on the employee</value>
+  </data>
+  <data name="hEquipEml" xml:space="preserve">
+    <value>Equipment and the communications necessary for the employee for work</value>
+  </data>
+  <data name="lAEOfiice" xml:space="preserve">
+    <value>out office</value>
+  </data>
+  <data name="lAEVpn" xml:space="preserve">
+    <value>remote (through VPN)</value>
+  </data>
+  <data name="lAIMobile" xml:space="preserve">
+    <value>mobile (SkyLink, 3G)</value>
+  </data>
+  <data name="lAIModem" xml:space="preserve">
+    <value>from house through the modem</value>
+  </data>
+  <data name="lAIOffice" xml:space="preserve">
+    <value>from office</value>
+  </data>
+  <data name="lComplete" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="lCompN" xml:space="preserve">
+    <value>notebook</value>
+  </data>
+  <data name="lCompP" xml:space="preserve">
+    <value>personal</value>
+  </data>
+  <data name="lCompT" xml:space="preserve">
+    <value>thin client</value>
+  </data>
+  <data name="lMin" xml:space="preserve">
+    <value>min.</value>
+  </data>
+  <data name="lPhoneDect" xml:space="preserve">
+    <value>phone DECT</value>
+  </data>
+  <data name="lPhoneDesk" xml:space="preserve">
+    <value>phone</value>
+  </data>
+  <data name="lPhoneIP" xml:space="preserve">
+    <value>IP phone</value>
+  </data>
+  <data name="lPhoneIPCam" xml:space="preserve">
+    <value>IP camera</value>
+  </data>
+  <data name="lPhoneSim" xml:space="preserve">
+    <value>SIM-card for the mob. phone</value>
+  </data>
+  <data name="lPLExitInSide" xml:space="preserve">
+    <value>only within the holding</value>
+  </data>
+  <data name="lPLExitOutCountry" xml:space="preserve">
+    <value>+ international</value>
+  </data>
+  <data name="lPLExitOutTown" xml:space="preserve">
+    <value>+ within the country</value>
+  </data>
+  <data name="lPLExitTown" xml:space="preserve">
+    <value>+ local city</value>
+  </data>
+  <data name="lRequire" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="lSotrudnikParent1" xml:space="preserve">
+    <value>as at the employee</value>
+  </data>
+  <data name="lSotrudnikParent2" xml:space="preserve">
+    <value>instead of the employee</value>
+  </data>
+  <data name="lTrack" xml:space="preserve">
+    <value>Register delay of the employee</value>
+  </data>
+  <data name="_lbl_ОтветственнаяКомпания" xml:space="preserve">
+    <value>Responsible company</value>
+  </data>
+  <data name="_Msg_CopyBuffer" xml:space="preserve">
+    <value>copied to the clipboard</value>
+  </data>
+  <data name="_Msg_Delete" xml:space="preserve">
+    <value>You are sure, what want to remove this record?</value>
+  </data>
+  <data name="_Msg_EmailНеКорректен" xml:space="preserve">
+    <value>e-mail is not corrected</value>
+  </data>
+  <data name="_Msg_ExistsDirection" xml:space="preserve">
+    <value>for the given employee on the given workplace already exists</value>
+  </data>
+  <data name="_Msg_ExistsPhone" xml:space="preserve">
+    <value>phone number uses</value>
+  </data>
+  <data name="_Msg_FillFormByEmpl" xml:space="preserve">
+    <value>Attention! Fill out the form on the basis of the employee:</value>
+  </data>
+  <data name="_Msg_NoAccessEthernet" xml:space="preserve">
+    <value>does not enter into a corporate network</value>
+  </data>
+  <data name="_Msg_NoAccessInternet" xml:space="preserve">
+    <value>no access to network Internet</value>
+  </data>
+  <data name="_Msg_NoData" xml:space="preserve">
+    <value>&amp;nbsp;</value>
+  </data>
+  <data name="_Msg_NoRequired" xml:space="preserve">
+    <value>is not required </value>
+  </data>
+  <data name="_Msg_NoSignSupervisor" xml:space="preserve">
+    <value>Direction is not signed by the direct head</value>
+  </data>
+  <data name="_Msg_NoSpecified" xml:space="preserve">
+    <value>is not specified</value>
+  </data>
+  <data name="_Msg_NoThisDoc" xml:space="preserve">
+    <value>It is impossible to specify in the document as a basis, this same document!</value>
+  </data>
+  <data name="_Msg_ВыданаSim" xml:space="preserve">
+    <value>SIM-card is given</value>
+  </data>
+  <data name="_Msg_ДокументНеДоступен" xml:space="preserve">
+    <value>doc is unavaible</value>
+  </data>
+  <data name="_Msg_ЛицоБезБП" xml:space="preserve">
+    <value>person does not work under the business - project</value>
+  </data>
+  <data name="_Msg_ЛогинНеКорректен" xml:space="preserve">
+    <value>login is not corrected</value>
+  </data>
+  <data name="_Msg_ЛогинСуществует" xml:space="preserve">
+    <value>employee with such login already exists</value>
+  </data>
+  <data name="_Msg_НеКомпьютеризированноеРабочееМесто" xml:space="preserve">
+    <value>on this the workplace can not be installed the computer</value>
+  </data>
+  <data name="_Msg_ОписаниеКаталога" xml:space="preserve">
+    <value>Set of types of the persons used by the companies, working under the given project</value>
+  </data>
+  <data name="_Msg_ОтсутствуетПодчиненность" xml:space="preserve">
+    <value>is no subordination in the list of staff</value>
+  </data>
+  <data name="_Msg_РабочееМестоНеВОфисе" xml:space="preserve">
+    <value>workplace not at office</value>
+  </data>
+  <data name="_Msg_РабочееМестоНеСоответствует" xml:space="preserve">
+    <value>workplace does not correspond to workplaces in a card of the employee</value>
+  </data>
+  <data name="_Msg_РабочееНеДоступно" xml:space="preserve">
+    <value>workplace is inaccessible</value>
+  </data>
+  <data name="_Msg_РасположениеЗакрыто" xml:space="preserve">
+    <value>location is closed</value>
+  </data>
+  <data name="_Msg_РасположениеНеДоступно" xml:space="preserve">
+    <value>location is not accessible</value>
+  </data>
+  <data name="_Msg_СотрудникНеДоступен" xml:space="preserve">
+    <value>employee is not accessible</value>
+  </data>
+  <data name="_Msg_СотрудникНеИмеетЛогина" xml:space="preserve">
+    <value>employee does not have a login</value>
+  </data>
+  <data name="_Msg_СотрудникНетЛица" xml:space="preserve">
+    <value>employeer is not synchronized with the reference persons</value>
+  </data>
+  <data name="_Msg_СотрудникНетЛицаЗаказчика" xml:space="preserve">
+    <value>the employee is not listed company responsible for the financial regulation</value>
+  </data>
+  <data name="_Msg_СотрудникНетРабМеста" xml:space="preserve">
+    <value>employee does not have workplace</value>
+  </data>
+  <data name="_Msg_СотрудникНеУволен" xml:space="preserve">
+    <value>employee yet is not dismissed</value>
+  </data>
+  <data name="_Msg_СотрудникСостояние1" xml:space="preserve">
+    <value>condition of the employee - the decree (vacation)</value>
+  </data>
+  <data name="_Msg_СотрудникСостояние2" xml:space="preserve">
+    <value>condition of the employee - the visitor personal</value>
+  </data>
+  <data name="_Msg_СотрудникСостояние3" xml:space="preserve">
+    <value>condition of the employee - it is dismissed</value>
+  </data>
+  <data name="_Msg_СотрудникСостояние4" xml:space="preserve">
+    <value>condition of the employee - the visitor on a guest card</value>
+  </data>
+  <data name="_Msg_СотрудникСостояние5" xml:space="preserve">
+    <value>condition of the employee - the stranger</value>
+  </data>
+  <data name="_Msg_ФотоНет" xml:space="preserve">
+    <value>employee does not have photo</value>
+  </data>
+  <data name="_NTF_CadrNoCompany" xml:space="preserve">
+    <value>As an employee staffing company is not listed, \ notvechayuschaya for financial regulation.</value>
+  </data>
+  <data name="_NTF_DelayMustEmail" xml:space="preserve">
+    <value>To keep track of delays, you must specify \ nrukovoditeley who need to send e-mail about the lateness of the employee!</value>
+  </data>
+  <data name="_NTF_DocInCorrect" xml:space="preserve">
+    <value>The document was saved incorrectly</value>
+  </data>
+  <data name="_NTF_EmailIncorrect" xml:space="preserve">
+    <value>e-mail is incorrect</value>
+  </data>
+  <data name="_NTF_EmailNotUnique" xml:space="preserve">
+    <value>e-mail this already exists</value>
+  </data>
+  <data name="_NTF_EmployeeNoPerson" xml:space="preserve">
+    <value>Employees are not synchronized with the reference entities.</value>
+  </data>
+  <data name="_NTF_LoginIncorrect" xml:space="preserve">
+    <value>Username is incorrect.</value>
+  </data>
+  <data name="_NTF_NoDataDoc" xml:space="preserve">
+    <value>Do not specify the date of the document.</value>
+  </data>
+  <data name="_NTF_NoDomain" xml:space="preserve">
+    <value>Unknown domain.</value>
+  </data>
+  <data name="_NTF_NoEmail" xml:space="preserve">
+    <value>Unknown e-mail.</value>
+  </data>
+  <data name="_NTF_NoEmployee" xml:space="preserve">
+    <value>Unknown officer.</value>
+  </data>
+  <data name="_NTF_NoLider" xml:space="preserve">
+    <value>Unknown leader.</value>
+  </data>
+  <data name="_NTF_NoLogin" xml:space="preserve">
+    <value>Unknown username.</value>
+  </data>
+  <data name="_NTF_NoSender" xml:space="preserve">
+    <value>Do not specify the name of the sender is address.</value>
+  </data>
+  <data name="_NTF_NoWorkGo" xml:space="preserve">
+    <value>Not specified time of arrival of the employee to work!</value>
+  </data>
+  <data name="_NTF_NoWorkPlace" xml:space="preserve">
+    <value>Unspecified job place the employee.</value>
+  </data>
+  <data name="_NTF_VerbalVisit" xml:space="preserve">
+    <value>Do not include the time-delay verbal explanatory head!</value>
+  </data>
+  <data name="_NTF_WriteCadr" xml:space="preserve">
+    <value>Do not include the time-delay in writing to the Personnel Department explanatory!</value>
+  </data>
+  <data name="_NTF_ПосменнаяРабота" xml:space="preserve">
+    <value>working shift with</value>
+  </data>
+  <data name="_NTF_РабМестаВместе" xml:space="preserve">
+    <value>with</value>
+  </data>
+  <data name="_NTF_СотрудникСовпадает" xml:space="preserve">
+    <value>Selected employee coincides with an employee, who is the document!</value>
+  </data>
+  <data name="_Pos_BtnAccept" xml:space="preserve">
+    <value>Is confirmed</value>
+  </data>
+  <data name="_Pos_BtnCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="_Pos_BtnDel" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="_Pos_BtnSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="_Pos_Catalog" xml:space="preserve">
+    <value>Catalog:</value>
+  </data>
+  <data name="_Pos_CatalogChange1" xml:space="preserve">
+    <value>Hoiatus: \net on muutunud (lisatud uus kanne) juurdepääs tüüpi töötajad isikute andmebaas </value>
+  </data>
+  <data name="_Pos_CatalogChange2" xml:space="preserve">
+    <value>In the event of a change in the current directory all added entries will be deleted! \nChoose a directory?</value>
+  </data>
+  <data name="_Pos_ConfirmDel" xml:space="preserve">
+    <value>Are you sure you want to delete this entry?</value>
+  </data>
+  <data name="_Pos_Empl" xml:space="preserve">
+    <value>Employee:</value>
+  </data>
+  <data name="_Pos_EmplTypes" xml:space="preserve">
+    <value>Access employee to the types of persons</value>
+  </data>
+  <data name="_Pos_ExecRole" xml:space="preserve">
+    <value>Performs the role:</value>
+  </data>
+  <data name="_Pos_InCompany" xml:space="preserve">
+    <value>The company:</value>
+  </data>
+  <data name="_Pos_NoDocId" xml:space="preserve">
+    <value>Unable to determine the code of the document!</value>
+  </data>
+  <data name="_Pos_PersonType" xml:space="preserve">
+    <value>Type person:</value>
+  </data>
+  <data name="_Pos_PersonType1" xml:space="preserve">
+    <value>Seda tüüpi üksused:</value>
+  </data>
+  <data name="_Pos_PersonType2" xml:space="preserve">
+    <value>\ncan not be selected, unnecessarily you have already given access to the employee for such types of persons.</value>
+  </data>
+  <data name="_Pos_ReqCatalog" xml:space="preserve">
+    <value>Specify the catalog!</value>
+  </data>
+  <data name="_Pos_ReqCatalog2" xml:space="preserve">
+    <value>Enter or directory, or type of person!</value>
+  </data>
+  <data name="_Pos_ReqCatalog3" xml:space="preserve">
+    <value>Are you sure you want to have the officer \n got access to all types of people in the specified directory, \n which exist now or will in the future?</value>
+  </data>
+  <data name="_Pos_RoleEmpl" xml:space="preserve">
+    <value>The role of the employee in the company</value>
+  </data>
+  <data name="_Rnd_AllCatalog" xml:space="preserve">
+    <value>all catalogs</value>
+  </data>
+  <data name="_Rnd_AllCompany" xml:space="preserve">
+    <value>all companies</value>
+  </data>
+  <data name="_Rnd_AllTypePerson" xml:space="preserve">
+    <value>all types</value>
+  </data>
+  <data name="_Rnd_Catalog" xml:space="preserve">
+    <value>Catalog</value>
+  </data>
+  <data name="_Rnd_Company" xml:space="preserve">
+    <value>Companies:</value>
+  </data>
+  <data name="_Rnd_TypePerson" xml:space="preserve">
+    <value>Type of entity</value>
+  </data>
+  <data name="_Msg_AlertTitle" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="_Msg_CheckPhoneNumber" xml:space="preserve">
+    <value>The phone number is in the wrong format</value>
+  </data>
+  <data name="_Msg_OpenEquip" xml:space="preserve">
+    <value>open the form of equipment</value>
+  </data>
+  <data name="_Msg_OpenEquipNotResp" xml:space="preserve">
+    <value>No person in charge of the equipment</value>
+  </data>
+  <data name="_Msg_OpenEquipResp" xml:space="preserve">
+    <value>Responsible for equipment</value>
+  </data>
+</root>
