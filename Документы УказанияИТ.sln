@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kesco.Lib.Log", "Kesco.Lib.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Directions", "Directions\Kesco.App.Web.Docs.Directions.csproj", "{574E5155-200B-449E-858D-2B39614DA599}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kesco.Lib.Web.Comet", "Kesco.Lib.Web.Comet\Kesco.Lib.Web.Comet\Kesco.Lib.Web.Comet.csproj", "{EB32DBFE-59E0-4F6C-A718-BE9BA708C64F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kesco.Lib.Web.Comet", "Kesco.Lib.Web.Comet\Kesco.Lib.Web.Comet.csproj", "{EB32DBFE-59E0-4F6C-A718-BE9BA708C64F}"
 EndProject
 Project("{F088123C-0E9E-452A-89E6-6BA2F21D5CAC}") = "DirectionsUML", "DirectionsUML\DirectionsUML.modelproj", "{1F43DE61-B99F-4220-B776-1CED93817C6D}"
 EndProject
