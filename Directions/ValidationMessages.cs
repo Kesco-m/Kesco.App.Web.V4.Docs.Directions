@@ -380,7 +380,7 @@ namespace Kesco.App.Web.Docs.Directions
                 w.Write("");
                 return;
             }
-
+            
             if (dir.Sotrudnik.PersonEmployeeId == null)
                 ntfList.Add(LocalResx.GetString("_Msg_СотрудникНетЛица"));
 
@@ -470,6 +470,62 @@ namespace Kesco.App.Web.Docs.Directions
 
             }
             
+        }
+
+        /// <summary>
+        /// Получение информации о необходимости выдачи Sim-карты
+        /// </summary>
+        /// <param name="page">Текущая страница</param>
+        /// <param name="w">Поток вывода</param>
+        /// <param name="dir">Текущий документ</param>
+        public static void CheckSimInfo(EntityPage page, TextWriter w, Direction dir)
+        {
+            if (dir.SotrudnikField.ValueString.Length == 0)
+            {
+                w.Write("");
+                return;
+            }
+
+            var empl = dir.Sotrudnik;
+
+            var post = empl.SimPost.Length == 0 ? dir.SotrudnikPostField.ValueString : empl.SimPost;
+            var bitmask = dir.PhoneEquipField.ValueString.Length > 0 ? dir.PhoneEquipField.ValueInt : 0;
+
+            if (!empl.SimRequired && (bitmask & 16) == 16)
+                page.RenderNtf(w, new List<string> { string.Format("сотруднику на должности<br>{0}<br>не требуется мобильная связь", post) }, NtfStatus.Error);
+            else if (empl.SimRequired && (bitmask & 16) != 16)
+            {
+                if (empl.SimGprsPackage)
+                    page.RenderNtf(w, new List<string> { string.Format("сотруднику на должности<br>{0}<br>требуется мобильная связь с заранее предоплаченным интернетом", post) }, NtfStatus.Error);
+                else
+                    page.RenderNtf(w, new List<string> { string.Format("сотруднику на должности<br>{0}<br>требуется мобильная связь с помегабайтной тарификацией", post) }, NtfStatus.Error);
+            }
+            else if (empl.SimRequired && (bitmask & 16) == 16)
+            {
+                if (empl.SimGprsPackage)
+                    page.RenderNtf(w,
+                        new List<string>
+                        {
+                            string.Format(
+                                "сотруднику на должности<br>{0}<br>требуется мобильная связь с заранее предоплаченным интернетом",
+                                post)
+                        }, (bitmask & 32) != 32 ? NtfStatus.Error : NtfStatus.Information);
+                else
+                    page.RenderNtf(w,
+                        new List<string>
+                        {
+                            string.Format(
+                                "сотруднику на должности<br>{0}<br>требуется мобильная связь с помегабайтной тарификацией",
+                                post)
+                        }, (bitmask & 32) == 32 ? NtfStatus.Error : NtfStatus.Information);
+
+            }
+            else
+            {
+                w.Write("");
+            }
+
+
         }
     }
 }

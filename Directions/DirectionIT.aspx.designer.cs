@@ -263,23 +263,5 @@ namespace Kesco.App.Web.Docs.Directions {
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
         protected global::Kesco.Lib.Web.DBSelect.V4.DBSPersonTheme efPTypes_Type;
-        
-        /// <summary>
-        /// efDocTest элемент управления.
-        /// </summary>
-        /// <remarks>
-        /// Автоматически создаваемое поле.
-        /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
-        /// </remarks>
-        protected global::Kesco.Lib.Web.DBSelect.V4.DBSDocument efDocTest;
-        
-        /// <summary>
-        /// efBproject элемент управления.
-        /// </summary>
-        /// <remarks>
-        /// Автоматически создаваемое поле.
-        /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
-        /// </remarks>
-        protected global::Kesco.Lib.Web.DBSelect.V4.DBSBusinessProject efBproject;
     }
 }

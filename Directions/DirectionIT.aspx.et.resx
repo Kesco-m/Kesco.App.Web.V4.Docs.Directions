@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <root>
-  <!-- 
+	<!-- 
     Microsoft ResX Schema 
     
-    Version 2.0
+    Version 1.3
     
     The primary goals of this format is to allow a simple XML format 
     that is mostly human readable. The generation and parsing of the 
@@ -14,17 +14,16 @@
     
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
-    <resheader name="version">2.0</resheader>
+    <resheader name="version">1.3</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Name1">this is my long string</data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
+        [base64 mime encoded serialized .NET Framework object]
     </data>
     <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
+        [base64 mime encoded string representing a byte array form of the .NET Framework object]
     </data>
                 
     There are any number of "resheader" rows that contain simple 
@@ -36,7 +35,7 @@
     Classes that don't support this are serialized and stored with the 
     mimetype set.
     
-    The mimetype is used for serialized objects, and tells the 
+    The mimetype is used forserialized objects, and tells the 
     ResXResourceReader how to depersist the object. This is currently not 
     extensible. For a given mimetype the value must be set accordingly:
     
@@ -46,7 +45,7 @@
     
     mimetype: application/x-microsoft.net.object.binary.base64
     value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : System.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
     
     mimetype: application/x-microsoft.net.object.soap.base64
@@ -59,422 +58,402 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
-  <resheader name="resmimetype">
-    <value>text/microsoft-resx</value>
-  </resheader>
-  <resheader name="version">
-    <value>2.0</value>
-  </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <data name="btnGO" xml:space="preserve">
-    <value>Kulgema</value>
-  </data>
-  <data name="docDate" xml:space="preserve">
-    <value>Kuupäev</value>
-  </data>
-  <data name="docDescription" xml:space="preserve">
-    <value>Kirjeldus dokumendi arhiiv</value>
-  </data>
-  <data name="docNumber" xml:space="preserve">
-    <value>Number</value>
-  </data>
-  <data name="hAccessEml" xml:space="preserve">
-    <value>Töötajale töötamiseks vajalik ligipääs andmetele</value>
-  </data>
-  <data name="hDadaEml" xml:space="preserve">
-    <value>Töötaja andmed</value>
-  </data>
-  <data name="hEquipEml" xml:space="preserve">
-    <value>Töötajale töötamiseks vajalikud vahendid ja kommunikatsioonid</value>
-  </data>
-  <data name="lAEOfiice" xml:space="preserve">
-    <value>kontorist väljas</value>
-  </data>
-  <data name="lAEVpn" xml:space="preserve">
-    <value>kaugligipääes (VPN kaudu)</value>
-  </data>
-  <data name="lAIMobile" xml:space="preserve">
-    <value>mobiilne (SkyLink, 3G)</value>
-  </data>
-  <data name="lAIModem" xml:space="preserve">
-    <value>kodust modemi kaudu</value>
-  </data>
-  <data name="lAIOffice" xml:space="preserve">
-    <value>kontorist</value>
-  </data>
-  <data name="lComplete" xml:space="preserve">
-    <value>Tehtud</value>
-  </data>
-  <data name="lCompN" xml:space="preserve">
-    <value>laptop</value>
-  </data>
-  <data name="lCompP" xml:space="preserve">
-    <value>personaalne</value>
-  </data>
-  <data name="lCompT" xml:space="preserve">
-    <value>thin client</value>
-  </data>
-  <data name="lMin" xml:space="preserve">
-    <value>min.</value>
-  </data>
-  <data name="lPhoneDect" xml:space="preserve">
-    <value>toru</value>
-  </data>
-  <data name="lPhoneDesk" xml:space="preserve">
-    <value>lauatelefon</value>
-  </data>
-  <data name="lPhoneIP" xml:space="preserve">
-    <value>IP-telefon</value>
-  </data>
-  <data name="lPhoneIPCam" xml:space="preserve">
-    <value>IP-kaamera</value>
-  </data>
-  <data name="lPhoneSim" xml:space="preserve">
-    <value>SIM-kaart mobiili jaoks</value>
-  </data>
-  <data name="lPLExitInSide" xml:space="preserve">
-    <value>holdingu sees</value>
-  </data>
-  <data name="lPLExitOutCountry" xml:space="preserve">
-    <value>rahsvusvaheline</value>
-  </data>
-  <data name="lPLExitOutTown" xml:space="preserve">
-    <value>riigisisene</value>
-  </data>
-  <data name="lPLExitTown" xml:space="preserve">
-    <value>kohalik</value>
-  </data>
-  <data name="lRequire" xml:space="preserve">
-    <value>Vajalik</value>
-  </data>
-  <data name="lSotrudnikParent1" xml:space="preserve">
-    <value>nagu töötajal</value>
-  </data>
-  <data name="lSotrudnikParent2" xml:space="preserve">
-    <value>töötaja asemel</value>
-  </data>
-  <data name="lTrack" xml:space="preserve">
-    <value>Jälgida töötaja hilinemisi</value>
-  </data>
-  <data name="_lbl_ОтветственнаяКомпания" xml:space="preserve">
-    <value>Vastutav ttevõte</value>
-  </data>
-  <data name="_Msg_CopyBuffer" xml:space="preserve">
-    <value>kopeerida lõikelauale</value>
-  </data>
-  <data name="_Msg_Delete" xml:space="preserve">
-    <value>Oled sa kindel et tahad kustutada seda kannet?</value>
-  </data>
-  <data name="_Msg_EmailНеКорректен" xml:space="preserve">
-    <value>e-posti aadress on vale</value>
-  </data>
-  <data name="_Msg_ExistsPhone" xml:space="preserve">
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>1.3</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<data name="hAccessEml">
+		<value>Töötajale töötamiseks vajalik ligipääs andmetele</value>
+	</data>
+	<data name="hDadaEml">
+		<value>Töötaja andmed</value>
+	</data>
+	<data name="hEquipEml">
+		<value>Töötajale töötamiseks vajalikud vahendid ja kommunikatsioonid</value>
+	</data>
+	<data name="lAEOfiice">
+		<value>kontorist väljas</value>
+	</data>
+	<data name="lAEVpn">
+		<value>kaugligipääes (VPN kaudu)</value>
+	</data>
+	<data name="lAIMobile">
+		<value>mobiilne (SkyLink, 3G)</value>
+	</data>
+	<data name="lAIModem">
+		<value>kodust modemi kaudu</value>
+	</data>
+	<data name="lAIOffice">
+		<value>kontorist</value>
+	</data>
+	<data name="lComplete">
+		<value>Tehtud</value>
+	</data>
+	<data name="lCompN">
+		<value>laptop</value>
+	</data>
+	<data name="lCompP">
+		<value>personaalne</value>
+	</data>
+	<data name="lCompT">
+		<value>thin client</value>
+	</data>
+	<data name="lMin">
+		<value>min.</value>
+	</data>
+	<data name="lPhoneDect">
+		<value>toru</value>
+	</data>
+	<data name="lPhoneDesk">
+		<value>lauatelefon</value>
+	</data>
+	<data name="lPhoneIP">
+		<value>IP-telefon</value>
+	</data>
+	<data name="lPhoneIPCam">
+		<value>IP-kaamera</value>
+	</data>
+	<data name="lPhoneSim">
+		<value>SIM-kaart mobiili jaoks</value>
+	</data>
+	<data name="lPLExitInSide">
+		<value>holdingu sees</value>
+	</data>
+	<data name="lPLExitOutCountry">
+		<value>rahsvusvaheline</value>
+	</data>
+	<data name="lPLExitOutTown">
+		<value>riigisisene</value>
+	</data>
+	<data name="lPLExitTown">
+		<value>kohalik</value>
+	</data>
+	<data name="lRequire">
+		<value>Vajalik</value>
+	</data>
+	<data name="lSotrudnikParent1">
+		<value>nagu töötajal</value>
+	</data>
+	<data name="lSotrudnikParent2">
+		<value>töötaja asemel</value>
+	</data>
+	<data name="lTrack">
+		<value>Jälgida töötaja hilinemisi</value>
+	</data>
+	<data name="_Msg_Delete">
+		<value>Oled sa kindel et tahad kustutada seda kannet?</value>
+	</data>
+	<data name="_Msg_EmailНеКорректен">
+		<value>e-posti aadress on vale</value>
+	</data>
+  <data name="_Msg_ExistsPhone">
     <value>telefoninumber kasutab</value>
   </data>
-  <data name="_Msg_FillFormByEmpl" xml:space="preserve">
-    <value>Tähelepanu! Täida ankeet alusel töötaja:</value>
-  </data>
-  <data name="_Msg_NoAccessEthernet" xml:space="preserve">
-    <value>ei kuulu ettevõtte võrgus</value>
-  </data>
-  <data name="_Msg_NoAccessInternet" xml:space="preserve">
-    <value>ole Interneti</value>
-  </data>
-  <data name="_Msg_NoData" xml:space="preserve">
-    <value>&amp;nbsp;</value>
-  </data>
-  <data name="_Msg_NoRequired" xml:space="preserve">
-    <value>ei pea</value>
-  </data>
-  <data name="_Msg_NoSignSupervisor" xml:space="preserve">
-    <value>Suund ei ole alla kirjutanud vahetule ülemusele</value>
-  </data>
-  <data name="_Msg_NoSpecified" xml:space="preserve">
-    <value>ei ole määratud</value>
-  </data>
-  <data name="_Msg_NoThisDoc" xml:space="preserve">
-    <value>Võimatu on täpsustada dokumendi alusel, sama dokument!</value>
-  </data>
-  <data name="_Msg_ВыданаSim" xml:space="preserve">
-    <value>Poolt väljastatud SIM-kaardi</value>
-  </data>
-  <data name="_Msg_ДокументНеДоступен" xml:space="preserve">
-    <value>Dokument ei ole</value>
-  </data>
-  <data name="_Msg_ЛицоБезБП" xml:space="preserve">
-    <value>isik ei tööta äriprojekt</value>
-  </data>
-  <data name="_Msg_ЛогинНеКорректен" xml:space="preserve">
-    <value>login on vale</value>
-  </data>
-  <data name="_Msg_ЛогинСуществует" xml:space="preserve">
-    <value>Logi sisse hõivatud</value>
-  </data>
-  <data name="_Msg_НеКомпьютеризированноеРабочееМесто" xml:space="preserve">
-    <value>on see tkhe vorkplatse san märgib baa paigaldatud Tkhe arvutis</value>
-  </data>
-  <data name="_Msg_ОписаниеКаталога" xml:space="preserve">
-    <value>Set tüüpi üksused, mida kasutatakse ettevõtete poolt selle projekti kallal</value>
-  </data>
-  <data name="_Msg_ОтсутствуетПодчиненность" xml:space="preserve">
-    <value>puudub alluvus personalitöö</value>
-  </data>
-  <data name="_Msg_РабочееМестоНеВОфисе" xml:space="preserve">
-    <value>töökohal ei ole kontoris</value>
-  </data>
-  <data name="_Msg_РабочееМестоНеСоответствует" xml:space="preserve">
-    <value>töökohal ei vasta töökohti kaart liige</value>
-  </data>
-  <data name="_Msg_РабочееНеДоступно" xml:space="preserve">
-    <value>töökohal ei ole kättesaadav</value>
-  </data>
-  <data name="_Msg_РасположениеЗакрыто" xml:space="preserve">
-    <value>asukoht on suletud</value>
-  </data>
-  <data name="_Msg_РасположениеНеДоступно" xml:space="preserve">
-    <value>asukoht ei ole kättesaadav</value>
-  </data>
-  <data name="_Msg_СотрудникНеДоступен" xml:space="preserve">
-    <value>officer ei ole kättesaadav</value>
-  </data>
-  <data name="_Msg_СотрудникНеИмеетЛогина" xml:space="preserve">
-    <value>ei pea töötaja login</value>
-  </data>
-  <data name="_Msg_СотрудникНетЛица" xml:space="preserve">
-    <value>sotdnika ole kande kataloog inimesi</value>
-  </data>
-  <data name="_Msg_СотрудникНетЛицаЗаказчика" xml:space="preserve">
-    <value>töötaja ei ole börsifirma vastutab finantsregulatsiooni</value>
-  </data>
-  <data name="_Msg_СотрудникНетРабМеста" xml:space="preserve">
-    <value>töötaja ei tööta kohas</value>
-  </data>
-  <data name="_Msg_СотрудникНеУволен" xml:space="preserve">
-    <value>сотрудник еще не уволен</value>
-  </data>
-  <data name="_Msg_СотрудникСостояние1" xml:space="preserve">
-    <value>riigi töötaja - määruse (puhkusel)</value>
-  </data>
-  <data name="_Msg_СотрудникСостояние2" xml:space="preserve">
-    <value>riigi töötaja - isiklik külaline</value>
-  </data>
-  <data name="_Msg_СотрудникСостояние3" xml:space="preserve">
-    <value>riigi töötaja - vallandati</value>
-  </data>
-  <data name="_Msg_СотрудникСостояние4" xml:space="preserve">
-    <value>riigi töötaja - külastaja poolt külastaja kaart</value>
-  </data>
-  <data name="_Msg_СотрудникСостояние5" xml:space="preserve">
-    <value>riigi töötaja - autsaider</value>
-  </data>
-  <data name="_Msg_ФотоНет" xml:space="preserve">
-    <value>töötaja puudub photo</value>
-  </data>
-  <data name="_NTF_CadrNoCompany" xml:space="preserve">
-    <value>Kuna töötaja personali ettevõte ei ole nimekirjas, \ notvechayuschaya finantsregulatsiooni.</value>
-  </data>
-  <data name="_NTF_DelayMustEmail" xml:space="preserve">
-    <value>Jälgida viivitusi, peate täpsustama \ nrukovoditeley kellel on vaja saata e-posti teel hilinenud töötaja!</value>
-  </data>
-  <data name="_NTF_DocInCorrect" xml:space="preserve">
-    <value>Dokument on salvestatud valesti</value>
-  </data>
-  <data name="_NTF_EmailIncorrect" xml:space="preserve">
-    <value>e-mail on vale.</value>
-  </data>
-  <data name="_NTF_EmailNotUnique" xml:space="preserve">
-    <value>e-maili on juba olemas</value>
-  </data>
-  <data name="_NTF_EmployeeNoPerson" xml:space="preserve">
-    <value>Töötajad ei ole sünkroonis viide üksused.</value>
-  </data>
-  <data name="_NTF_LoginIncorrect" xml:space="preserve">
-    <value>Kasutajanimi on vale.</value>
-  </data>
-  <data name="_NTF_NoDataDoc" xml:space="preserve">
-    <value>Ei täpsusta dokumendi kuupäev.</value>
-  </data>
-  <data name="_NTF_NoDomain" xml:space="preserve">
-    <value>Põhjalaiust domeeni.</value>
-  </data>
-  <data name="_NTF_NoEmail" xml:space="preserve">
-    <value>Põhjalaiust e-posti teel.</value>
-  </data>
-  <data name="_NTF_NoEmployee" xml:space="preserve">
-    <value>Tundmatu ametnik.</value>
-  </data>
-  <data name="_NTF_NoLider" xml:space="preserve">
-    <value>Põhjalaiust liider.</value>
-  </data>
-  <data name="_NTF_NoLogin" xml:space="preserve">
-    <value>Põhjalaiust kasutajanimi.</value>
-  </data>
-  <data name="_NTF_NoSender" xml:space="preserve">
-    <value>Ärge nimetage saatja aadress.</value>
-  </data>
-  <data name="_NTF_NoWorkGo" xml:space="preserve">
-    <value>Pole täpsustatud saabumisaeg töötaja tööle!</value>
-  </data>
-  <data name="_NTF_NoWorkPlace" xml:space="preserve">
-    <value>Määramata töö töötajale.</value>
-  </data>
-  <data name="_NTF_VerbalVisit" xml:space="preserve">
-    <value>Ei sisalda ajalist viivitust verbaalne selgitav pea!</value>
-  </data>
-  <data name="_NTF_WriteCadr" xml:space="preserve">
-    <value>Ei sisalda ajalist viivitust kirjalikult personaliosakond selgitav!</value>
-  </data>
-  <data name="_NTF_ПосменнаяРабота" xml:space="preserve">
-    <value>vahetustega töö</value>
-  </data>
-  <data name="_NTF_РабМестаВместе" xml:space="preserve">
-    <value>koos</value>
-  </data>
-  <data name="_NTF_СотрудникСовпадает" xml:space="preserve">
-    <value>Valitud töötaja ühtib töötaja, kes on dokumendi!</value>
-  </data>
-  <data name="_Pos_BtnAccept" xml:space="preserve">
-    <value>Kinnitab</value>
-  </data>
-  <data name="_Pos_BtnCancel" xml:space="preserve">
-    <value>Tühistamine</value>
-  </data>
-  <data name="_Pos_BtnDel" xml:space="preserve">
-    <value>Kõrvaldama</value>
-  </data>
-  <data name="_Pos_BtnSave" xml:space="preserve">
-    <value>Välja arvatud</value>
-  </data>
-  <data name="_Pos_Catalog" xml:space="preserve">
-    <value>Kataloog:</value>
-  </data>
-  <data name="_Pos_CatalogChange1" xml:space="preserve">
-    <value>Hoiatus: \net on muutunud (lisatud uus kanne) juurdepääs tüüpi töötajad isikute andmebaas </value>
-  </data>
-  <data name="_Pos_CatalogChange2" xml:space="preserve">
-    <value>Kui muutus jooksva kataloogi kõik lisatud kirjed kustutatakse! \nVali kataloog?</value>
-  </data>
-  <data name="_Pos_ConfirmDel" xml:space="preserve">
-    <value>Oled sa kindel et tahad kustutada seda kannet?</value>
-  </data>
-  <data name="_Pos_Empl" xml:space="preserve">
-    <value>Töötaja:</value>
-  </data>
-  <data name="_Pos_EmplTypes" xml:space="preserve">
-    <value>Juurdepääs ametniku poole tüüpi isikud</value>
-  </data>
-  <data name="_Pos_ExecRole" xml:space="preserve">
-    <value>Täidab rolli:</value>
-  </data>
-  <data name="_Pos_InCompany" xml:space="preserve">
-    <value>Ettevõte:</value>
-  </data>
-  <data name="_Pos_NoDocId" xml:space="preserve">
-    <value>Suuda kindlaks koodi dokumendi!</value>
-  </data>
-  <data name="_Pos_PersonType" xml:space="preserve">
-    <value>Tüüpi ettevõtte:</value>
-  </data>
-  <data name="_Pos_PersonType1" xml:space="preserve">
-    <value>Seda tüüpi üksused:</value>
-  </data>
-  <data name="_Pos_PersonType2" xml:space="preserve">
-    <value>\nei saa valida, asjatult sa oled juba juurdepääs töötaja sellist tüüpi inimest.</value>
-  </data>
-  <data name="_Pos_ReqCatalog" xml:space="preserve">
-    <value>Määra kataloog!</value>
-  </data>
-  <data name="_Pos_ReqCatalog2" xml:space="preserve">
-    <value>Siseneda või kataloogi või tüüpi inimene!</value>
-  </data>
-  <data name="_Pos_ReqCatalog3" xml:space="preserve">
-    <value>Oled kindel, et sa tahad olla ametnik \nsaanud juurdepääsu kõikidele inimestele määratud kataloogi \nmis eksisteerivad praegu või tulevikus liituvad?</value>
-  </data>
-  <data name="_Pos_RoleEmpl" xml:space="preserve">
-    <value>Rolli töötaja firma</value>
-  </data>
-  <data name="_Rnd_AllCatalog" xml:space="preserve">
-    <value>Kõik catalogs</value>
-  </data>
-  <data name="_Rnd_AllCompany" xml:space="preserve">
-    <value>kõik companies</value>
-  </data>
-  <data name="_Rnd_AllTypePerson" xml:space="preserve">
-    <value>Kõik tüüpi</value>
-  </data>
-  <data name="_Rnd_Catalog" xml:space="preserve">
-    <value>Kataloog:</value>
-  </data>
-  <data name="_Rnd_Company" xml:space="preserve">
-    <value>Ettevõte:</value>
-  </data>
-  <data name="_Rnd_TypePerson" xml:space="preserve">
-    <value>Tüüpi ettevõtte</value>
-  </data>
-  <data name="_Msg_AlertTitle" xml:space="preserve">
-    <value>Sõnum</value>
-  </data>
-  <data name="_Msg_CheckPhoneNumber" xml:space="preserve">
-    <value>Telefoninumber on loetletud vales vormingus</value>
-  </data>
-  <data name="_Msg_OpenEquip" xml:space="preserve">
+
+  <data name="_Msg_NoAccessEthernet">
+		<value>ei kuulu ettevõtte võrgus</value>
+	</data>
+	<data name="_Msg_NoAccessInternet">
+		<value>ole Interneti</value>
+	</data>
+	<data name="_Msg_NoRequired">
+		<value>ei pea</value>
+	</data>
+	<data name="_Msg_NoSignSupervisor">
+		<value>Suund ei ole alla kirjutanud vahetule ülemusele</value>
+	</data>
+	<data name="_Msg_NoSpecified">
+		<value>ei ole määratud</value>
+	</data>
+  <data name="_Msg_SimGive">
+    <value>SIM-kaart väljastatakse</value>
+  </data>
+	<data name="_Msg_ВыданаSim">
+		<value>Poolt väljastatud SIM-kaardi</value>
+	</data>
+  <data name="_Msg_OpenEquip">
     <value>avada tehnika</value>
   </data>
-  <data name="_Msg_OpenEquipNotResp" xml:space="preserve">
+  <data name="_Msg_OpenEquipNotResp">
     <value>Ükski seadmete eest vastutav isik</value>
   </data>
-  <data name="_Msg_OpenEquipResp" xml:space="preserve">
-    <value>Responsible for equipment</value>
+	<data name="_Msg_ДокументНеДоступен">
+		<value>Dokument ei ole</value>
+	</data>
+	<data name="_Msg_ЛицоБезБП">
+		<value>isik ei tööta äriprojekt</value>
+	</data>
+	<data name="_Msg_ЛогинНеКорректен">
+		<value>login on vale</value>
+	</data>
+	<data name="_Msg_ЛогинСуществует">
+		<value>Logi sisse hõivatud</value>
+	</data>
+	<data name="_Msg_ОписаниеКаталога">
+		<value>Set tüüpi üksused, mida kasutatakse ettevõtete poolt selle projekti kallal</value>
+	</data>
+	<data name="_Msg_ОтсутствуетПодчиненность">
+		<value>puudub alluvus personalitöö</value>
+	</data>
+	<data name="_Msg_РабочееМестоНеВОфисе">
+		<value>töökohal ei ole kontoris</value>
+	</data>
+	<data name="_Msg_РабочееМестоНеСоответствует">
+		<value>töökohal ei vasta töökohti kaart liige</value>
+	</data>
+  <data name="_Msg_НеКомпьютеризированноеРабочееМесто">
+    <value>on see tkhe vorkplatse san märgib baa paigaldatud Tkhe arvutis</value>
+  </data>
+ 
+  <data name="_Msg_РабочееНеДоступно">
+		<value>töökohal ei ole kättesaadav</value>
+	</data>
+	<data name="_Msg_РасположениеЗакрыто">
+		<value>asukoht on suletud</value>
+	</data>
+	<data name="_Msg_РасположениеНеДоступно">
+		<value>asukoht ei ole kättesaadav</value>
+	</data>
+	<data name="_Msg_СотрудникНеДоступен">
+		<value>officer ei ole kättesaadav</value>
+	</data>
+	<data name="_Msg_СотрудникНетЛица">
+		<value>sotdnika ole kande kataloog inimesi</value>
+	</data>
+	<data name="_Msg_СотрудникНетРабМеста">
+		<value>töötaja ei tööta kohas. Sisestage see kaart liige</value>
+	</data>
+	<data name="_Msg_СотрудникНеУволен">
+		<value>сотрудник еще не уволен</value>
+	</data>
+	<data name="_Msg_СотрудникСостояние1">
+		<value>riigi töötaja - määruse (puhkusel)</value>
+	</data>
+	<data name="_Msg_СотрудникСостояние2">
+		<value>riigi töötaja - isiklik külaline</value>
+	</data>
+	<data name="_Msg_СотрудникСостояние3">
+		<value>riigi töötaja - vallandati</value>
+	</data>
+	<data name="_Msg_СотрудникСостояние4">
+		<value>riigi töötaja - külastaja poolt külastaja kaart</value>
+	</data>
+	<data name="_Msg_СотрудникСостояние5">
+		<value>riigi töötaja - autsaider</value>
+	</data>
+	<data name="_Msg_ФотоНет">
+		<value>töötaja puudub photo</value>
+	</data>
+	<data name="btnGO">
+		<value>Kulgema</value>
+	</data>
+	<data name="docDate">
+		<value>Kuupäev</value>
+	</data>
+	<data name="docDescription">
+		<value>Kirjeldus dokumendi arhiiv</value>
+	</data>
+	<data name="docNumber">
+		<value>Number</value>
+	</data>
+	<data name="_Msg_NoData">
+		<value>&amp;nbsp;</value>
+	</data>
+	<data name="_NTF_NoDataDoc">
+		<value>Ei täpsusta dokumendi kuupäev.</value>
+	</data>
+	<data name="_NTF_NoEmployee">
+		<value>Tundmatu ametnik.</value>
+	</data>
+	<data name="_NTF_EmployeeNoPerson">
+		<value>Töötajad ei ole sünkroonis viide üksused.</value>
+	</data>
+	<data name="_NTF_CadrNoCompany">
+		<value>Kuna töötaja personali ettevõte ei ole nimekirjas, \ notvechayuschaya finantsregulatsiooni.</value>
+	</data>
+	<data name="_NTF_NoLider">
+		<value>Põhjalaiust liider.</value>
+	</data>
+	<data name="_NTF_NoWorkPlace">
+		<value>Määramata töö töötajale.</value>
+	</data>
+	<data name="_NTF_NoLogin">
+		<value>Põhjalaiust kasutajanimi.</value>
+	</data>
+	<data name="_NTF_LoginIncorrect">
+		<value>Kasutajanimi on vale.</value>
+	</data>
+	<data name="_NTF_NoEmail">
+		<value>Põhjalaiust e-posti teel.</value>
+	</data>
+	<data name="_NTF_NoDomain">
+		<value>Põhjalaiust domeeni.</value>
+	</data>
+	<data name="_NTF_NoSender">
+		<value>Ärge nimetage saatja aadress.</value>
+	</data>
+	<data name="_NTF_EmailIncorrect">
+		<value>e-mail on vale.</value>
+	</data>
+	<data name="_NTF_EmailNotUnique">
+		<value>e-maili on juba olemas. e-maili peab olema unikaalne.</value>
+	</data>
+	<data name="_NTF_NoWorkGo">
+		<value>Pole täpsustatud saabumisaeg töötaja tööle!</value>
+	</data>
+	<data name="_NTF_DelayMustEmail">
+		<value>Jälgida viivitusi, peate täpsustama \ nrukovoditeley kellel on vaja saata e-posti teel hilinenud töötaja!</value>
+	</data>
+	<data name="_NTF_VerbalVisit">
+		<value>Ei sisalda ajalist viivitust verbaalne selgitav pea!</value>
+	</data>
+	<data name="_NTF_WriteCadr">
+		<value>Ei sisalda ajalist viivitust kirjalikult personaliosakond selgitav!</value>
+	</data>
+	<data name="_Msg_NoThisDoc">
+		<value>Võimatu on täpsustada dokumendi alusel, sama dokument!</value>
+	</data>
+	<data name="_Msg_FillFormByEmpl">
+		<value>Tähelepanu! Täida ankeet alusel töötaja:</value>
+	</data>
+	<data name="_Rnd_Company">
+		<value>Ettevõte:</value>
+	</data>
+	<data name="_Rnd_AllCompany">
+		<value>kõik companies</value>
+	</data>
+	<data name="_Rnd_Catalog">
+		<value>Kataloog:</value>
+	</data>
+	<data name="_Rnd_TypePerson">
+		<value>Tüüpi ettevõtte</value>
+	</data>
+	<data name="_Rnd_AllCatalog">
+		<value>Kõik catalogs</value>
+	</data>
+	<data name="_Rnd_AllTypePerson">
+		<value>Kõik tüüpi</value>
+	</data>
+	<data name="_NTF_DocInCorrect">
+		<value>Dokument on salvestatud valesti</value>
+	</data>
+	<data name="_Msg_CopyBuffer">
+		<value>kopeerida lõikelauale</value>
+	</data>
+	<data name="_Pos_RoleEmpl">
+		<value>Rolli töötaja firma</value>
+	</data>
+	<data name="_Pos_Empl">
+		<value>Töötaja:</value>
+	</data>
+	<data name="_Pos_ExecRole">
+		<value>Täidab rolli:</value>
+	</data>
+	<data name="_Pos_InCompany">
+		<value>Ettevõte:</value>
+	</data>
+	<data name="_Pos_BtnSave">
+		<value>Välja arvatud</value>
+	</data>
+	<data name="_Pos_BtnDel">
+		<value>Kõrvaldama</value>
+	</data>
+	<data name="_Pos_BtnCancel">
+		<value>Tühistamine</value>
+	</data>
+	<data name="_Pos_ConfirmDel">
+		<value>Oled sa kindel et tahad kustutada seda kannet?</value>
+	</data>
+	<data name="_Pos_BtnAccept">
+		<value>Kinnitab</value>
+	</data>
+	<data name="_Pos_Catalog">
+		<value>Kataloog:</value>
+	</data>
+	<data name="_Pos_PersonType">
+		<value>Tüüpi ettevõtte:</value>
+	</data>
+	<data name="_Pos_ReqCatalog">
+		<value>Määra kataloog!</value>
+	</data>
+	<data name="_Pos_ReqCatalog2">
+		<value>Siseneda või kataloogi või tüüpi inimene!</value>
+	</data>
+	<data name="_Pos_ReqCatalog3">
+		<value>Oled kindel, et sa tahad olla ametnik \nsaanud juurdepääsu kõikidele inimestele määratud kataloogi \nmis eksisteerivad praegu või tulevikus liituvad?</value>
+	</data>
+	<data name="_Pos_CatalogChange1">
+		<value>Hoiatus: \net on muutunud (lisatud uus kanne) juurdepääs tüüpi töötajad isikute andmebaas </value>
+	</data>
+	<data name="_Pos_CatalogChange2">
+		<value>Kui muutus jooksva kataloogi kõik lisatud kirjed kustutatakse! \nVali kataloog?</value>
+	</data>
+	<data name="_Pos_PersonType1">
+		<value>Seda tüüpi üksused:</value>
+	</data>
+	<data name="_Pos_PersonType2">
+		<value>\nei saa valida, asjatult sa oled juba juurdepääs töötaja sellist tüüpi inimest.</value>
+	</data>
+	<data name="_Pos_NoDocId">
+		<value>Suuda kindlaks koodi dokumendi!</value>
+	</data>
+	<data name="_Pos_EmplTypes">
+		<value>Juurdepääs ametniku poole tüüpi isikud</value>
+	</data>
+	<data name="_Msg_СотрудникНеИмеетЛогина">
+		<value>ei pea töötaja login</value>
+	</data>
+	<data name="_Msg_СотрудникНетЛицаЗаказчика">
+		<value>töötaja ei ole börsifirma vastutab finantsregulatsiooni</value>
+	</data>
+	<data name="_lbl_ОтветственнаяКомпания">
+		<value>Vastutav ttevõte</value>
+	</data>
+	<data name="_NTF_РабМестаВместе">
+		<value>koos</value>
+	</data>
+  <data name="_NTF_ПосменнаяРабота">
+    <value>vahetustega töö</value>
+  </data>
+  <data name="_NTF_ГруппаПосменнойРаботы">
+    <value>vahetustega töögrupp</value>
+  </data>
+  <data name="_NTF_СотрудникСовпадает">
+    <value>Valitud töötaja ühtib töötaja, kes on dokumendi</value>
   </data>
 </root>

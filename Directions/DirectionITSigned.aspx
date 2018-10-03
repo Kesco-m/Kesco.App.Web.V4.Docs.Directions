@@ -29,7 +29,7 @@
             <div><%Render.WorkPlaceType(this, Response.Output, Dir, false);%></div>
         </div>
     </div>
-    <div id="dibMobilPhone"><%RenderMobilPhone(Response.Output);%></div>
+    <div id="divMobilPhone" class="marginL marginT disp_inline"><%RenderMobilPhone(Response.Output);%></div>
     <div id="divData"><%RenderData(Response.Output);%></div>
     <div class="marginT2">
         <% StartRenderVariablePart(Response.Output, 145, 250, 427); %>

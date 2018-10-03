@@ -1,40 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Text.RegularExpressions;
 using System.Web;
-using System.Web.Hosting;
 using System.Web.Script.Serialization;
 using Kesco.Lib.BaseExtention;
 using Kesco.Lib.BaseExtention.Enums.Controls;
 using Kesco.Lib.BaseExtention.Enums.Corporate;
 using Kesco.Lib.BaseExtention.Enums.Docs;
+using Kesco.Lib.DALC;
+using Kesco.Lib.Entities;
 using Kesco.Lib.Entities.Corporate;
-using Kesco.Lib.Entities.Corporate.Phones;
 using Kesco.Lib.Entities.Documents;
 using Kesco.Lib.Entities.Documents.EF.Directions;
 using Kesco.Lib.Entities.Persons;
-using Kesco.Lib.Entities.Persons.PersonOld;
 using Kesco.Lib.Web.Controls.V4;
 using Kesco.Lib.Web.Controls.V4.Common;
 using Kesco.Lib.Web.Controls.V4.Common.DocumentPage;
 using Kesco.Lib.Web.Settings;
 using Convert = Kesco.Lib.ConvertExtention.Convert;
+using Item = Kesco.Lib.Entities.Item;
 
 namespace Kesco.App.Web.Docs.Directions
 {
     /*
      Подключаемый класс формы документа: Указание IT на организацию работы
      */
+
     /// <summary>
     ///     Класс формы документа указания на организацию работы
     /// </summary>
     public abstract partial class DirectionIT : DocPage
     {
+        private RenderHelper _render;
+
         protected ResourceManager LocalResx = new ResourceManager("Kesco.App.Web.Docs.Directions.DirectionIT",
             Assembly.GetExecutingAssembly());
 
@@ -42,8 +46,6 @@ namespace Kesco.App.Web.Docs.Directions
         {
             get { return (Direction) Doc; }
         }
-
-        private RenderHelper _render;
 
         #region InitControls
 
@@ -73,8 +75,6 @@ namespace Kesco.App.Web.Docs.Directions
 
             efPTypes_Catalog.NextControl = "efPTypes_Type";
             efPTypes_Type.NextControl = "efPTypes_Type_0";
-
-
         }
 
         #endregion
@@ -89,10 +89,11 @@ namespace Kesco.App.Web.Docs.Directions
             efPTypes_Type.BeforeSearch += efPTypes_Type_BeforeSearch;
             efMailName.OnRenderNtf += efMailName_OnRenderNtf;
             efMailName.Changed += efMailName_Changed;
+            efDomain.Changed += efDomain_Changed;
             efLogin.OnRenderNtf += efLogin_OnRenderNtf;
             efLogin.Changed += efLogin_Changed;
         }
-        
+
         #endregion
 
         #region SetBinder
@@ -115,9 +116,123 @@ namespace Kesco.App.Web.Docs.Directions
 
         #endregion
 
+        private void SotrudnikClearInfo()
+        {
+            Dir.SotrudnikPostField.Value = null;
+            Dir.SupervisorField.Value = null;
+            Dir.RedirectNumField.Value = null;
+            Dir.WorkPlaceField.Value = null;
+            Dir.LoginField.Value = null;
+            Dir.MailNameField.Value = null;
+            Dir.SotrudnikLanguageField.Value = null;
+        }
+
+        private void SotrudnikSetInfo()
+        {
+            var empl = Dir.Sotrudnik;
+
+            if (Dir.SotrudnikField.ValueString.Length == 0 || empl == null || empl.Unavailable)
+            {
+                RefreshSimInfo();
+                Dir.Description = "";
+                return;
+            }
+
+
+            Dir.SotrudnikLanguageField.Value = empl.Language;
+
+            if (empl.SimRequired)
+                SetPhoneEquip(16, "0");
+
+            if (empl.SimGprsPackage)
+                SetPhoneEquip(32, "0");
+
+            RefreshSimInfo();
+
+            SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.ДоступЧерезVPN, empl.IsVPNGroup ? "1" : "0");
+
+            Dir.AccessEthernetField.ValueString = (empl.Login.Length > 0 || empl.IsVPNGroup || empl.IsInternetGroup)
+                ? "1"
+                : "0";
+
+            DisplayDataWorkPlace();
+            DisplayDataEthernet();
+
+
+            SetEthernetData();
+
+            Dir.Description = empl.FIO;
+        }
+
+        private void SetEthernetData()
+        {
+            var empl = Dir.Sotrudnik;
+
+            if (empl.Login.Length > 0)
+                Dir.LoginField.Value = empl.Login;
+            else
+                Dir.LoginField.Value = GetFreeLogin();
+
+
+            if (empl.Email.Length > 0)
+            {
+                var inx = empl.Email.IndexOf("@", StringComparison.Ordinal);
+                Dir.MailNameField.Value = empl.Email.Substring(0, inx);
+                Dir.DomainField.Value = empl.Email.Substring(inx + 1).ToLower();
+            }
+
+            if (Dir.MailNameField.ValueString.Length == 0 && Dir.LoginField.ValueString.Length > 0)
+                Dir.MailNameField.Value = Dir.LoginField.Value;
+
+            if (Dir.DomainField.ValueString.Length == 0)
+                SetDefaultDomainByEmployee();
+
+            if (empl.DisplayName.Length > 0)
+                Dir.DisplayNameField.Value = empl.DisplayName;
+
+
+            FillPositionCommonFoldersByEmployee(empl);
+            FillPositionRolesByEmployee(empl);
+            FillPositionTypesByEmployee(empl);
+        }
+
+        private void RefreshSotrudnikInfo()
+        {
+            RefreshPhoto();
+            RefreshSotrudnikAOrg();
+            RefreshSotrudnikFinOrg();
+
+            RefreshSotrudnikPost();
+            RefreshSupervisorInfo();
+
+            RefreshMobilphoneArea();
+
+            SotrudnikSetInfo();
+
+            efLogin.RenderNtf();
+            efMailName.RenderNtf();
+        }
+
+        private void SotrudnikParentSetInfo()
+        {
+            if (Dir.SotrudnikParentField.ValueString.Length == 0) return;
+            ClearDocumentPositions();
+            FillPositionCommonFoldersByEmployee(Dir.SotrudnikParent);
+            FillPositionRolesByEmployee(Dir.SotrudnikParent);
+            FillPositionTypesByEmployee(Dir.SotrudnikParent);
+        }
+
+        private void ClearDocumentPositions()
+        {
+            Dir.PositionTypes.Clear();
+            Dir.PositionRoles.Clear();
+            Dir.PositionCommonFolders.Clear();
+        }
+
         #region Override
 
-        protected RenderHelper Render {
+        protected RenderHelper Render
+        {
             get { return _render ?? (_render = new RenderHelper()); }
         }
 
@@ -131,10 +246,9 @@ namespace Kesco.App.Web.Docs.Directions
             if (Doc.IsNew)
                 Doc.Date = DateTime.Today;
             ShowDocDate = false;
-
+            ShowCopyButton = false;
             SetBinders();
             SetHandlers();
-           
         }
 
         protected override void LoadData(string id)
@@ -269,7 +383,8 @@ namespace Kesco.App.Web.Docs.Directions
                     JS.Write(jsStr);
                     break;
                 case "TestCheckSimilar":
-                    var jsStr1 = DocViewInterop.CheckSimilarDocument(HttpContext.Current, "0", "2353", "15.01.2018", "13", "1603,15950,22778","2");
+                    var jsStr1 = DocViewInterop.CheckSimilarDocument(HttpContext.Current, "0", "2353", "15.01.2018",
+                        "13", "1603,15950,22778", "2");
                     JS.Write(jsStr1);
                     break;
                 case "SendMessageDocument":
@@ -284,7 +399,7 @@ namespace Kesco.App.Web.Docs.Directions
         protected override bool ValidateDocument(out List<string> errors, params string[] exeptions)
         {
             base.ValidateDocument(out errors);
-            
+
             var bitMask = Dir.WorkPlaceTypeField.ValueInt;
 
             if (bitMask == 0)
@@ -314,7 +429,8 @@ namespace Kesco.App.Web.Docs.Directions
                 }
             }
             //только доступ к корпоративной сети через Internet ==============================================================
-            if (bitMask == 4 || (Dir.AccessEthernetField.ValueString.Length != 0 && Dir.AccessEthernetField.ValueInt == 1))
+            if (bitMask == 4 ||
+                (Dir.AccessEthernetField.ValueString.Length != 0 && Dir.AccessEthernetField.ValueInt == 1))
             {
                 if (Dir.AccessEthernetField.ValueString.Length == 0 || Dir.AccessEthernetField.ValueInt == 0)
                 {
@@ -335,11 +451,11 @@ namespace Kesco.App.Web.Docs.Directions
             if (Dir.SotrudnikParentCheckField.ValueString.Length != 0 &&
                 Dir.SotrudnikParentField.ValueString.Length == 0)
             {
-                if (Dir.SotrudnikParentCheckField.ValueInt==1)
+                if (Dir.SotrudnikParentCheckField.ValueInt == 1)
                     errors.Add("Не заполнено поле 'как у сотрудника'");
                 else
                     errors.Add("Не заполнено поле 'вместо сотрудника'");
-                
+
                 return false;
             }
 
@@ -348,7 +464,7 @@ namespace Kesco.App.Web.Docs.Directions
             {
                 ValidationMessages.CheckSotrudnikWorkPlaceGroup(this, w, Dir);
                 var ws = w.ToString();
-                if (ws.Length>0) errors.Add(ws);
+                if (ws.Length > 0) errors.Add(ws);
             }
 
 
@@ -369,7 +485,6 @@ namespace Kesco.App.Web.Docs.Directions
             {
                 Dir.WorkPlaceField.ValueString = "";
                 if ((bitMaskPhoneEq & 2) == 2) SetPhoneEquip(2, "0");
-
             }
 
             if ((bitMaskWP & 1) != 1 && (bitMaskWP & 2) != 2)
@@ -389,20 +504,22 @@ namespace Kesco.App.Web.Docs.Directions
                 Dir.PositionRoles.Clear();
                 Dir.PositionTypes.Clear();
                 Dir.PositionAdvancedGrants.Clear();
-
             }
 
             if (Dir.SotrudnikParentCheckField.ValueString.Length == 0)
                 Dir.SotrudnikParentField.ValueString = "";
 
-            Dir.PersonZakazchikField.ValueString = Dir.Sotrudnik.OrganizationId.HasValue ? Dir.Sotrudnik.OrganizationId.Value.ToString() : "";
-            Dir.PersonEmployerField.ValueString = Dir.Sotrudnik.PersonEmployeeId.HasValue ? Dir.Sotrudnik.PersonEmployeeId.Value.ToString() : "";
+            Dir.PersonZakazchikField.ValueString = Dir.Sotrudnik.OrganizationId.HasValue
+                ? Dir.Sotrudnik.OrganizationId.Value.ToString()
+                : "";
+            Dir.PersonEmployerField.ValueString = Dir.Sotrudnik.PersonEmployeeId.HasValue
+                ? Dir.Sotrudnik.PersonEmployeeId.Value.ToString()
+                : "";
         }
-        
+
 
         protected void Page_Load(object sender, EventArgs e)
         {
-
             //var x = "http://sip-hnov.kescom.com/api/authenticate?key=" + HttpUtility.UrlEncode("dk4E%xtm@7amb$") +
             //        "&username=apiadmin&password=" + HttpUtility.UrlEncode("5x5=25");
 
@@ -418,8 +535,9 @@ namespace Kesco.App.Web.Docs.Directions
                     efSotrudnik.Focus();
 
                 SetInitControls();
+            }
 
-                JS.Write(@"directions_clientLocalization = {{
+            JS.Write(@"directions_clientLocalization = {{
 CONFIRM_StdMessage:""{0}"",
 CONFIRM_StdTitle:""{1}"", 
 CONFIRM_StdCaptionYes:""{2}"",
@@ -436,26 +554,22 @@ DIRECTIONS_FORM_Type_Title:""{12}"",
 DIRECTIONS_FORM_WP_Title:""{13}"",
 DIRECTIONS_FORM_Mail_Title:""{14}""
 }};",
-                    Resx.GetString("CONFIRM_StdMessage"),
-                    Resx.GetString("CONFIRM_StdTitle"),
-                    Resx.GetString("CONFIRM_StdCaptionYes"),
-                    Resx.GetString("CONFIRM_StdCaptionNo"),
-                    Resx.GetString("cmdDelete"),
-                    Resx.GetString("cmdOK"),
-                    Resx.GetString("cmdCancel"),
-                    Resx.GetString("cmdUncheck"),
-                    Resx.GetString("cmdWorkplaceOther"),
-                    Resx.GetString("DIRECTIONS_FORM_CF_Title"),
-                    Resx.GetString("DIRECTIONS_FORM_AG_Title"),
-                    Resx.GetString("DIRECTIONS_FORM_Role_Title"),
-                    Resx.GetString("DIRECTIONS_FORM_Type_Title"),
-                    Resx.GetString("DIRECTIONS_FORM_WP_Title"),
-                    Resx.GetString("DIRECTIONS_FORM_Mail_Title")
-                    );
-                
-                if (Dir.IsNew)
-                    JS.Write("directions_initNewDoc();");
-            }
+                Resx.GetString("CONFIRM_StdMessage"),
+                Resx.GetString("CONFIRM_StdTitle"),
+                Resx.GetString("CONFIRM_StdCaptionYes"),
+                Resx.GetString("CONFIRM_StdCaptionNo"),
+                Resx.GetString("cmdDelete"),
+                Resx.GetString("cmdOK"),
+                Resx.GetString("cmdCancel"),
+                Resx.GetString("cmdUncheck"),
+                Resx.GetString("cmdWorkplaceOther"),
+                Resx.GetString("DIRECTIONS_FORM_CF_Title"),
+                Resx.GetString("DIRECTIONS_FORM_AG_Title"),
+                Resx.GetString("DIRECTIONS_FORM_Role_Title"),
+                Resx.GetString("DIRECTIONS_FORM_Type_Title"),
+                Resx.GetString("DIRECTIONS_FORM_WP_Title"),
+                Resx.GetString("DIRECTIONS_FORM_Mail_Title")
+                );
         }
 
         //protected override void SaveDocument()
@@ -464,6 +578,23 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         //    if (Dir.Id.IsNullEmptyOrZero()) return;
         //    Dir.SaveDocumentPositions(false);
         //}
+
+        protected override void RefreshManualNotifications()
+        {
+            if (Dir.SotrudnikField.ValueString.Length == 0) return;
+
+            Dir.Sotrudnik.RequiredRefreshInfo = true;
+            RenderWorkPlaceList(null, null, true);
+            RefreshPhoto();
+            RefreshSotrudnikPost();
+            RefreshSotrudnikAOrg();
+            RefreshSotrudnikFinOrg();
+            RefreshSupervisorInfo();
+            RefreshMobilphoneArea();
+            RefreshWorkPlace("");
+            RefreshSimInfo();
+            Dir.Sotrudnik.RequiredRefreshInfo = false;
+        }
 
         #endregion
 
@@ -477,6 +608,8 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             if (Dir.SotrudnikField.ValueString.Length == 0) return;
 
             var employee = Dir.Sotrudnik;
+            employee.RequiredRefreshInfo = true;
+
             if (employee.Unavailable)
             {
                 efSotrudnik.ValueText = "#" + employee.Id;
@@ -486,24 +619,23 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
             using (var w = new StringWriter())
             {
-                List<string> ntfList = new List<string>();
+                var ntfList = new List<string>();
                 ValidationMessages.CheckSotrudnik(this, w, Dir, ntfList);
-                foreach (string msg in ntfList)
+                foreach (var msg in ntfList)
                     ntf.Add(msg, NtfStatus.Error);
 
                 ntfList.Clear();
                 ValidationMessages.CheckSotrudnikStatus(this, w, Dir, ntfList);
-                foreach (string msg in ntfList)
+                foreach (var msg in ntfList)
                     ntf.Add(msg, NtfStatus.Error);
             }
-
         }
 
         private void efSotrudnikParent_OnRenderNtf(object sender, Ntf ntf)
         {
             ntf.Clear();
-            
-            Employee p = Dir.SotrudnikParent;
+
+            var p = Dir.SotrudnikParent;
             if (p == null) return;
 
             if (p.Unavailable)
@@ -514,25 +646,24 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             }
 
             if (Dir.SotrudnikParentCheckField.ValueString.Length == 0) return;
-            
+
             var bitMask = int.Parse(Dir.SotrudnikParentCheckField.ValueString);
 
             using (var w = new StringWriter())
             {
-                List<string> ntfList = new List<string>();
+                var ntfList = new List<string>();
                 ValidationMessages.CheckSotrudnikParent(this, w, Dir, ntfList);
-                foreach (string msg in ntfList)
+                foreach (var msg in ntfList)
                     ntf.Add(msg, NtfStatus.Error);
 
                 ntfList.Clear();
                 ValidationMessages.CheckSotrudnikParentStatus(this, w, Dir, ntfList);
-                foreach (string msg in ntfList)
+                foreach (var msg in ntfList)
                     ntf.Add(msg, NtfStatus.Error);
             }
-            
         }
 
-       
+
         private void efPRoles_Role_OnRenderNtf(object sender, Ntf ntf)
         {
             RefreshPRoles_Role_Description();
@@ -621,21 +752,22 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             }
             RefreshSotrudnikInfo();
         }
-        
+
         protected void efMobilphone_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             if (Dir.RedirectNumField.ValueString.Length > 0)
             {
                 if (!Regex.IsMatch(Dir.RedirectNumField.ValueString, RegexPattern.PhoneNumber))
                 {
-                    ShowMessage(LocalResx.GetString("_Msg_CheckPhoneNumber"), efMobilphone, LocalResx.GetString("_Msg_AlertTitle"));
+                    ShowMessage(LocalResx.GetString("_Msg_CheckPhoneNumber"), efMobilphone,
+                        LocalResx.GetString("_Msg_AlertTitle"));
                     Dir.RedirectNumField.ValueString = "";
                     efMobilphone.Value = "";
                 }
             }
             RefreshMobilphoneArea();
         }
-        
+
         protected void efWorkPlaceType1_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.РабочееМестоВОфисе, e.NewValue);
@@ -657,9 +789,9 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             {
                 Dir.AccessEthernetField.Value = 1;
                 DisplayDataEthernet();
+
                 SetRequiredLogin();
                 SetRequiredMailName();
-                
             }
         }
 
@@ -693,11 +825,13 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             SetPhoneEquip(16, e.NewValue);
             if ((Dir.PhoneEquipField.ValueInt & 16) == 16) SetPhoneEquip(32, "1");
             DisplayDataSim();
+            RefreshSimInfo();
         }
 
         protected void efAccessInternetGPRS_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             SetPhoneEquip(32, e.NewValue);
+            RefreshSimInfo();
         }
 
         protected void efComputer_OnChanged(object sender, ProperyChangedEventArgs e)
@@ -713,41 +847,49 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         protected void efAccessEthernet_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             DisplayDataEthernet();
+
+            SetEthernetData();
+
             SetRequiredLogin();
             SetRequiredMailName();
         }
-        
+
         protected void efSotrudnikParentCheck1_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             SetSotrudnikParentType(DirectionsSotrudnikParentBitEnum.КакУСотрудника, e.NewValue);
-            
         }
 
         protected void efSotrudnikParentCheck2_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             SetSotrudnikParentType(DirectionsSotrudnikParentBitEnum.ВместоСотрудника, e.NewValue);
-            
         }
-        
+
         protected void efSotrudnikParent_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             if (Dir.SotrudnikField.Value != null && Dir.SotrudnikField.Value.Equals(Dir.SotrudnikParentField.Value))
             {
                 Dir.SotrudnikParentField.ValueString = e.OldValue;
-                ShowMessage(LocalResx.GetString("_NTF_СотрудникСовпадает"), "Сообщение", MessageStatus.Warning, efSotrudnikParent.HtmlID);
+                ShowMessage(LocalResx.GetString("_NTF_СотрудникСовпадает"), "Сообщение", MessageStatus.Warning,
+                    efSotrudnikParent.HtmlID);
             }
             else if (Dir.SotrudnikParentField.ValueString.Length > 0)
-                ShowConfirm(string.Format(LocalResx.GetString("_Msg_FillFormByEmpl") + " " + Dir.SotrudnikParent.FullName + "?"), "cmdasync('cmd', 'SotrudnikParentSetInfo');", null);
+                ShowConfirm(
+                    string.Format(LocalResx.GetString("_Msg_FillFormByEmpl") + " " + Dir.SotrudnikParent.FullName + "?"),
+                    "cmdasync('cmd', 'SotrudnikParentSetInfo');", null);
 
             efSotrudnikParent.IsRequired = Dir.SotrudnikParentField.ValueString.Length <= 0;
-    
         }
 
         protected void efMailName_Changed(object sender, ProperyChangedEventArgs e)
         {
             SetRequiredMailName();
-
         }
+
+        protected void efDomain_Changed(object sender, ProperyChangedEventArgs e)
+        {
+            efMailName.RenderNtf();
+        }
+
 
         protected void efLogin_Changed(object sender, ProperyChangedEventArgs e)
         {
@@ -781,7 +923,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             else
                 JS.Write("$('#btnPTypes_Delete').hide();");
         }
-        
+
         protected void efPTypes_Type_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             if (e.NewValue.Equals(efPTypes_Type.CustomRecordId) &&
@@ -811,16 +953,15 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         #endregion
 
         #region Render
-        
+
         protected void RenderMobilphoneArea(TextWriter w)
         {
             var phoneNum = Dir.RedirectNumField.ValueString;
             var direction = Dir.FormatingMobilNumber(ref phoneNum);
             w.Write(direction);
         }
-        
-      
-        private void RenderWorkPlaceList(object x, object y)
+
+        private void RenderWorkPlaceList(object x, object y, bool refreshOnly = false)
         {
             var w = new StringWriter();
 
@@ -834,7 +975,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             var inx = 0;
             foreach (var wp in wps)
             {
-                if (!wp.WorkPlacePar.Equals((int)ТипыРабочихМест.КомпьютеризированноеРабочееМесто)) continue;
+                if (!wp.WorkPlacePar.Equals((int) ТипыРабочихМест.КомпьютеризированноеРабочееМесто)) continue;
                 w.Write("<div>");
                 w.Write("<nobr>");
                 w.Write(
@@ -851,10 +992,11 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             }
 
             if (wps.Count == 0)
-                RenderNtf(w, new List<string>(new[] { LocalResx.GetString("_Msg_СотрудникНетРабМеста") }),
+                RenderNtf(w, new List<string>(new[] {LocalResx.GetString("_Msg_СотрудникНетРабМеста")}),
                     NtfStatus.Error);
 
             RefreshControlText(w, "divWPL_Body");
+            if (refreshOnly) return;
             JS.Write("directions_SetPositionWorkPlaceList();");
             if (wps.Count == 0)
                 AdvSearchWorkPlace();
@@ -921,7 +1063,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             if ((bit & 1) == 1 && Dir.WorkPlaceField.ValueString.Length > 0)
                 Render.WorkPlace(this, w, label, Dir);
             else
-                RenderNtf(w, new List<string>{"не указано рабочее место"}, NtfStatus.Error);
+                RenderNtf(w, new List<string> {"не указано рабочее место"}, NtfStatus.Error);
             RefreshControlText(w, "divWorkPlace");
         }
 
@@ -937,6 +1079,13 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             }
 
             RefreshControlText(w, "efPRoles_Role_Description");
+        }
+
+        private void RefreshSimInfo()
+        {
+            var w = new StringWriter();
+            ValidationMessages.CheckSimInfo(this, w, Dir);
+            JS.Write("$(\"#divSimInfo\").html('{0}');", HttpUtility.JavaScriptStringEncode(w.ToString()));
         }
 
         #endregion
@@ -968,9 +1117,8 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 {
                     var p = Dir.PositionCommonFolders.FirstOrDefault(x => x.CommonFolderId.ToString() == cf.Id);
                     check = (p != null);
-                   
                 }
-                
+
                 w.Write("<div class='marginL div_cf'>");
                 w.Write("<input id='cf_{0}' data-id='{0}' data-name='{1}' class='CF' type='checkbox' {2}>", cf.Id,
                     HttpUtility.HtmlEncode(cf.Name), check ? "checked" : "");
@@ -980,7 +1128,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 w.Write("</div>");
             }
                 );
-            
+
             RefreshControlText(w, "divCF_Body");
         }
 
@@ -1016,7 +1164,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
         private void ReloadPositionCommonFolders(bool setFocus = false)
         {
-           // Dir.LoadPositionCommonFolders();
+            // Dir.LoadPositionCommonFolders();
             RefreshPositionCommonFolders();
             if (setFocus)
                 JS.Write("directions_setElementFocus(null,'btnLinkCFAdd');");
@@ -1159,7 +1307,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 list.ForEach(delegate(PositionRole p) { p.Delete(false); });
                 ReloadPositionRoles(true);
             }
-            
+
             if (!string.IsNullOrEmpty(closeForm))
                 JS.Write("directions_ClosePositionRolesAdd();");
         }
@@ -1209,7 +1357,6 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                             "Сообщение", MessageStatus.Warning, efPRoles_Person.HtmlID);
                         return;
                     }
-                    
                 }
 
 
@@ -1293,7 +1440,9 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                     ShowConfirmDeleteGetJS(string.Format("directions_deleteRoleAllCallBack('{0}')", p0.RoleId)),
                     "удалить");
 
-                w.Write("{0}:", p0.RoleObject.Name);
+                w.Write(
+                    "{0}<img src=\"/styles/PageNext.gif\" style=\"margin-left:10px: margin-right:10px;\" border=\"0\">",
+                    p0.RoleObject.Name);
 
                 var r = Dir.PositionRoles.FirstOrDefault(x => x.PersonId == 0 && x.RoleId == p0.RoleId);
 
@@ -1338,7 +1487,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                     w.Write("</div>");
                 });
 
-                RenderNtf(w, new List<string>{p0.RoleObject.Description}, NtfStatus.Information);
+                RenderNtf(w, new List<string> {p0.RoleObject.Description}, NtfStatus.Information);
 
                 w.Write("<hr/>");
             });
@@ -1403,12 +1552,19 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         {
             if (Dir.IsNew)
             {
-                Dir.PositionTypes.RemoveAll(x => (x.CatalogId.HasValue ? x.CatalogId.Value.ToString() : efPTypes_Catalog.CustomRecordId) == catalog);
+                Dir.PositionTypes.RemoveAll(
+                    x =>
+                        (x.CatalogId.HasValue ? x.CatalogId.Value.ToString() : efPTypes_Catalog.CustomRecordId) ==
+                        catalog);
                 RefreshPositionTypes();
             }
             else
             {
-                var list = Dir.PositionTypes.Where(x =>(x.CatalogId.HasValue ? x.CatalogId.Value.ToString() : efPTypes_Catalog.CustomRecordId) == catalog).ToList();
+                var list =
+                    Dir.PositionTypes.Where(
+                        x =>
+                            (x.CatalogId.HasValue ? x.CatalogId.Value.ToString() : efPTypes_Catalog.CustomRecordId) ==
+                            catalog).ToList();
 
                 list.ForEach(delegate(PositionType p) { p.Delete(false); });
                 ReloadPositionTypes(true);
@@ -1430,8 +1586,11 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             else
             {
                 var list = Dir.PositionTypes.Where(
-                    x =>(x.CatalogId.HasValue ? x.CatalogId.Value.ToString() : efPTypes_Catalog.CustomRecordId) == catalog &&
-                        (x.ThemeId.HasValue ? x.ThemeId.Value.ToString() : efPTypes_Type.CustomRecordId) == theme).ToList();
+                    x =>
+                        (x.CatalogId.HasValue ? x.CatalogId.Value.ToString() : efPTypes_Catalog.CustomRecordId) ==
+                        catalog &&
+                        (x.ThemeId.HasValue ? x.ThemeId.Value.ToString() : efPTypes_Type.CustomRecordId) == theme)
+                    .ToList();
 
                 list.ForEach(delegate(PositionType p) { p.Delete(false); });
                 ReloadPositionTypes(true);
@@ -1536,7 +1695,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 else
                 {
                     //Сохраняем каждую тему в указанном каталоге
-                    efPTypes_Type.SelectedItems.ForEach(delegate(Lib.Entities.Item item)
+                    efPTypes_Type.SelectedItems.ForEach(delegate(Item item)
                     {
                         var p = new PositionType
                         {
@@ -1560,7 +1719,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                                 (p0.ThemeId.HasValue ? p0.ThemeId.Value.ToString() : efPTypes_Type.CustomRecordId));
 
                     //если не нашли тему в каталоге, то удаляем
-                    if (r.Equals(default(Lib.Entities.Item)) &&
+                    if (r.Equals(default(Item)) &&
                         (efPTypes_Catalog.Value.Length == 0 ? efPTypes_Catalog.CustomRecordId : efPTypes_Catalog.Value) ==
                         (p0.CatalogId.HasValue ? p0.CatalogId.Value.ToString() : efPTypes_Catalog.CustomRecordId))
                     {
@@ -1573,14 +1732,14 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
                 //если список типов пуст, добавляем custom
                 if (efPTypes_Type.SelectedItems.Count == 0)
-                    efPTypes_Type.SelectedItems.Add(new Lib.Entities.Item
+                    efPTypes_Type.SelectedItems.Add(new Item
                     {
                         Id = efPTypes_Type.CustomRecordId,
                         Value = efPTypes_Type.CustomRecordText
                     });
 
                 //добавляем в позиции новые записи
-                efPTypes_Type.SelectedItems.ForEach(delegate(Lib.Entities.Item item)
+                efPTypes_Type.SelectedItems.ForEach(delegate(Item item)
                 {
                     var r =
                         Dir.PositionTypes.FirstOrDefault(
@@ -1607,7 +1766,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                     }
                 });
             }
-           
+
             if (isNew) return;
             JS.Write("directions_ClosePositionTypesAdd('btnLinkTypesAdd');");
             ReloadPositionTypes();
@@ -1651,7 +1810,9 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                     "удалить"
                     );
 
-                w.Write("{0}:", string.IsNullOrEmpty(p0.CatalogName) ? "<все каталоги>" : p0.CatalogName);
+                w.Write(
+                    "{0}<img src=\"/styles/PageNext.gif\" style=\"margin-left:10px: margin-right:10px;\" border=\"0\">",
+                    string.IsNullOrEmpty(p0.CatalogName) ? "<все каталоги>" : p0.CatalogName);
                 w.Write("</div>");
 
                 var listTheme =
@@ -1715,10 +1876,10 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                         {
                             var pThId = (p.ThemeId.HasValue ? p.ThemeId.ToString() : efPTypes_Type.CustomRecordId);
                             var pThName = (p.ThemeId.HasValue ? p.ThemeName : efPTypes_Type.CustomRecordText);
-                            efPTypes_Type.SelectedItems.Add(new Lib.Entities.Item
+                            efPTypes_Type.SelectedItems.Add(new Item
                             {
                                 Id = pThId,
-                                Value = new Lib.Entities.Item {Id = pThId, Value = pThName}
+                                Value = new Item {Id = pThId, Value = pThName}
                             });
                         });
             }
@@ -1785,7 +1946,8 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                     check = p != null;
                 }
                 w.Write("<div class='marginL div_ag'>");
-                w.Write("<input id='ag_{0}' data-id='{0}' data-name='{1}' data-name-en='{2}' class='AG' type='checkbox' {3}>", 
+                w.Write(
+                    "<input id='ag_{0}' data-id='{0}' data-name='{1}' data-name-en='{2}' class='AG' type='checkbox' {3}>",
                     ag.Id,
                     HttpUtility.HtmlEncode(ag.Name),
                     HttpUtility.HtmlEncode(ag.NameEn),
@@ -1826,7 +1988,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             var serializer = new JavaScriptSerializer();
             var values = serializer.Deserialize<Dictionary<string, string>>(jsonValues);
             Dir.SavePositionsAdvancedGrantsByDictionary(values, !isNew);
-            
+
             if (isNew) return;
             RefreshPositionAdvancedGrants();
         }
@@ -1857,26 +2019,37 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 w.Write("</div>");
             });
         }
-        
+
         #endregion
-       
 
         #endregion
 
         #region Adv functions
 
+        private string GetFreeLogin()
+        {
+            var sqlParams = new Dictionary<string, object> {{"@КодСотрудника", Dir.Sotrudnik.Id}};
+            var dt = DBManager.GetData(SQLQueries.SELECT_СвободныйЛогин, Config.DS_user, CommandType.Text, sqlParams);
+            return dt.Rows.Count != 1 ? "" : dt.Rows[0][0].ToString();
+        }
+
         private void SetRequiredMailName()
         {
-            var accessEthernet = (Dir.AccessEthernetField.ValueString.Length == 0) ? 0 : Dir.AccessEthernetField.ValueInt;
+            var accessEthernet = (Dir.AccessEthernetField.ValueString.Length == 0)
+                ? 0
+                : Dir.AccessEthernetField.ValueInt;
 
-            if (accessEthernet==1)
+            if (accessEthernet == 1)
                 efMailName.IsRequired = Dir.MailNameField.ValueString.Length == 0;
             else
                 efMailName.IsRequired = false;
         }
+
         private void SetRequiredLogin()
         {
-            var accessEthernet = (Dir.AccessEthernetField.ValueString.Length == 0) ? 0 : Dir.AccessEthernetField.ValueInt;
+            var accessEthernet = (Dir.AccessEthernetField.ValueString.Length == 0)
+                ? 0
+                : Dir.AccessEthernetField.ValueInt;
 
             if (accessEthernet == 1)
                 efLogin.IsRequired = Dir.LoginField.ValueString.Length == 0;
@@ -1884,14 +2057,16 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 efLogin.IsRequired = false;
         }
 
-        
 
         private void SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum bit, string whatdo)
         {
             var bitMask = Dir.WorkPlaceTypeField.ValueInt;
 
             if (whatdo.Equals("0"))
-                bitMask ^= (int) bit;
+            {
+                if ((bitMask & (int) bit) == (int) bit)
+                    bitMask ^= (int) bit;
+            }
             else
                 bitMask |= (int) bit;
 
@@ -1916,6 +2091,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                     SetPhoneEquip(2, "0");
             }
         }
+
         private void GetWorkPlaceType()
         {
             var bitMask = Dir.WorkPlaceTypeField.ValueInt;
@@ -1929,23 +2105,26 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             if ((bitMask & 4) == 4) efWorkPlaceType4.Value = "1";
             else efWorkPlaceType4.Value = "0";
         }
-        
+
 
         private void DisplayDataWorkPlace()
         {
             JS.Write("directions_Data_WP({0}, {1});",
-                     Dir.WorkPlaceTypeField.ValueInt, Dir.AccessEthernetField.ValueInt);
+                Dir.WorkPlaceTypeField.ValueInt, Dir.AccessEthernetField.ValueInt);
         }
+
         private void DisplayDataPhoneDesk(bool setIp)
         {
             if (setIp) efPhoneIPCam.IsDisabled = (Dir.PhoneEquipField.ValueInt & 1) != 1;
             DisplayPLExit();
             DisplayMobilPhone();
         }
+
         private void DisplayDataSim()
         {
             efAccessInternetGPRS.IsDisabled = (Dir.PhoneEquipField.ValueInt & 16) != 16;
         }
+
         private void DisplayDataEthernet()
         {
             JS.Write("directions_Data_Lan({0});", Dir.AccessEthernetField.ValueInt);
@@ -1967,6 +2146,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             Dir.PhoneEquipField.ValueString = (bitMask == 0) ? "" : bitMask.ToString();
             GetPhoneEquip();
         }
+
         private void GetPhoneEquip()
         {
             var bitMask = Dir.PhoneEquipField.ValueInt;
@@ -1986,6 +2166,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             if ((bitMask & 32) == 32) efAccessInternetGPRS.Value = "1";
             else efAccessInternetGPRS.Value = "0";
         }
+
         private void DisplayPLExit()
         {
             var display = "none";
@@ -1995,6 +2176,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             JS.Write("var objDiv = document.getElementById('divPLExit'); if (objDiv) objDiv.style.display ='{0}';",
                 display);
         }
+
         private void DisplayMobilPhone()
         {
             var display = 0;
@@ -2017,6 +2199,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             Dir.CompTypeField.ValueString = (bitMask == 0) ? "" : bitMask.ToString();
             GetCompType();
         }
+
         private void GetCompType()
         {
             var bitMask = Dir.CompTypeField.ValueInt;
@@ -2035,12 +2218,14 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             ReturnDialogResult.ShowAdvancedDialogSearch(this, "directions_AdvSearchWorkPlace", "",
                 Config.location_search, parameters, false, 0, 800, 600);
         }
+
         private void SetWorkPlace(string value, string label)
         {
             if (value.Length == 0) return;
             Dir.WorkPlaceField.Value = value;
             RefreshWorkPlace(label);
         }
+
         private void ClearWorkPlace()
         {
             Dir.WorkPlaceField.Value = "";
@@ -2094,6 +2279,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 Dir.DomainField.Value = Config.domain;
             }
         }
+
         private void RenderMailNamesList(object x, object y)
         {
             var w = new StringWriter();
@@ -2143,43 +2329,44 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
 
             if (!fl)
-                RenderNtf(w, new List<string>{"Ошибка получения возможных имен почтового ящика"}, NtfStatus.Error);
+                RenderNtf(w, new List<string> {"Ошибка получения возможных имен почтового ящика"}, NtfStatus.Error);
 
             RefreshControlText(w, "divMN_Body");
             JS.Write("directions_SetMailNamesList();");
         }
+
         private void SetMailName(string value, string label)
         {
             if (value.Length == 0) return;
             Dir.MailNameField.Value = value;
             efMailName.RenderNtf();
         }
-        
+
 
         private void SetSotrudnikParentType(DirectionsSotrudnikParentBitEnum bit, string whatdo)
         {
             var bitMask = Dir.SotrudnikParentCheckField.ValueInt;
 
             if (whatdo.Equals("0"))
-                bitMask ^= (int)bit;
+                bitMask ^= (int) bit;
             else
-                bitMask |= (int)bit;
+                bitMask |= (int) bit;
 
             if (bit == DirectionsSotrudnikParentBitEnum.КакУСотрудника &&
-                (bitMask & (int)DirectionsSotrudnikParentBitEnum.ВместоСотрудника) ==
-                (int)DirectionsSotrudnikParentBitEnum.ВместоСотрудника)
-                bitMask ^= (int)DirectionsSotrudnikParentBitEnum.ВместоСотрудника;
+                (bitMask & (int) DirectionsSotrudnikParentBitEnum.ВместоСотрудника) ==
+                (int) DirectionsSotrudnikParentBitEnum.ВместоСотрудника)
+                bitMask ^= (int) DirectionsSotrudnikParentBitEnum.ВместоСотрудника;
 
             if (bit == DirectionsSotrudnikParentBitEnum.ВместоСотрудника &&
-                (bitMask & (int)DirectionsSotrudnikParentBitEnum.КакУСотрудника) ==
-                (int)DirectionsSotrudnikParentBitEnum.КакУСотрудника)
-                bitMask ^= (int)DirectionsSotrudnikParentBitEnum.КакУСотрудника;
+                (bitMask & (int) DirectionsSotrudnikParentBitEnum.КакУСотрудника) ==
+                (int) DirectionsSotrudnikParentBitEnum.КакУСотрудника)
+                bitMask ^= (int) DirectionsSotrudnikParentBitEnum.КакУСотрудника;
 
             Dir.SotrudnikParentCheckField.ValueString = (bitMask == 0) ? "" : bitMask.ToString();
             GetSotrudnikParentType();
             efSotrudnikParent.RenderNtf();
-           
         }
+
         private void GetSotrudnikParentType()
         {
             var bitMask = Dir.SotrudnikParentCheckField.ValueInt;
@@ -2197,8 +2384,6 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             }
             else
                 JS.Write("$('#divSotrudnikParent').hide();");
-
-
         }
 
 
@@ -2210,95 +2395,5 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         }
 
         #endregion
-
-        private void SotrudnikClearInfo()
-        {
-            Dir.SotrudnikPostField.Value = null;
-            Dir.SupervisorField.Value = null;
-            Dir.RedirectNumField.Value = null;
-            Dir.WorkPlaceField.Value = null;
-            Dir.LoginField.Value = null;
-            Dir.MailNameField.Value = null;
-            Dir.SotrudnikLanguageField.Value = null;
-            
-        }
-
-        private void SotrudnikSetInfo()
-        {
-            var empl = Dir.Sotrudnik;
-
-            if (Dir.SotrudnikField.ValueString.Length == 0 || empl == null || empl.Unavailable)
-            {
-                Dir.Description = "";
-                return;
-            }
-
-            Dir.LoginField.Value = empl.Login;
-            Dir.SotrudnikLanguageField.Value = empl.Language;
-
-            if (empl.Email.Length > 0)
-            {
-                var inx = empl.Email.IndexOf("@", StringComparison.Ordinal);
-                Dir.MailNameField.Value = empl.Email.Substring(0, inx);
-                Dir.DomainField.Value = empl.Email.Substring(inx + 1).ToLower();
-            }
-
-            if (Dir.DomainField.ValueString.Length == 0)
-                SetDefaultDomainByEmployee();
-
-            if (empl.DisplayName.Length > 0)
-                Dir.DisplayNameField.Value = empl.DisplayName;
-
-            Dir.Description = empl.FIO;
-
-            FillPositionCommonFoldersByEmployee(empl);
-            SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.ДоступЧерезVPN, empl.IsVPNGroup ? "1" : "0");
-
-            Dir.AccessEthernetField.ValueString = (empl.Login.Length > 0 || empl.IsVPNGroup || empl.IsInternetGroup)
-                ? "1"
-                : "0";
-
-            DisplayDataWorkPlace();
-            DisplayDataEthernet();
-            
-            FillPositionRolesByEmployee(empl);
-            FillPositionTypesByEmployee(empl);
-
-        }
-
-        private void RefreshSotrudnikInfo()
-        {
-            RefreshPhoto();
-            RefreshSotrudnikAOrg();
-            RefreshSotrudnikFinOrg();
-
-            RefreshSotrudnikPost();
-            RefreshSupervisorInfo();
-
-            RefreshMobilphoneArea();
-
-            SotrudnikSetInfo();
-
-            efLogin.RenderNtf();
-            efMailName.RenderNtf();
-            
-        }
-
-        private void SotrudnikParentSetInfo()
-        {
-            if (Dir.SotrudnikParentField.ValueString.Length == 0) return;
-            ClearDocumentPositions();
-            FillPositionCommonFoldersByEmployee(Dir.SotrudnikParent);
-            FillPositionRolesByEmployee(Dir.SotrudnikParent);
-            FillPositionTypesByEmployee(Dir.SotrudnikParent);
-        }
-
-
-        private void ClearDocumentPositions()
-        {
-            Dir.PositionTypes.Clear();
-            Dir.PositionRoles.Clear();
-            Dir.PositionCommonFolders.Clear();
-        }
     }
 }

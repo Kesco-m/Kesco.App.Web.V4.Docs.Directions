@@ -1,4 +1,5 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="DirectionIT.aspx.cs" Inherits="Kesco.App.Web.Docs.Directions.DirectionIT" %>
+<%@ Import Namespace="Kesco.App.Web.Docs.Directions" %>
 <%@ Register TagPrefix="dbs" Namespace="Kesco.Lib.Web.DBSelect.V4" Assembly="DBSelect.V4" %>
 <%@ Register TagPrefix="base" Namespace="Kesco.Lib.Web.Controls.V4" Assembly="Controls.V4" %>
 
@@ -131,9 +132,10 @@
                                     <base:CheckBox ID="efAccessInternetGPRS" runat="server" IsDisabled="True" OnChanged="efAccessInternetGPRS_OnChanged"></base:CheckBox>
                                 </div>
                                 <div class="disp_inlineBlockS">
-                                    Мобильный Internet
+                                    Включить заранее предоплаченный интернет
                                 </div>
                         </div>
+                        <div id="divSimInfo"><% ValidationMessages.CheckSimInfo(this, Response.Output, Dir);%></div>
                     </div>  
                     
 
@@ -392,7 +394,7 @@
     <!--================ Выбор общих папок                  ================-->
   
      <div id = "divCommonFoldersAdd" style="display: none;">
-        <div id="divCF_Body" class="marginL marginR marginT"></div>        
+        <div id="divCF_Body" class="marginL marginR marginT" style="height: 250px; overflow: auto"></div>        
     </div>
 
 
@@ -453,10 +455,8 @@
      <div id = "divAdvancedGrantAdd" style="display: none;">
         <div id="divAG_Body" class="marginL marginR marginT"></div>
     </div>
-    
-    Документ: <dbs:DBSDocument runat="server" ID="efDocTest" Width="300"></dbs:DBSDocument><br />
-    Бизнес-проект: <dbs:DBSBusinessProject runat="server" ID="efBproject" Width="300">></dbs:DBSBusinessProject>
-    
+   
+   
     <script type="text/javascript">
 
 

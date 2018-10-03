@@ -136,8 +136,8 @@ function directions_SetMailNamesList() {
 
     if (null == directions_SetMailNamesList.form) {
         var title = directions_clientLocalization.DIRECTIONS_FORM_Mail_Title;
-        var width = 250;
-        var height = 130;
+        var width = 251;
+        var height = 131;
         var onOpen = function() { directions_setElementFocus(null, "imgMN_0"); };
         var buttons = [
             {
@@ -180,7 +180,7 @@ function directions_SetPositionRolesAdd() {
     if (null == directions_SetPositionRolesAdd.form) {
         var title = directions_clientLocalization.DIRECTIONS_FORM_Role_Title;
         var width = 465;
-        var height = 220;
+        var height = 300;
         var onOpen = function() { directions_setElementFocus(null, "efPRoles_Role_0"); };
         var buttons = [
             {
@@ -243,8 +243,8 @@ function directions_SetPositionTypesAdd() {
     if (null == directions_SetPositionTypesAdd.form) {
 
         var title = directions_clientLocalization.DIRECTIONS_FORM_Type_Title;
-        var width = 465;
-        var height = 220;
+        var width = 450;
+        var height = 250;
         var onOpen = function() { directions_setElementFocus(null, "efPTypes_Catalog_0"); };
         var buttons = [
             {
@@ -305,8 +305,8 @@ function directions_SetPositionCFAdd() {
 
     if (null == directions_SetPositionCFAdd.form) {
         var title = directions_clientLocalization.DIRECTIONS_FORM_CF_Title;
-        var width = 340;
-        var height = 350;
+        var width = 341;
+        var height = 351;
         var onOpen = function() { directions_setElementFocus("CF"); };
         var buttons = [
             {
