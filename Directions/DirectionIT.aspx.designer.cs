@@ -85,24 +85,6 @@ namespace Kesco.App.Web.Docs.Directions {
         protected global::Kesco.Lib.Web.Controls.V4.ComboBox efPLExit;
         
         /// <summary>
-        /// efPhoneSim элемент управления.
-        /// </summary>
-        /// <remarks>
-        /// Автоматически создаваемое поле.
-        /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
-        /// </remarks>
-        protected global::Kesco.Lib.Web.Controls.V4.CheckBox efPhoneSim;
-        
-        /// <summary>
-        /// efAccessInternetGPRS элемент управления.
-        /// </summary>
-        /// <remarks>
-        /// Автоматически создаваемое поле.
-        /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
-        /// </remarks>
-        protected global::Kesco.Lib.Web.Controls.V4.CheckBox efAccessInternetGPRS;
-        
-        /// <summary>
         /// efMobilphone элемент управления.
         /// </summary>
         /// <remarks>

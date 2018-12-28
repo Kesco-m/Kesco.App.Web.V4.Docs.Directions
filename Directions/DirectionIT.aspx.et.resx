@@ -282,6 +282,9 @@
 	<data name="btnGO">
 		<value>Kulgema</value>
 	</data>
+  <data name="btnOldVersion">
+    <value>Vana versioon</value>
+  </data>
 	<data name="docDate">
 		<value>Kuupäev</value>
 	</data>
@@ -455,5 +458,17 @@
   </data>
   <data name="_NTF_СотрудникСовпадает">
     <value>Valitud töötaja ühtib töötaja, kes on dokumendi</value>
+  </data>
+  <data name="_NTF_НеУказанМобильный">
+    <value>Määra mobiiltelefon!</value>
+  </data>
+  <data name="_NTF_СотрудникВГруппе">
+    <value>Dokumendi salvestamine on võimatu, kuna määratud töötaja on tööl vahetuses!</value>
+  </data>
+  <data name="_NTF_СотрудникВГруппе1">
+    <value>Nimetatud töötaja on vahetustega töögrupi liige! Sellise töötaja töökorraldusele viitamine on võimatu!</value>
+  </data>
+  <data name="_NTF_СотрудникВГруппе2">
+    <value>Töötajat, kes kuulub vahetustega töörühma, on võimatu valida!</value>
   </data>
 </root>

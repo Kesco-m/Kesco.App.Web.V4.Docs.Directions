@@ -291,6 +291,9 @@
 	<data name="btnGO">
 		<value>Execute</value>
 	</data>
+  <data name="btnOldVersion">
+    <value>Old version</value>
+  </data>
 	<data name="_Msg_ДокументНеДоступен">
 		<value>doc is unavaible</value>
 	</data>
@@ -459,5 +462,17 @@
   
   <data name="_NTF_СотрудникСовпадает">
     <value>Selected employee coincides with an employee, who is the document</value>
+  </data>
+  <data name="_NTF_НеУказанМобильный">
+    <value>Specify a mobile phone!</value>
+  </data>
+  <data name="_NTF_СотрудникВГруппе">
+    <value>It is impossible to save the document, because the specified employee is in the shift group work!</value>
+  </data>
+  <data name="_NTF_СотрудникВГруппе1">
+    <value>The specified employee is a member of the shift work group! It is impossible to create a reference to the organization of work for such an employee!</value>
+  </data>
+  <data name="_NTF_СотрудникВГруппе2">
+    <value>It is impossible to choose a worker who belongs to the group of shift work!</value>
   </data>
 </root>

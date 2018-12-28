@@ -213,8 +213,9 @@ namespace Kesco.App.Web.Docs.Directions
             var emailUsersGuid = new StringCollection();
             for (var i = 0; i < result.Properties["objectGUID"].Count; i++)
             {
-                if (empl.Guid.ToString() != result.Properties["objectGUID"][i].ToString())
-                    emailUsersGuid.Add(result.Properties["objectGUID"][i].ToString());
+                var adsiGuid = new Guid( (byte[])result.Properties["objectGUID"][i]);
+                if (!empl.Guid.Equals(adsiGuid))
+                    emailUsersGuid.Add(adsiGuid.ToString());
             }
             if (emailUsersGuid.Count == 0)
             {
@@ -309,12 +310,12 @@ namespace Kesco.App.Web.Docs.Directions
             var bitMask = int.Parse(dir.SotrudnikParentCheckField.ValueString);
 
 
-            if ((bitMask & 1) == 1 && (p.Login.Length == 0 || p.LoginFull.Length == 0))
+            if ((bitMask & 1) == 1 && (p.Login.Length == 0))
                 ntfList.Add(LocalResx.GetString("_Msg_СотрудникНеИмеетЛогина"));
 
-            if ((bitMask & 2) == 2 && (p.Login.Length == 0 || p.LoginFull.Length == 0)
+            if ((bitMask & 2) == 2 && (p.Login.Length == 0)
                 && dir.SotrudnikField.ValueString.Length > 0 && !dir.Sotrudnik.Unavailable &&
-                (dir.Sotrudnik.LoginFull.Length == 0 || dir.Sotrudnik.Login.Length == 0))
+                (dir.Sotrudnik.Login.Length == 0))
                 ntfList.Add(LocalResx.GetString("_Msg_СотрудникНеИмеетЛогина"));
 
             if (dir.SotrudnikField.ValueString.Length > 0 &&

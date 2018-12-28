@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Script.Serialization;
@@ -38,7 +41,6 @@ namespace Kesco.App.Web.Docs.Directions
     public abstract partial class DirectionIT : DocPage
     {
         private RenderHelper _render;
-
         protected ResourceManager LocalResx = new ResourceManager("Kesco.App.Web.Docs.Directions.DirectionIT",
             Assembly.GetExecutingAssembly());
 
@@ -133,22 +135,13 @@ namespace Kesco.App.Web.Docs.Directions
 
             if (Dir.SotrudnikField.ValueString.Length == 0 || empl == null || empl.Unavailable)
             {
-                RefreshSimInfo();
                 Dir.Description = "";
                 return;
             }
 
 
             Dir.SotrudnikLanguageField.Value = empl.Language;
-
-            if (empl.SimRequired)
-                SetPhoneEquip(16, "0");
-
-            if (empl.SimGprsPackage)
-                SetPhoneEquip(32, "0");
-
-            RefreshSimInfo();
-
+            
             SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.ДоступЧерезVPN, empl.IsVPNGroup ? "1" : "0");
 
             Dir.AccessEthernetField.ValueString = (empl.Login.Length > 0 || empl.IsVPNGroup || empl.IsInternetGroup)
@@ -167,6 +160,7 @@ namespace Kesco.App.Web.Docs.Directions
         private void SetEthernetData()
         {
             var empl = Dir.Sotrudnik;
+            if (empl == null) return;
 
             if (empl.Login.Length > 0)
                 Dir.LoginField.Value = empl.Login;
@@ -201,6 +195,7 @@ namespace Kesco.App.Web.Docs.Directions
             RefreshPhoto();
             RefreshSotrudnikAOrg();
             RefreshSotrudnikFinOrg();
+            RefreshSotrudnikCadrWorkPlaces();
 
             RefreshSotrudnikPost();
             RefreshSupervisorInfo();
@@ -283,7 +278,6 @@ namespace Kesco.App.Web.Docs.Directions
             GetCompType();
 
             DisplayDataPhoneDesk(true);
-            DisplayDataSim();
             DisplayDataEthernet();
         }
 
@@ -520,10 +514,6 @@ namespace Kesco.App.Web.Docs.Directions
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            //var x = "http://sip-hnov.kescom.com/api/authenticate?key=" + HttpUtility.UrlEncode("dk4E%xtm@7amb$") +
-            //        "&username=apiadmin&password=" + HttpUtility.UrlEncode("5x5=25");
-
-
             if (!V4IsPostBack && !DocEditable)
             {
                 V4Redirect("DirectionITSigned.aspx");
@@ -572,6 +562,23 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 );
         }
 
+        protected override void SetDocMenuButtons()
+        {
+            base.SetDocMenuButtons();
+            
+            var btnOldVersion = new Button
+            {
+                ID = "btnOldVersion",
+                V4Page = this,
+                Text = LocalResx.GetString("btnOldVersion"),
+                Title = LocalResx.GetString("btnOldVersion"),
+                IconJQueryUI = ButtonIconsEnum.Alert,
+                Width = 125,
+                OnClick = string.Format("v4_windowOpen('{0}','_self');", HttpUtility.JavaScriptStringEncode(WebExtention.UriBuilder(ConfigurationManager.AppSettings["URI_Direction_OldVersion"], CurrentQS)))
+            };
+            AddMenuButton(btnOldVersion);
+        }
+
         //protected override void SaveDocument()
         //{
         //    base.SaveDocument();
@@ -589,10 +596,10 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             RefreshSotrudnikPost();
             RefreshSotrudnikAOrg();
             RefreshSotrudnikFinOrg();
+            RefreshSotrudnikCadrWorkPlaces();
             RefreshSupervisorInfo();
             RefreshMobilphoneArea();
             RefreshWorkPlace("");
-            RefreshSimInfo();
             Dir.Sotrudnik.RequiredRefreshInfo = false;
         }
 
@@ -734,11 +741,20 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         protected void efSotrudnik_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             SotrudnikClearInfo();
+            
             if (Dir.SotrudnikField.ValueString.Length > 0)
             {
                 var employee = Dir.Sotrudnik;
                 if (employee != null && !employee.Unavailable)
                 {
+                    if (!string.IsNullOrEmpty(employee.CommonEmployeeID))
+                    {
+                        ShowMessage(LocalResx.GetString("_NTF_СотрудникВГруппе1"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efSotrudnik.HtmlID);
+                        Dir.SotrudnikField.ValueString = "";
+                        efSotrudnik.Focus();
+                        return;
+                    }
+
                     var dt = Dir.SupervisorData;
                     if (dt.Rows.Count != 0)
                     {
@@ -785,13 +801,20 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         {
             SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.ДоступЧерезVPN, e.NewValue);
             DisplayDataWorkPlace();
-            if (e.NewValue.Equals("1") && Dir.AccessEthernetField.ValueString != "1")
+            if (e.NewValue.Equals("1") )
             {
-                Dir.AccessEthernetField.Value = 1;
+                if (Dir.AccessEthernetField.ValueString != "1")
+                    Dir.AccessEthernetField.Value = 1;
+
+                efAccessEthernet.IsDisabled = true;
                 DisplayDataEthernet();
 
                 SetRequiredLogin();
                 SetRequiredMailName();
+            }
+            else
+            {
+                efAccessEthernet.IsDisabled = false;
             }
         }
 
@@ -820,20 +843,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
         {
         }
 
-        protected void efPhoneSim_OnChanged(object sender, ProperyChangedEventArgs e)
-        {
-            SetPhoneEquip(16, e.NewValue);
-            if ((Dir.PhoneEquipField.ValueInt & 16) == 16) SetPhoneEquip(32, "1");
-            DisplayDataSim();
-            RefreshSimInfo();
-        }
-
-        protected void efAccessInternetGPRS_OnChanged(object sender, ProperyChangedEventArgs e)
-        {
-            SetPhoneEquip(32, e.NewValue);
-            RefreshSimInfo();
-        }
-
+        
         protected void efComputer_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             SetCompType(2, e.NewValue);
@@ -846,6 +856,13 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
         protected void efAccessEthernet_OnChanged(object sender, ProperyChangedEventArgs e)
         {
+            var bitMask = Dir.WorkPlaceTypeField.ValueInt;
+            if ((bitMask & 4) == 4 && e.NewValue == "0")
+            {
+                efAccessEthernet.Value = "1";
+                efAccessEthernet.IsDisabled = true;
+                return;
+            }
             DisplayDataEthernet();
 
             SetEthernetData();
@@ -866,16 +883,24 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
         protected void efSotrudnikParent_OnChanged(object sender, ProperyChangedEventArgs e)
         {
+            if (Dir.SotrudnikParentField.ValueString.Length > 0 && Dir.SotrudnikParent != null && !Dir.SotrudnikParent.Unavailable && Dir.SotrudnikParent.CommonEmployeeID.Length>0)
+            {
+                ShowMessage(LocalResx.GetString("_NTF_СотрудникВГруппе2"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efSotrudnikParent.HtmlID);
+                Dir.SotrudnikParentField.ValueString = "";
+                return;
+            }
+
             if (Dir.SotrudnikField.Value != null && Dir.SotrudnikField.Value.Equals(Dir.SotrudnikParentField.Value))
             {
                 Dir.SotrudnikParentField.ValueString = e.OldValue;
-                ShowMessage(LocalResx.GetString("_NTF_СотрудникСовпадает"), "Сообщение", MessageStatus.Warning,
+                ShowMessage(LocalResx.GetString("_NTF_СотрудникСовпадает"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning,
                     efSotrudnikParent.HtmlID);
             }
             else if (Dir.SotrudnikParentField.ValueString.Length > 0)
-                ShowConfirm(
-                    string.Format(LocalResx.GetString("_Msg_FillFormByEmpl") + " " + Dir.SotrudnikParent.FullName + "?"),
-                    "cmdasync('cmd', 'SotrudnikParentSetInfo');", null);
+                if (Dir.SotrudnikParent != null)
+                    ShowConfirm(
+                        string.Format(LocalResx.GetString("_Msg_FillFormByEmpl") + " " + Dir.SotrudnikParent.FullName + "?"),
+                        "cmdasync('cmd', 'SotrudnikParentSetInfo');", null);
 
             efSotrudnikParent.IsRequired = Dir.SotrudnikParentField.ValueString.Length <= 0;
         }
@@ -1041,6 +1066,15 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             RefreshControlText(w, "divSotrudnikFinOrg");
         }
 
+        private void RefreshSotrudnikCadrWorkPlaces()
+        {
+            var w = new StringWriter();
+            Render.SotrudnikCadrWorkPlaces(this, w, Dir);
+            RefreshControlText(w, "divSotrudnikCadrWorkPlaces");
+        }
+
+
+
         private void RefreshSupervisorInfo()
         {
             var w = new StringWriter();
@@ -1080,14 +1114,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
             RefreshControlText(w, "efPRoles_Role_Description");
         }
-
-        private void RefreshSimInfo()
-        {
-            var w = new StringWriter();
-            ValidationMessages.CheckSimInfo(this, w, Dir);
-            JS.Write("$(\"#divSimInfo\").html('{0}');", HttpUtility.JavaScriptStringEncode(w.ToString()));
-        }
-
+        
         #endregion
 
         #region Positions
@@ -2120,11 +2147,6 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             DisplayMobilPhone();
         }
 
-        private void DisplayDataSim()
-        {
-            efAccessInternetGPRS.IsDisabled = (Dir.PhoneEquipField.ValueInt & 16) != 16;
-        }
-
         private void DisplayDataEthernet()
         {
             JS.Write("directions_Data_Lan({0});", Dir.AccessEthernetField.ValueInt);
@@ -2159,12 +2181,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
             if ((bitMask & 8) == 8) efPhoneIPCam.Value = "1";
             else efPhoneIPCam.Value = "0";
-
-            if ((bitMask & 16) == 16) efPhoneSim.Value = "1";
-            else efPhoneSim.Value = "0";
-
-            if ((bitMask & 32) == 32) efAccessInternetGPRS.Value = "1";
-            else efAccessInternetGPRS.Value = "0";
+            
         }
 
         private void DisplayPLExit()

@@ -65,7 +65,10 @@ namespace Kesco.App.Web.Docs.Directions
             if (dt.Rows.Count > 0)
             {
                 dir.SotrudnikPostField.Value = dt.Rows[0]["ДолжностьСотрудника"];
-                page.RenderNtf(w, new List<string> { dir.SotrudnikPostField.ValueString }, NtfStatus.Information);
+                if (dir.SotrudnikPostField.Value.ToString()=="")
+                    page.RenderNtf(w, new List<string> { "у сотрудника нет должности в штатном расписании" }, NtfStatus.Error);
+                else 
+                    page.RenderNtf(w, new List<string> { dir.SotrudnikPostField.ValueString }, NtfStatus.Information);
             }
             else
                 page.RenderNtf(w, new List<string> { "у сотрудника нет должности в штатном расписании" }, NtfStatus.Error);
@@ -162,8 +165,12 @@ namespace Kesco.App.Web.Docs.Directions
                 !employee.OrganizationId.Equals(dt.Rows[0]["КодЛицаКомпанииСотрудника"]))
             {
                 dir.SotrudnikPostField.Value = dt.Rows[0]["ДолжностьСотрудника"];
-                PersonData(page, wr, dir, dt.Rows[0]["КодЛицаКомпанииСотрудника"].ToString(), "", NtfStatus.Information);
-                sInfo.Add(wr.ToString());
+                if (dt.Rows[0]["КодЛицаКомпанииСотрудника"].ToString().Length > 0)
+                {
+                    PersonData(page, wr, dir, dt.Rows[0]["КодЛицаКомпанииСотрудника"].ToString(), "",
+                        NtfStatus.Information);
+                    sInfo.Add(wr.ToString());
+                }
             }
 
             if (sInfo.Count > 0)
@@ -200,8 +207,10 @@ namespace Kesco.App.Web.Docs.Directions
         public void WorkPlaceType(EntityPage page, TextWriter w, Direction dir, bool renderDelete=true)
         {
             var bitmask = dir.WorkPlaceTypeField.ValueInt;
-            StringBuilder sb = new StringBuilder();
-            
+            if (bitmask == 0 && dir.WorkPlaceField.ValueString.Length > 0)
+                bitmask = 1;
+
+           
             w.Write("<fieldset class=\"marginL paddingT paddingB paddingR marginT disp_inlineBlock\">");
             w.Write("<legend>{0}:</legend>", "Организовать сотруднику");
             if ((bitmask & 1) == 1)
@@ -217,7 +226,7 @@ namespace Kesco.App.Web.Docs.Directions
                 w.Write("<div class=\"marginL marginT disp_inlineBlockS\">{0}</div><br>", "рабочее место вне офиса");
 
             if ((bitmask & 4) == 4)
-                w.Write("<div class=\"marginL marginT disp_inlineBlockS\">{0}</div>", "доступ к корпоративной сети через Internet");
+                w.Write("<div class=\"marginL marginT disp_inlineBlockS\">{0}</div>", "учетную запись без создания рабочего места");
 
             w.Write("</fieldset>");
         }
@@ -315,5 +324,41 @@ namespace Kesco.App.Web.Docs.Directions
 
             return empls;
         }
+
+
+        public void SotrudnikCadrWorkPlaces (EntityPage page, TextWriter w, Direction dir)
+        {
+            
+            if (dir.SotrudnikField.ValueString.Length == 0)
+                return;
+
+            var wr = new StringWriter();
+            var wps = dir.Sotrudnik.Workplaces;
+            
+            foreach (var wp in wps)
+            {
+                var icon = "";
+                var title = "";
+
+                wp.GetWorkPlaceSpecifications(out icon, out title);
+
+                wr.Write("<div style=\"margin-left:30px;\">");
+                page.RenderLinkLocation(wr, wp.Id, wp.Id, wp.Path, NtfStatus.Information);
+                if (icon.Length > 0)
+                    wr.Write("&nbsp;<img width=\"10\" height=\"10\" src=\"/styles/{0}\" title=\"{1}\" border=0/>", icon, title);
+                wr.Write("</div>");
+            }
+            var text = wr.ToString();
+            if (text.Length > 0)
+            {
+                text = "Рабочие места сотрудника:" + text;
+                page.RenderNtf(w, new List<string>(new[] { text }), NtfStatus.Information);
+            }
+            wr = new StringWriter();
+            wr.Write("сотруднику выдано оборудование, которое находится не на его рабочем месте");
+            page.RenderNtf(w, new List<string>(new[] { wr.ToString() }), NtfStatus.Error);
+            
+        }
+
     }
 }

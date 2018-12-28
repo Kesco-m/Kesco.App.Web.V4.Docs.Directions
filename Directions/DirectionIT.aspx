@@ -24,16 +24,17 @@
                 <div class="disp_inline w300" style="height:1px"></div><br/>
                 
                 <div class="marginL disp_inline">
-                    <div class="disp_inlineBlock w75">
+                    <div class="disp_inlineBlock w100">
                         Сотрудник:
                     </div>
                     <div class="marginL disp_inlineBlockS">
-                        <dbs:DBSEmployee ID="efSotrudnik" runat="server" Width="258" CLID="3" IsCaller="True" CallerType="Employee" AutoSetSingleValue="True" OnChanged="efSotrudnik_OnChanged" OnBeforeSearch="efSotrudnik_OnBeforeSearch" NextControl="efSupervisor"></dbs:DBSEmployee>
+                        <dbs:DBSEmployee ID="efSotrudnik" runat="server" Width="260" CLID="3" IsCaller="True" CallerType="Employee" AutoSetSingleValue="True" OnChanged="efSotrudnik_OnChanged" OnBeforeSearch="efSotrudnik_OnBeforeSearch" NextControl="efSupervisor"></dbs:DBSEmployee>
                         <div>
                             <span id="spSotrudnikPost" style="display: inline-block"><%Render.SotrudnikPost(this, Response.Output, Dir);%></span>
                             <span id="spSotrudnikAOrg" style="display: inline-block"><%Render.SotrudnikAOrg(this, Response.Output, Dir);%></span>
                         </div>
                         <div id = "divSotrudnikFinOrg"><%Render.SotrudnikFinOrg(this, Response.Output, Dir);%></div>
+                        <div id = "divSotrudnikCadrWorkPlaces"><%Render.SotrudnikCadrWorkPlaces(this, Response.Output, Dir);%></div>
                         <div id = "divSupervisor"><%Render.Supervisor(this, Response.Output, Dir);%></div>
                     </div>
                 </div>
@@ -70,7 +71,7 @@
                                 <base:CheckBox ID="efWorkPlaceType4" runat="server" OnChanged="efWorkPlaceType4_OnChanged"></base:CheckBox>
                             </div>
                              <div class="marginL disp_inlineBlockS">
-                               доступ к корпоративной сети через Internet
+                               учетную запись без создания рабочего места
                             </div>
                         </div>
                     </div>
@@ -118,27 +119,7 @@
                               <base:ComboBox ID="efPLExit" runat="server" Width="185px" EmptyValueExist="False" OnChanged="efPLExit_OnChanged"></base:ComboBox>
                         </div>
                     </div>
-                    
-                    <div class="disp_inlineBlock marginT" style="display: none" data-wp="3">
-                        <div class="disp_inlineBlockS">
-                                <base:CheckBox ID="efPhoneSim" runat="server" OnChanged="efPhoneSim_OnChanged"></base:CheckBox>
-                        </div>
-                        <div class="disp_inlineBlockS">
-                                SIM-карта для моб. тел.
-                        </div>
-
-                        <div class="disp_inlineBlockS">
-                                <div class="marginL disp_inlineBlockS">
-                                    <base:CheckBox ID="efAccessInternetGPRS" runat="server" IsDisabled="True" OnChanged="efAccessInternetGPRS_OnChanged"></base:CheckBox>
-                                </div>
-                                <div class="disp_inlineBlockS">
-                                    Включить заранее предоплаченный интернет
-                                </div>
-                        </div>
-                        <div id="divSimInfo"><% ValidationMessages.CheckSimInfo(this, Response.Output, Dir);%></div>
-                    </div>  
-                    
-
+                   
                 </div>
             </div>
             <br style="display: none" data-wp="3"/>
