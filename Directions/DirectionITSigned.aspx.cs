@@ -1111,7 +1111,11 @@ namespace Kesco.App.Web.Docs.Directions
                         dr[3] = p.RoleObject.Description;
                     }
                     else
-                        dr[2] = dr[3] = "";
+                    {
+                        dr[2] = "#" + p.RoleId;
+                        dr[3] = "";
+                    }
+                    
 
                     dr[4] = (p.PersonId == 0) ? "" : p.PersonId.ToString();
                     dr[5] = p.PersonName;
@@ -1195,8 +1199,16 @@ namespace Kesco.App.Web.Docs.Directions
                 dr[0] = r.RoleId;
                 if (r.RoleId > 0)
                 {
-                    dr[1] = r.RoleName;
-                    dr[2] = r.RoleDescription;
+                    if (!string.IsNullOrEmpty(r.RoleName))
+                    {
+                        dr[1] = r.RoleName;
+                        dr[2] = r.RoleDescription;
+                    }
+                    else
+                    {
+                        dr[1] = "#" + r.RoleId;
+                        dr[2] = "";
+                    }
                 }
                 else
                     dr[1] = dr[2] = "";
