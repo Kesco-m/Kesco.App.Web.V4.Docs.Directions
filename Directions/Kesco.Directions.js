@@ -443,6 +443,53 @@ function directions_PositionAG_Clear() {
     });
 }
 
+//================================================= Дополнительный функиции
+
+function directions_openAnotherEquipment() {
+    cmd("cmd", "OpenAnotherEquipmentDetails");
+}
+
+function directions_openEquipment(idLocation) {
+    cmd("cmd", "OpenEquipmentDetails", "IdLocation", idLocation);
+}
+
+//================================================= Выбор рабочего места
+
+directions_anotherEquipmentList.form = null;
+function directions_anotherEquipmentList() {
+
+    if (null == directions_anotherEquipmentList.form) {
+
+        var title = directions_clientLocalization.DIRECTIONS_FORM_ADVINFO_Title;
+        var width = 483;
+        var height = 253;
+        var onOpen = function () { directions_setElementFocus(null, "btnAEQ_Add"); };
+        var buttons = [
+            {
+                id: "btnAEQ_Add",
+                text: "Ок",
+                icons: {
+                    primary: v4_buttonIcons.Ok
+                },
+                click: directions_closeAnotherEquipmentList
+            }
+        ];
+
+            directions_anotherEquipmentList.form = v4_dialog("divAdvInfoValidation", $("#divAdvInfoValidation"), title, width, height, onOpen, null, buttons);
+        
+    }
+
+        directions_anotherEquipmentList.form.dialog("open");
+}
+
+function directions_closeAnotherEquipmentList() {
+    if (null != directions_anotherEquipmentList.form) {
+        var obj = document.getElementById('divAdvInfoValidation_Body');
+        if (obj) obj.innerHTML = '';
+        directions_anotherEquipmentList.form.dialog("close");
+    }
+}
+
 //================================================= Callback confirm
 function directions_deleteTypeAllCallBack(id, close) {
     return 'cmdasync("cmd", "DeletePositionByCatalog", "catalog",' + id + ', "closeForm", "' + (close == 1 ? 1 : 0) + '");'; 
@@ -466,4 +513,5 @@ function directions_deleteRoleAllCallBack(id) {
 function directions_deleteRoleCallBack(id, close) {
     return 'cmdasync("cmd", "DeletePositionRoleByGuid", "guid", "' + id + '", "closeForm", "' + (close == 1 ? 1 : 0) + '");';
 }
+
 

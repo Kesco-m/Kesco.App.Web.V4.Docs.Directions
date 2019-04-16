@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
@@ -30,10 +31,7 @@ namespace Kesco.App.Web.Docs.Directions
     {
         private RenderHelper _render;
         protected DataTable dtEquip;
-
-        protected ResourceManager LocalResx = new ResourceManager("Kesco.App.Web.Docs.Directions.DirectionIT",
-            Assembly.GetExecutingAssembly());
-
+        
         protected RenderHelper Render
         {
             get { return _render ?? (_render = new RenderHelper()); }
@@ -46,33 +44,33 @@ namespace Kesco.App.Web.Docs.Directions
 
         private void SetCultureText()
         {
-            hAccessEml = LocalResx.GetString("hAccessEml");
-            hDadaEml = LocalResx.GetString("hDadaEml");
-            hEquipEml = LocalResx.GetString("hEquipEml");
-            lAEOfiice = LocalResx.GetString("lAEOfiice");
-            lAEVpn = LocalResx.GetString("lAEVpn");
-            lAIMobile = LocalResx.GetString("lAIMobile");
-            lAIModem = LocalResx.GetString("lAIModem");
-            lAIOffice = LocalResx.GetString("lAIOffice");
-            lCompN = LocalResx.GetString("lCompN");
-            lCompP = LocalResx.GetString("lCompP");
-            lCompT = LocalResx.GetString("lCompT");
-            lPhoneDect = LocalResx.GetString("lPhoneDect");
-            lPhoneDesk = LocalResx.GetString("lPhoneDesk");
-            lPhoneIP = LocalResx.GetString("lPhoneIP");
-            lPhoneIPCam = LocalResx.GetString("lPhoneIPCam");
-            lPhoneSim = LocalResx.GetString("lPhoneSim");
+            hAccessEml = Resx.GetString("DIRECTIONS_hAccessEml");
+            hDadaEml = Resx.GetString("DIRECTIONS_hDadaEml");
+            hEquipEml = Resx.GetString("DIRECTIONS_hEquipEml");
+            lAEOfiice = Resx.GetString("DIRECTIONS_lAEOfiice");
+            lAEVpn = Resx.GetString("DIRECTIONS_lAEVpn");
+            lAIMobile = Resx.GetString("DIRECTIONS_lAIMobile");
+            lAIModem = Resx.GetString("DIRECTIONS_lAIModem");
+            lAIOffice = Resx.GetString("DIRECTIONS_lAIOffice");
+            lCompN = Resx.GetString("DIRECTIONS_lCompN");
+            lCompP = Resx.GetString("DIRECTIONS_lCompP");
+            lCompT = Resx.GetString("DIRECTIONS_lCompT");
+            lPhoneDect = Resx.GetString("DIRECTIONS_lPhoneDect");
+            lPhoneDesk = Resx.GetString("DIRECTIONS_lPhoneDesk");
+            lPhoneIP = Resx.GetString("DIRECTIONS_lPhoneIP");
+            lPhoneIPCam = Resx.GetString("DIRECTIONS_lPhoneIPCam");
+            lPhoneSim = Resx.GetString("DIRECTIONS_lPhoneSim");
 
-            lPLExitInSide = LocalResx.GetString("lPLExitInSide");
-            lPLExitOutCountry = LocalResx.GetString("lPLExitOutCountry");
-            lPLExitOutTown = LocalResx.GetString("lPLExitOutTown");
-            lPLExitTown = LocalResx.GetString("lPLExitTown");
+            lPLExitInSide = Resx.GetString("DIRECTIONS_lPLExitInSide");
+            lPLExitOutCountry = Resx.GetString("DIRECTIONS_lPLExitOutCountry");
+            lPLExitOutTown = Resx.GetString("DIRECTIONS_lPLExitOutTown");
+            lPLExitTown = Resx.GetString("DIRECTIONS_lPLExitTown");
 
-            lSotrudnikParent1 = LocalResx.GetString("lSotrudnikParent1");
-            lSotrudnikParent2 = LocalResx.GetString("lSotrudnikParent2");
+            lSotrudnikParent1 = Resx.GetString("DIRECTIONS_lSotrudnikParent1");
+            lSotrudnikParent2 = Resx.GetString("DIRECTIONS_lSotrudnikParent2");
 
-            lRequire = LocalResx.GetString("lRequire");
-            lComplete = LocalResx.GetString("lComplete");
+            lRequire = Resx.GetString("DIRECTIONS_lRequire");
+            lComplete = Resx.GetString("DIRECTIONS_lComplete");
         }
 
         private void CreateDataTableEquipment()
@@ -166,6 +164,12 @@ namespace Kesco.App.Web.Docs.Directions
                 SetCultureText();
                 CreateDataTableEquipment();
             }
+
+            JS.Write(@"directions_clientLocalization = {{
+DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
+}};",
+                Resx.GetString("DIRECTIONS_FORM_ADVINFO_Title")
+                );
         }
 
         protected override void SetDocMenuButtons()
@@ -186,8 +190,8 @@ namespace Kesco.App.Web.Docs.Directions
                 {
                     ID = "btnExecute",
                     V4Page = this,
-                    Text = LocalResx.GetString("btnGO"),
-                    Title = LocalResx.GetString("btnGO"),
+                    Text = Resx.GetString("DIRECTIONS_btnGO"),
+                    Title = Resx.GetString("DIRECTIONS_btnGO"),
                     IconJQueryUI = ButtonIconsEnum.Ok,
                     Width = 105,
                     OnClick = "Wait.render(true); cmdasync('cmd','Execute');"
@@ -199,10 +203,10 @@ namespace Kesco.App.Web.Docs.Directions
             {
                 ID = "btnOldVersion",
                 V4Page = this,
-                Text = LocalResx.GetString("btnOldVersion"),
-                Title = LocalResx.GetString("btnOldVersion"),
+                Text = Resx.GetString("DIRECTIONS_btnOldVersion"),
+                Title = Resx.GetString("DIRECTIONS_btnOldVersion"),
                 IconJQueryUI = ButtonIconsEnum.Alert,
-                Width = 125,
+                Width = 150,
                 OnClick = string.Format("v4_windowOpen('{0}','_self');", HttpUtility.JavaScriptStringEncode(WebExtention.UriBuilder(ConfigurationManager.AppSettings["URI_Direction_OldVersion"], CurrentQS)))
             };
             AddMenuButton(btnOldVersion);
@@ -233,6 +237,12 @@ namespace Kesco.App.Web.Docs.Directions
                 case "Execute":
                     Execute();
                     break;
+                case "OpenAnotherEquipmentDetails":
+                    Render.EquipmentAnotherPlace(this, "divAdvInfoValidation_Body", Dir);
+                    break;
+                case "OpenEquipmentDetails":
+                    Render.EquipmentInPlace(this, "divAdvInfoValidation_Body", Dir, param["IdLocation"]);
+                    break;
                 default:
                     base.ProcessCommand(cmd, param);
                     break;
@@ -252,7 +262,7 @@ namespace Kesco.App.Web.Docs.Directions
 
         private void GetNtfFormatMsg(TextWriter w, string _msg, bool br)
         {
-            w.Write("{1}<font class='NtfMsg'>{0}</font>", _msg, (br ? "<br>" : ""));
+            w.Write("{1}<font class='v4NtfError'>{0}</font>", _msg, (br ? "<br>" : ""));
         }
 
 
@@ -296,7 +306,7 @@ namespace Kesco.App.Web.Docs.Directions
             if (Dir.RedirectNumField.ValueString.Length == 0 &&
                 (bitMask & 1) != 1 && (bitMask & 2) != 2 && (bitMask & 4) != 4) fl = false;
 
-            w.Write("<div class=\"marginL marginT\">{0}:</div>", Dir.RedirectNumField.Name);
+            w.Write("<div class=\"marginT\">{0}:</div>", Resx.GetString("DIRECTIONS_Field_MobilPhone"));
             w.Write("<div class=\"marginL2 marginT\">");
             if (Dir.RedirectNumField.ValueString.Length > 0)
             {
@@ -305,7 +315,7 @@ namespace Kesco.App.Web.Docs.Directions
                 Dir.FormatingMobilNumber(ref _phoneNum);
 
                 w.Write(
-                    "<a href='#' title='" + LocalResx.GetString("_Msg_CopyBuffer") +
+                    "<a href='#' title='" + Resx.GetString("DIRECTIONS_Msg_CopyBuffer") +
                     "' onclick=\"copyToClipboard('{0}')\">", _phoneNum);
                 w.Write(Dir.RedirectNumField.ValueString);
                 w.Write("</a>");
@@ -325,7 +335,7 @@ namespace Kesco.App.Web.Docs.Directions
                 if (dv[i]["НомерТелефона"].Equals(DBNull.Value))
                 {
                     w.Write("<span ><img src='/styles/sim.gif' border=0>");
-                    w.Write(LocalResx.GetString("_Msg_ВыданаSim"));
+                    w.Write(Resx.GetString("DIRECTIONS_Msg_ВыданаSim"));
                     w.Write("</span>");
                     continue;
                 }
@@ -334,7 +344,7 @@ namespace Kesco.App.Web.Docs.Directions
 
 
                 w.Write(
-                    "<a href='#' title='" + LocalResx.GetString("_Msg_CopyBuffer") +
+                    "<a href='#' title='" + Resx.GetString("DIRECTIONS_Msg_CopyBuffer") +
                     "' onclick=\"copyToClipboard('{0}')\">", _phoneNum);
                 w.Write(_phoneNum);
                 w.Write("</a>");
@@ -343,9 +353,9 @@ namespace Kesco.App.Web.Docs.Directions
             if (!fl)
             {
                 if ((bitMask & 16) != 16)
-                    GetNtfFormatMsg(w, LocalResx.GetString("_Msg_NoSpecified"), false);
+                    GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_NoSpecified"), false);
                 else
-                    w.Write(LocalResx.GetString("_Msg_SimGive"));
+                    w.Write(Resx.GetString("DIRECTIONS_Msg_SimGive"));
             }
             w.Write("</div>");
         }
@@ -361,7 +371,7 @@ namespace Kesco.App.Web.Docs.Directions
 
         protected void RenderData(TextWriter w)
         {
-            w.Write("<table class='bgcolor marginT2' cellpadding=0 cellspacing=0 style='width:96%;' >");
+            w.Write("<table class='bgcolor marginT2' cellpadding=0 cellspacing=0 style='width:99%;' >");
 
             RenderSotrudnikInfo(w);
 
@@ -421,13 +431,13 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%' colspan=3>");
-            w.Write(Dir.PhoneEquipField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_Phone") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL' nowrap>");
             if (Dir.PhoneEquipField.ValueString.Length == 0)
-                w.Write(LocalResx.GetString("_Msg_NoRequired"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             else
             {
                 bitMask = Dir.PhoneEquipField.ValueInt;
@@ -446,7 +456,12 @@ namespace Kesco.App.Web.Docs.Directions
                 {
                     col.Add(lPhoneDect);
                 }
-               
+
+                for (int i = 0; i < col.Count; i++)
+                {
+                    if (i > 0) w.Write("<br>");
+                    w.Write(col[i]);
+                }
             }
             w.Write("</td>");
             w.Write("<td valign='top' noWrap width='100%' align='left' style='PADDING-LEFT:30px'>");
@@ -484,54 +499,51 @@ namespace Kesco.App.Web.Docs.Directions
             var flC = (Dir.PhoneEquipField.ValueString.Length == 0 ||
                        (Dir.PhoneEquipField.ValueString.Length != 0 && bitmask == 0));
 
-            sb.AppendFormat("<table cellpadding=0 cellspacing=0 {0}>", flC ? "class='NoCI'" : "");
-
+            
             dv.Table = dtEquip;
 
 
-            if (dtEquip.Columns.Contains("ЕстьТелефонныйНомер"))
-                dv.RowFilter = "(НомерТелефона IS NOT NULL AND ЕстьХарактеристикиSIM=0) OR ЕстьТелефонныйНомер > 0";
-            else
-                dv.RowFilter = "(НомерТелефона IS NOT NULL AND ЕстьХарактеристикиSIM=0)";
+            dv.RowFilter = dtEquip.Columns.Contains("ЕстьТелефонныйНомер")
+                ? "(НомерТелефона IS NOT NULL AND ЕстьХарактеристикиSIM=0) OR ЕстьТелефонныйНомер > 0"
+                : "(НомерТелефона IS NOT NULL AND ЕстьХарактеристикиSIM=0)";
 
             dv.Sort = "НомерТелефона, Оборудование";
 
             if (dv.Count > 0)
             {
                 fl = true;
-                StringWriter wr;
+                var className = (!flC ? "class='NoCI'" : "");
+
                 for (var i = 0; i < dv.Count; i++)
                 {
                     if (i == 0)
+                        sb.AppendFormat("<div>&nbsp;</div>");
+
+                    sb.AppendFormat("<div class=\"marginL {0}\">", (flC ? "NoCI" : ""));
+                    
+                    var phoneNumber = dv[i]["НомерТелефона"].Equals(DBNull.Value)
+                        ? ""
+                        : dv[i]["НомерТелефона"].ToString();
+
+                    if (phoneNumber.Length>0)
+                        sb.AppendFormat("{0} ", dv[i]["НомерТелефона"]);
+                    
+                    var empls = Render.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), false);
+                    using (var wr = new StringWriter())
                     {
-                        sb.AppendFormat("<tr>");
-                        sb.AppendFormat("<td colspan=2>");
-                        sb.AppendFormat("&nbsp;");
-                        sb.AppendFormat("</td>");
-                        sb.AppendFormat("</tr>");
+                        RenderLinkEquipment(wr, dv[i]["КодОборудования"].ToString(), (flC ? "class=\"NoCI\"" : ""),
+                            "title=\"" + Resx.GetString("DIRECTIONS_Msg_OpenEquip") + "\"");
+                        wr.Write(dv[i]["Оборудование"]);
+                        RenderLinkEnd(wr);
+                        wr.Write(empls);
+
+                        sb.AppendFormat("{0}", wr);
                     }
-                    sb.AppendFormat("<tr>");
-                    sb.AppendFormat("<td noWrap>");
-                    sb.AppendFormat("{0}", dv[i]["НомерТелефона"]);
-                    sb.AppendFormat("</td>");
-                    sb.AppendFormat("<td noWrap>");
-                    var className = (flC ? "class='NoCI'" : "");
-                    var empls = Render.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), className);
-                    wr = new StringWriter();
-                    RenderLinkEquipment(wr, dv[i]["КодОборудования"].ToString(), className,
-                        "title=\"" + LocalResx.GetString("_Msg_OpenEquip") + "\"");
-                    wr.Write(dv[i]["Оборудование"]);
-                    RenderLinkEnd(wr);
-                    wr.Write(empls);
 
-                    sb.AppendFormat("&nbsp;{0}", wr);
-
-                    sb.AppendFormat("</td>");
-                    sb.AppendFormat("</tr>");
+                    sb.Append("</div>");
                 }
             }
-            sb.AppendFormat("</table>");
-
+            
             if (fl)
                 w.Write(sb.ToString());
             else
@@ -559,13 +571,13 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.CompTypeField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_Computer") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (Dir.CompTypeField.ValueString.Length == 0)
-                w.Write(LocalResx.GetString("_Msg_NoRequired"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             else
             {
                 var bitMask = Dir.CompTypeField.ValueInt;
@@ -590,7 +602,7 @@ namespace Kesco.App.Web.Docs.Directions
                 if ((bitMask & 2) == 2 || (bitMask & 1) == 1)
                 {
                     if (Dir.AccessEthernetField.ValueString.Length == 0)
-                        GetNtfFormatMsg(w, LocalResx.GetString("_Msg_NoAccessEthernet"));
+                        GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_NoAccessEthernet"));
                 }
             }
             w.Write("</td>");
@@ -616,21 +628,24 @@ namespace Kesco.App.Web.Docs.Directions
 
             for (var i = 0; i < dv.Count; i++)
             {
-                if (i > 0) w.Write("<br/>");
+                if (i == 0)
+                    w.Write("<div>&nbsp;</div>");
                 var className = (!flC ? "class='NoCI'" : "");
-                var empls = Render.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), className);
+
+                w.Write("<div class=\"marginL {0}\">", className);
+                var empls = Render.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(),false);
                 RenderLinkEquipment(w, dv[i]["КодОборудования"].ToString(), className,
-                    "title=\"" + LocalResx.GetString("_Msg_OpenEquip") + "\"");
+                    "title=\"" + Resx.GetString("DIRECTIONS_Msg_OpenEquip") + "\"");
                 w.Write(dv[i]["Оборудование"]);
                 RenderLinkEnd(w);
                 w.Write(empls);
+                w.Write("</div>");
             }
         }
 
 
         private void RenderAdvEquip(TextWriter w)
         {
-            if (Dir.AdvEquipField.ValueString.Length == 0) return;
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDBB' valign='top'>");
             RenderAdvEquipRequired(w);
@@ -646,13 +661,13 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.AdvEquipField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_AdvEq") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (Dir.AdvEquipField.ValueString.Length == 0)
-                w.Write(LocalResx.GetString("_Msg_NoRequired"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             else
                 w.Write(Dir.AdvEquipField.ValueString);
             w.Write("</td>");
@@ -682,17 +697,21 @@ namespace Kesco.App.Web.Docs.Directions
                 return;
             }
 
+            var className = (!flC ? "class='NoCI'" : "");
 
             for (var i = 0; i < dv.Count; i++)
             {
-                if (i > 0) w.Write("<br/>");
-                var className = (!flC ? "class='NoCI'" : "");
-                var empls = Render.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), className);
+                if (i == 0)
+                    w.Write("<div>&nbsp;</div>");
+
+                w.Write("<div class=\"marginL {0}\">", !flC ? "NoCI" : "");
+                var empls = Render.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), false);
                 RenderLinkEquipment(w, dv[i]["КодОборудования"].ToString(), className,
-                    "title=\"" + LocalResx.GetString("_Msg_OpenEquip") + "\"");
-                w.Write(dv[i]["Оборудование"]);
+                    "title=\"" + HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Msg_OpenEquip")) + "\"");
+                w.Write(HttpUtility.HtmlEncode(dv[i]["Оборудование"]));
                 RenderLinkEnd(w);
                 w.Write(empls);
+                w.Write("</div>");
             }
         }
 
@@ -714,7 +733,7 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.AccessEthernetField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_AEAccess") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
@@ -727,12 +746,12 @@ namespace Kesco.App.Web.Docs.Directions
             if ((bitMask & 1) == 1 || (bitMask & 2) == 2)
                 col.Add((Dir.LoginField.ValueString.Length > 0) ? Dir.LoginField.ValueString : lAEOfiice);
             else
-                col.Add(LocalResx.GetString("_Msg_NoRequired") + lAEOfiice);
+                col.Add(Resx.GetString("DIRECTIONS_Msg_NoRequired") + lAEOfiice);
 
             if ((bitMask & 2) == 2)
                 col.Add(lAEVpn);
             else
-                col.Add(LocalResx.GetString("_Msg_NoRequired") + " " + lAEVpn);
+                col.Add(Resx.GetString("DIRECTIONS_Msg_NoRequired") + " " + lAEVpn);
 
             for (var i = 0; i < col.Count; i++)
             {
@@ -746,13 +765,6 @@ namespace Kesco.App.Web.Docs.Directions
 
         private void RenderAEAccessComplete(TextWriter w, string lAEVpn)
         {
-            //if (ds == null || ds.Tables.Count == 0) GetFoldersAndInternet(w);
-            //if (ds == null)
-            //{
-            //    w.Write(LocalResx.GetString("_Msg_NoData"));
-            //    return;
-            //}
-
             var bitMask = Dir.AccessEthernetField.ValueString.Length == 0 ? 0 : Dir.AccessEthernetField.ValueInt;
             var fl = false;
 
@@ -768,35 +780,24 @@ namespace Kesco.App.Web.Docs.Directions
                 {
                     var _f = Dir.Sotrudnik.PersonalFolder;
                     var _href = Regex.Replace(_f, "\\\\[^\\\\]+$", "").Replace(":", "|").Replace("\\", "/");
+                    var ntfs = new Dictionary<string, NtfStatus>();
+
+                    w.Write("<div class=\"marginL\">");
                     GetCompleteInfo(w,
                         "<nobr>" + Dir.Sotrudnik.Login + " " + "<a href='file:///" + _href + "' target='_blabk'>" + _f +
                         "</a>" + "</nobr>", fl);
-                    RenderADSIInfoByLogin(w, Dir.LoginField.ValueString);
+                    
+                    var adsiPath = ADSI_RenderInfoByLogin(w, ntfs, Dir.LoginField.ValueString, 1);
+                    RenderNtfInline(w, ntfs, ";",false);
+                    
+                    w.Write("</div>");
+                   
+                    if (adsiPath.Length > 0) w.Write("<div class=\"marginL\">{0}</div>", adsiPath);
                 }
                 else
                     GetCompleteInfo(w, "-", fl);
             }
-
-            //try
-            //{
-            //    dt = new DataTable("AE");
-            //    dt = ds.Tables[1];
-            //}
-            //catch (Exception)
-            //{
-            //    //Kesco.Env.Log.Write(ex,"Процедура получения данных о доступе к корпоративной сети отработала некорректно. DS.TABLES.COUNT="+(ds!=null?ds.Tables.Count:0));
-            //    w.Write(resx.GetString("_Msg_NoData"));
-            //    return;
-            //}
-            //if (dt.Rows.Count == 0)
-            //{
-            //    w.Write(resx.GetString("_Msg_NoData"));
-            //    return;
-            //}
-
-            //int r = ((bitMask & 2) == 2 ? 1 : 0) + (dt.Rows[0]["VPN"].ToString().Equals("1") ? 1 : 0);
-            //fl = (r != 1);
-            //GetCompleteInfo(w, (dt.Rows[0]["VPN"].ToString().Equals("1") ? "+" : "-"), fl);
+           
         }
 
 
@@ -817,7 +818,7 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.SotrudnikLanguageField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_Lang") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
@@ -833,7 +834,7 @@ namespace Kesco.App.Web.Docs.Directions
         {
             if (Dir.SotrudnikField.ValueString.Length == 0 || Dir.Sotrudnik.Unavailable)
             {
-                w.Write(LocalResx.GetString("_Msg_NoData"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
@@ -842,7 +843,9 @@ namespace Kesco.App.Web.Docs.Directions
                 : Dir.SotrudnikLanguageField.ValueString.ToLower());
             var fl = Dir.Sotrudnik.Language.ToLower().Equals(_l);
 
-            GetCompleteInfo(w, Dir.Sotrudnik.Language, fl, true);
+            w.Write("<div class=\"marginL\">");
+                GetCompleteInfo(w, Dir.Sotrudnik.Language, fl, true);
+            w.Write("</div>");
         }
 
 
@@ -863,13 +866,13 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write("E-Mail");
+            w.Write("E-Mail:");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (Dir.MailNameField.ValueString.Length == 0 || Dir.DomainField.ValueString.Length == 0)
-                w.Write(LocalResx.GetString("_Msg_NoRequired"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             else
             {
                 var email = Dir.MailNameField.ValueString + "@" + Dir.DomainField.ValueString;
@@ -899,7 +902,7 @@ namespace Kesco.App.Web.Docs.Directions
         {
             if (Dir.SotrudnikField.ValueString.Length == 0 || Dir.Sotrudnik.Unavailable)
             {
-                w.Write(LocalResx.GetString("_Msg_NoData"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
@@ -915,8 +918,9 @@ namespace Kesco.App.Web.Docs.Directions
                 : (Dir.MailNameField.ValueString + "@" + Dir.DomainField.ValueString);
 
             var fl = email.ToLower().Equals(emaildd.ToLower());
-
-            GetCompleteInfo(w, email, fl);
+            w.Write("<div class=\"marginL\">");
+                GetCompleteInfo(w, email, fl);
+            w.Write("</div>");
         }
 
 
@@ -956,28 +960,34 @@ namespace Kesco.App.Web.Docs.Directions
             var p = Dir.SotrudnikParent;
             if (p.Unavailable)
             {
-                GetNtfFormatMsg(w, LocalResx.GetString("_Msg_СотрудникНеДоступен"));
+                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"));
                 return;
             }
             if (Dir.SotrudnikField.ValueString.Length > 0 &&
                 Dir.SotrudnikParentField.ValueString.Equals(Dir.SotrudnikField.ValueString))
-                GetNtfFormatMsg(w, LocalResx.GetString("_NTF_СотрудникСовпадает").ToLower());
+                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_NTF_СотрудникСовпадает").ToLower());
 
             if ((bitMask & 1) == 1 && (p.Login.Length == 0))
-                GetNtfFormatMsg(w, LocalResx.GetString("_Msg_СотрудникНеИмеетЛогина"));
+                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
 
             if ((bitMask & 2) == 2 && (p.Login.Length == 0)
                 && Dir.SotrudnikField.ValueString.Length > 0 && !Dir.Sotrudnik.Unavailable &&
                 (Dir.Sotrudnik.Login.Length == 0))
-                GetNtfFormatMsg(w, LocalResx.GetString("_Msg_СотрудникНеИмеетЛогина"));
+                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
 
             using (var sw = new StringWriter())
             {
                 var ntfList = new List<string>();
+                var ntfs = new Dictionary<string, NtfStatus>();
                 ValidationMessages.CheckSotrudnikParentStatus(this, sw, Dir, ntfList);
-                RenderNtf(w, ntfList, NtfStatus.Error);
-            }
+                ntfList.ForEach(x => { ntfs.Add(x, NtfStatus.Error); });
 
+                var adsiPath = ADSI_RenderInfoByEmployee(w, ntfs, Dir.SotrudnikParentField.ValueString, Dir.SotrudnikParentCheckField.ValueInt);
+                RenderNtfInline(w, ntfs,";", false);
+
+                if (adsiPath.Length > 0) w.Write("<div>{0}</div>", adsiPath);
+            }
+            
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("</table>");
@@ -1001,14 +1011,14 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.PositionCommonFoldersField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Folders") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (!Dir.PositionCommonFolders.Any())
             {
-                w.Write(LocalResx.GetString("_Msg_NoRequired"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             }
             else
             {
@@ -1031,7 +1041,7 @@ namespace Kesco.App.Web.Docs.Directions
             if (commonFolders == null)
             {
                 if (!Dir.PositionCommonFolders.Any())
-                    w.Write(LocalResx.GetString("_Msg_NoData"));
+                    w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
                 else
                     GetCompleteInfo(w, "-", false);
                 return;
@@ -1041,7 +1051,7 @@ namespace Kesco.App.Web.Docs.Directions
             
             if (sortedList.Count == 0 && !Dir.PositionCommonFolders.Any())
             {
-                w.Write(LocalResx.GetString("_Msg_NoData"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
@@ -1051,13 +1061,41 @@ namespace Kesco.App.Web.Docs.Directions
                 return;
             }
 
-
+            w.Write("<br/>");
             sortedList.ForEach(delegate(CommonFolder p)
             {
                 var cf = Dir.PositionCommonFolders.FirstOrDefault(x => x.CommonFolderId.ToString() == p.Id);
                 var fl = cf != null;
-                GetCompleteInfo(w, p.Name, fl);
+                w.Write("<div class=\"marginL\">");
+                GetCompleteInfo(w, HttpUtility.HtmlEncode(p.Name), fl, false);
+                w.Write("</div>");
             });
+
+            RenderSFolderCompleteError(sortedList, w);
+        }
+
+        private void RenderSFolderCompleteError(IEnumerable<CommonFolder> folders, TextWriter w)
+        {
+            var list = new List<string>();
+            Dir.PositionCommonFolders.ForEach(delegate(PositionCommonFolder f)
+            {
+                var cf = folders.FirstOrDefault(x => x.Id == f.CommonFolderId.ToString());
+                if (cf == null)
+                    list.Add(f.CommonFolderName);
+            });
+
+            if (list.Count == 0) return;
+
+            w.Write("<div class=\"marginL\">");
+                GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false, false);
+            w.Write("</div>");
+            list.OrderBy(x => x).ToList().ForEach(delegate(string x)
+                {
+                    w.Write("<div class=\"marginL2\">");
+                        GetCompleteInfo(w, HttpUtility.HtmlEncode(x), false, false);
+                    w.Write("</div>");
+                }
+            );
         }
 
 
@@ -1078,7 +1116,7 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.PositionRolesField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Roles") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
@@ -1086,7 +1124,7 @@ namespace Kesco.App.Web.Docs.Directions
 
             if (!Dir.PositionRoles.Any())
             {
-                w.Write(LocalResx.GetString("_Msg_NoRequired"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             }
             else
             {
@@ -1139,7 +1177,7 @@ namespace Kesco.App.Web.Docs.Directions
 
                         w.Write("<td title='{0}' valign='top' rowSpan={1}>", dv[i]["RoleDescr"], rowSpan);
                         if (!dv[i]["RoleId"].Equals(""))
-                            w.Write(dv[i]["Role"]);
+                            w.Write(HttpUtility.HtmlEncode(dv[i]["Role"]));
                         else
                             w.Write("&nbsp;");
                         w.Write("</td>");
@@ -1154,7 +1192,7 @@ namespace Kesco.App.Web.Docs.Directions
                             dv[i]["Person"].ToString(), NtfStatus.Empty);
                     }
                     else
-                        w.Write(LocalResx.GetString("_Rnd_AllCompany"));
+                        w.Write(HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCompany")));
                     w.Write("</td>");
                     w.Write("</tr>");
                     w.Write("</table>");
@@ -1174,7 +1212,7 @@ namespace Kesco.App.Web.Docs.Directions
 
             if (listRoles.Count == 0 && !Dir.PositionRoles.Any())
             {
-                w.Write(LocalResx.GetString("_Msg_NoData"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
@@ -1233,7 +1271,7 @@ namespace Kesco.App.Web.Docs.Directions
             dv.Sort = "Role, RoleId, Person";
 
             var rowSpan = 0;
-            w.Write("<br><table cellpadding=0 cellspacing=0 width='100%'>");
+            w.Write("<br><table cellpadding=0 cellspacing=0 width='100%' class=\"marginL\">");
             var fl = true;
             for (var i = 0; i < dv.Count; i++)
             {
@@ -1246,7 +1284,7 @@ namespace Kesco.App.Web.Docs.Directions
                     w.Write("<td title='{0}' valign='top' rowSpan={1} style=\"padding-left:2px;\">", dv[i]["RoleDescr"],
                         rowSpan);
                     if (!dv[i]["RoleId"].Equals(""))
-                        GetCompleteInfo(w, dv[i]["Role"].ToString(), fl, false);
+                        GetCompleteInfo(w, HttpUtility.HtmlEncode(dv[i]["Role"].ToString()), fl, false);
                     else
                         w.Write("&nbsp;");
                     w.Write("</td>");
@@ -1258,10 +1296,10 @@ namespace Kesco.App.Web.Docs.Directions
                 if (dv[i]["PersonId"].ToString().Length > 0)
                 {
                     page.RenderLinkPerson(w, "personC" + dv[i]["PersonId"], dv[i]["PersonId"].ToString(),
-                        dv[i]["Person"].ToString(), !fl ? NtfStatus.Error : NtfStatus.Empty);
+                        dv[i]["Person"].ToString(), !fl ? NtfStatus.Error : NtfStatus.Empty, false);
                 }
                 else
-                    GetCompleteInfo(w, LocalResx.GetString("_Rnd_AllCompany"), fl, false);
+                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCompany")), fl, false);
                 w.Write("</td>");
                 w.Write("</tr>");
                 w.Write("</table>");
@@ -1287,12 +1325,12 @@ namespace Kesco.App.Web.Docs.Directions
                 fl = true;
                 w.Write("<tr>");
                 w.Write("<td style='padding-left:10px'>");
-                GetCompleteInfo(w, p.RoleObject.Name, false, false);
+                GetCompleteInfo(w, HttpUtility.HtmlEncode(p.RoleObject.Name), false, false);
                 w.Write("</td>");
                 w.Write("<td>");
 
                 if (p.PersonId == 0)
-                    GetCompleteInfo(w, LocalResx.GetString("_Rnd_AllCompany"), false, false);
+                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCompany")), false, false);
                 else
                 {
                     page.RenderLinkPerson(w, "perr" + p.PersonId, p.PersonId.ToString(), p.PersonName, NtfStatus.Error);
@@ -1307,7 +1345,7 @@ namespace Kesco.App.Web.Docs.Directions
             {
                 wr.Write("<tr>");
                 wr.Write("<td colspan = 2 style=\"padding-left:2px;\">");
-                GetCompleteInfo(wr, "не выполнено:", false, false);
+                GetCompleteInfo(wr, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false, false);
                 wr.Write("</td>");
                 wr.Write("</tr>");
 
@@ -1353,14 +1391,14 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.PositionTypesField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Types") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (!Dir.PositionTypes.Any())
             {
-                w.Write(LocalResx.GetString("_Msg_NoRequired"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             }
             else
             {
@@ -1378,7 +1416,7 @@ namespace Kesco.App.Web.Docs.Directions
                 {
                     dr = dt.NewRow();
                     dr[0] = p.Id;
-                    dr[1] = p.CatalogId;
+                    dr[1] = !p.CatalogId.HasValue ? "" : p.CatalogId.Value.ToString(); 
                     if (p.CatalogId.HasValue && p.CatalogObject != null && !p.CatalogObject.Unavailable)
                     {
                         dr[2] = p.CatalogObject.Name;
@@ -1416,7 +1454,7 @@ namespace Kesco.App.Web.Docs.Directions
                     {
                         rowSpan =
                             int.Parse(
-                                dt.Compute("COUNT(CatalogId)", "CatalogId='" + dv[i]["CatalogId"] + "'").ToString());
+                            dt.Compute("COUNT(CatalogId)",  "CatalogId='" + dv[i]["CatalogId"] + "'").ToString());
 
                         w.Write("<td noWrap title='{0}' valign='top' rowSpan={1}>", "", rowSpan);
                         if (!dv[i]["CatalogId"].Equals(""))
@@ -1433,10 +1471,10 @@ namespace Kesco.App.Web.Docs.Directions
                     w.Write("<td align='left'>");
                     if (dv[i]["ThemeId"].ToString().Length > 0)
                     {
-                        w.Write(dv[i]["Theme"]);
+                        w.Write(HttpUtility.HtmlEncode(dv[i]["Theme"]));
                     }
                     else
-                        w.Write(LocalResx.GetString("_Rnd_AllTypePerson"));
+                        w.Write(HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")));
                     w.Write("</td>");
                     w.Write("</tr>");
                     w.Write("</table>");
@@ -1456,7 +1494,7 @@ namespace Kesco.App.Web.Docs.Directions
 
             if (!listTypes.Any() && !Dir.PositionTypes.Any())
             {
-                w.Write(LocalResx.GetString("_Msg_NoData"));
+                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
@@ -1509,7 +1547,7 @@ namespace Kesco.App.Web.Docs.Directions
             dv.Sort = "Catalog, CatalogId, Theme";
 
             var rowSpan = 0;
-            w.Write("<br><table cellpadding=0 cellspacing=0 width='100%' >");
+            w.Write("<br><table cellpadding=0 cellspacing=0 width='100%' class=\"marginL\">");
             var fl = true;
             var _catName = "";
             var _thmName = "";
@@ -1529,11 +1567,11 @@ namespace Kesco.App.Web.Docs.Directions
                     {
                         _catName = dv[i]["Catalog"].ToString();
                         GetCompleteInfo(w,
-                            string.IsNullOrEmpty(_catName) ? "Не удалось получить название каталога!" : _catName, fl,
+                            string.IsNullOrEmpty(_catName) ? HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Pos_CatalogNoName")) : _catName, fl,
                             false);
                     }
                     else
-                        GetCompleteInfo(w, "<все каталоги>", fl, false);
+                        GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCatalog")), fl, false);
                     w.Write("</td>");
                 }
                 w.Write("<td>");
@@ -1544,14 +1582,14 @@ namespace Kesco.App.Web.Docs.Directions
                 {
                     _thmName = dv[i]["Theme"].ToString();
                     GetCompleteInfo(w,
-                        string.IsNullOrEmpty(_thmName) ? "Не удалось получить название типа лица!" : _thmName, fl, false);
+                        string.IsNullOrEmpty(_thmName) ? HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Pos_TypeNoName")) : _thmName, fl, false);
                 }
                 else
                 {
-                    var msgAllTypes = LocalResx.GetString("_Rnd_AllTypePerson");
+                    var msgAllTypes = HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllTypePerson"));
                     GetCompleteInfo(w,
                         string.IsNullOrEmpty(msgAllTypes)
-                            ? "Не удалось получить название всех типов лица!"
+                            ? HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Pos_TypeAllNoName"))
                             : msgAllTypes, fl, false);
                 }
                 w.Write("</td>");
@@ -1592,19 +1630,19 @@ namespace Kesco.App.Web.Docs.Directions
                 if (p.CatalogObject == null || p.CatalogObject.Unavailable)
                 {
                     if (!p.CatalogId.HasValue)
-                        nameEntity = LocalResx.GetString("_Rnd_AllCatalog");
+                        nameEntity = Resx.GetString("DIRECTIONS_Rnd_AllCatalog");
                     else
                         nameEntity = "#" + p.CatalogId.Value;
                 }
                 else
                     nameEntity = p.CatalogObject.Name;
 
-                GetCompleteInfo(w, nameEntity, false, false);
+                GetCompleteInfo(w, HttpUtility.HtmlEncode(nameEntity), false, false);
                 w.Write("</td>");
                 w.Write("<td>");
 
                 if (!p.ThemeId.HasValue || p.ThemeId.Value == 0)
-                    GetCompleteInfo(w, LocalResx.GetString("_Rnd_AllTypePerson"), false, false);
+                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")), false, false);
                 else
                 {
                     if (p.ThemeObject == null || p.ThemeObject.Unavailable)
@@ -1614,7 +1652,7 @@ namespace Kesco.App.Web.Docs.Directions
                     else
                         nameEntity = p.ThemeObject.NameTheme;
 
-                    GetCompleteInfo(w, nameEntity, false, false);
+                    GetCompleteInfo(w, HttpUtility.HtmlEncode(nameEntity), false, false);
                 }
 
                 w.Write("</td>");
@@ -1626,7 +1664,7 @@ namespace Kesco.App.Web.Docs.Directions
 
             wr.Write("<tr>");
             wr.Write("<td colspan = 2 style=\"padding-left:2px;\">");
-            GetCompleteInfo(wr, "не выполнено:", false, false);
+            GetCompleteInfo(wr, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false, false);
             wr.Write("</td>");
             wr.Write("</tr>");
 
@@ -1668,14 +1706,17 @@ namespace Kesco.App.Web.Docs.Directions
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Dir.PositionAdvancedGrantsField.Name);
+            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Grants") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
 
             Dir.PositionAdvancedGrants.OrderBy(x => x.GrantDescription).ToList().ForEach(
-                delegate(PositionAdvancedGrant p) { w.Write("<div>{0}</div>", p.GrantDescription); });
+                delegate(PositionAdvancedGrant p)
+                {
+                    w.Write("<div>{0}</div>", IsRusLocal ? p.GrantDescription : p.GrantDescriptionEn);
+                });
 
 
             w.Write("</td>");
@@ -1684,13 +1725,13 @@ namespace Kesco.App.Web.Docs.Directions
         }
 
 
-        private void RenderADSIInfoByLogin(TextWriter w, string login)
+        private string ADSI_RenderInfoByLogin(TextWriter w, Dictionary<string, NtfStatus> ntfs, string login, int bitmask)
         {
             var sqlParams = new Dictionary<string, object>
             {
                 {"@Login", login}
             };
-
+            var adsiPath = "";
             using (
                 var dbReader = new DBReader(SQLQueries.SELECT_ADSI_ПоЛогину, CommandType.Text, Config.DS_user, sqlParams)
                 )
@@ -1698,29 +1739,98 @@ namespace Kesco.App.Web.Docs.Directions
                 if (!dbReader.HasRows)
                 {
                     w.Write("");
-                    return;
+                    return adsiPath;
                 }
 
                 var colPath = dbReader.GetOrdinal("Path");
+                var colDisabled = dbReader.GetOrdinal("Disabled");
+                var colAccountExpires = dbReader.GetOrdinal("accountExpires");
 
                 while (dbReader.Read())
                 {
-                    var path = dbReader.GetString(colPath);
-
-                    var regex = new Regex("(OU=.+?(,|$))", RegexOptions.IgnoreCase);
-                    var matches = regex.Matches(path);
-                    w.Write("<div>");
-                    var adsi = matches.Cast<object>().Aggregate("", (current, m) => current + m);
-
-                    if (adsi.Right(1) == ",")
-                        adsi = adsi.Left(adsi.Length - 1);
-                    w.Write(adsi);
-
-                    w.Write("</div>");
-
-                    return;
+                    ADSI_RenderPath(dbReader, colPath, w, out adsiPath, false, false);
+                    ADSI_RenderAccountExpires(ntfs, dbReader, colAccountExpires, bitmask, w);
+                    ADSI_RenderDisabled(ntfs, dbReader, colDisabled, w);
+                    return adsiPath;
                 }
             }
+            return adsiPath;
+        }
+
+        private string ADSI_RenderInfoByEmployee(TextWriter w, Dictionary<string, NtfStatus> ntfs, string employeeId, int bitmask)
+        {
+            var sqlParams = new Dictionary<string, object>
+            {
+                {"@КодСотрудника", employeeId}
+            };
+            var adsiPath = "";
+            using (
+                var dbReader = new DBReader(SQLQueries.SELECT_ADSI_ПоКодуСотрудника, CommandType.Text, Config.DS_user,
+                    sqlParams)
+            )
+            {
+                if (!dbReader.HasRows)
+                {
+                    w.Write("");
+                    return adsiPath;
+                }
+
+                var colPath = dbReader.GetOrdinal("Path");
+                var colDisabled = dbReader.GetOrdinal("Disabled");
+                var colAccountExpires = dbReader.GetOrdinal("accountExpires");
+
+                while (dbReader.Read())
+                {
+                    ADSI_RenderPath(dbReader, colPath, w, out adsiPath, false, false);
+                    ADSI_RenderAccountExpires(ntfs, dbReader, colAccountExpires, bitmask, w);
+                    ADSI_RenderDisabled(ntfs, dbReader, colDisabled, w);
+                    return adsiPath;
+                }
+            }
+
+            return adsiPath;
+        }
+
+        private void ADSI_RenderDisabled(Dictionary<string, NtfStatus> ntfs, DBReader dbReader, int colDisabled, TextWriter w)
+        {
+            if (dbReader.GetInt32(colDisabled) == 0) return;
+            ntfs.Add("Disabled", NtfStatus.Error);
+        }
+
+        private void ADSI_RenderAccountExpires(Dictionary<string, NtfStatus> ntfs, DBReader dbReader, int colAccountExpires, int bitMask, TextWriter w)
+        {
+            var accountExpiresIsDbNull = dbReader.IsDBNull(colAccountExpires);
+            if (accountExpiresIsDbNull && (bitMask & 2) == 2)
+            {
+                ntfs.Add("не установлен AccountExpires", NtfStatus.Error);
+            }
+            else if (!accountExpiresIsDbNull && (bitMask & 1) == 1)
+            {
+                ntfs.Add("AccountExpires: " + dbReader.GetDateTime(colAccountExpires).ToString("dd.MM.yy"), NtfStatus.Error);
+            }
+            else if(!accountExpiresIsDbNull && (bitMask & 2) == 2)
+            {
+                ntfs.Add("AccountExpires: " + dbReader.GetDateTime(colAccountExpires).ToString("dd.MM.yy"), NtfStatus.Information);
+            }
+
+        }
+
+        private void ADSI_RenderPath(DBReader dbReader, int colPath, TextWriter w, out string adsiPath, bool marginL = true, bool streamWrite = true)
+        {
+            var path = dbReader.GetString(colPath);
+
+            var regex = new Regex("(OU=.+?(,|$))", RegexOptions.IgnoreCase);
+            var matches = regex.Matches(path);
+            if (streamWrite) w.Write("<div class=\"{0}\">", marginL ? "marginL" : "");
+            adsiPath = matches.Cast<object>().Aggregate("", (current, m) => current + m);
+
+            if (adsiPath.Right(1) == ",")
+                adsiPath = adsiPath.Left(adsiPath.Length - 1);
+
+            if (!streamWrite) return;
+
+            w.Write(adsiPath);
+            w.Write("</div>");
         }
 
         private void RenderNote(TextWriter w)
@@ -1749,15 +1859,16 @@ namespace Kesco.App.Web.Docs.Directions
 
         protected void RenderNoSignSupervisor(TextWriter w)
         {
-            if (Dir.SupervisorField.ValueString.Length == 0 || Dir.Supervisor.Unavailable) return;
-            if (Dir.Supervisor.Login.Length == 0) return;
+            var super = Dir.Sotrudnik.Supervisor;
 
-            bool fl = Dir.DocSigns.Where(t => !t.Unavailable).Any(t => t.EmployeeId == Dir.SupervisorField.ValueInt || t.EmployeeInsteadOf == Dir.SupervisorField.ValueInt);
+            if (super == null || super.Unavailable) return;
+            if (super.Login.Length == 0) return;
 
+            bool fl = Dir.DocSigns.Where(t => !t.Unavailable).Any(t => t.EmployeeId.Equals(int.Parse(super.Id)));
             if (fl) return;
 
-            w.Write("<div id='spNoSignSupervisor' style='COLOR:red; float:right; margin-right:50px;'>");
-            w.Write(LocalResx.GetString("_Msg_NoSignSupervisor"));
+            w.Write("<div id='spNoSignSupervisor' style='COLOR:red; float:right; margin-right:1%;'>");
+            w.Write(Resx.GetString("DIRECTIONS_Msg_NoSignSupervisor"));
             w.Write("</div>");
         }
         #endregion

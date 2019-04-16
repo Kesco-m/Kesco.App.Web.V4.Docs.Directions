@@ -350,16 +350,21 @@
                     Доп. информация по организации работы:
                 </div>
                 <div class="disp_inlineBlock">
-                    <base:TextArea ID="efAdvInfo" runat="server" Width="280px" Rows="3"></base:TextArea>
+                    <base:TextArea ID="efAdvInfo" runat="server" Width="298px" Rows="3"></base:TextArea>
                 </div>
             </div>
             <div class="marginT2">
-             <% StartRenderVariablePart(Response.Output,145,250,427); %>   
+             <% StartRenderVariablePart(Response.Output,145,250,0,1, true); %>   
              <% EndRenderVariablePart(Response.Output); %>
             </div>
         </div>
     </div>
-    
+     
+     <!--================ отображение дополнительной информации        ================-->
+    <div id = "divAdvInfoValidation" style="display: none;">
+        <div id="divAdvInfoValidation_Body" class="marginL marginR marginT"></div>        
+    </div>
+
     <!--================ Список доступных компьютеризированных рабочих мест        ================-->
     
     <div id = "divWorkPlaceList" style="display: none;">

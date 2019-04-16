@@ -18,9 +18,7 @@ namespace Kesco.App.Web.Docs.Directions
 {
     public class ValidationMessages
     {
-        private static readonly ResourceManager LocalResx =
-            new ResourceManager("Kesco.App.Web.Docs.Directions.DirectionIT", Assembly.GetExecutingAssembly());
-
+       
         /// <summary>
         ///     Проверка существования других указаний
         /// </summary>
@@ -50,7 +48,7 @@ namespace Kesco.App.Web.Docs.Directions
                     var colКодДокумента = dbReader.GetOrdinal("КодДокумента");
                     var colДокумент = dbReader.GetOrdinal("Документ");
 
-                    var list = new List<string> {LocalResx.GetString("_Msg_ExistsDirection") + ":"};
+                    var list = new List<string> { page.Resx.GetString("DIRECTIONS_Msg_ExistsDirection") + ":" };
                     while (dbReader.Read())
                     {
                         var wr = new StringWriter();
@@ -89,9 +87,9 @@ namespace Kesco.App.Web.Docs.Directions
             {
                 var wr = new StringWriter();
                 if (!dir.LocationWorkPlace.Unavailable && dir.LocationWorkPlace.IsComputeredWorkPlace)
-                    wr.Write(LocalResx.GetString("_NTF_ПосменнаяРабота") + ": ");
+                    wr.Write(page.Resx.GetString("DIRECTIONS_NTF_ПосменнаяРабота") + ": ");
                 else
-                    wr.Write(LocalResx.GetString("_NTF_РабМестаВместе") + ": ");
+                    wr.Write(page.Resx.GetString("DIRECTIONS_NTF_РабМестаВместе") + ": ");
                 var inx = 1;
                 foreach (var empl in listEmpl)
                 {
@@ -121,7 +119,7 @@ namespace Kesco.App.Web.Docs.Directions
 
             var workplaces = dir.Sotrudnik.Workplaces;
             if (workplaces != null && !workplaces.Any(x => x.Id.Equals(dir.LocationWorkPlace.Id)))
-                page.RenderNtf(w, new List<string> {LocalResx.GetString("_Msg_РабочееМестоНеСоответствует")});
+                page.RenderNtf(w, new List<string> { page.Resx.GetString("DIRECTIONS_Msg_РабочееМестоНеСоответствует") });
             else
                 w.Write("");
         }
@@ -141,7 +139,7 @@ namespace Kesco.App.Web.Docs.Directions
             }
 
             if (!dir.LocationWorkPlace.IsOffice)
-                page.RenderNtf(w, new List<string> {LocalResx.GetString("_Msg_РабочееМестоНеВОфисе")});
+                page.RenderNtf(w, new List<string> { page.Resx.GetString("DIRECTIONS_Msg_РабочееМестоНеВОфисе") });
             else
                 w.Write("");
         }
@@ -161,7 +159,7 @@ namespace Kesco.App.Web.Docs.Directions
             }
 
             if (!dir.LocationWorkPlace.IsComputeredWorkPlace && !dir.LocationWorkPlace.IsGuestWorkPlace)
-                page.RenderNtf(w, new List<string> {LocalResx.GetString("_Msg_НеКомпьютеризированноеРабочееМесто")});
+                page.RenderNtf(w, new List<string> { page.Resx.GetString("DIRECTIONS_Msg_НеКомпьютеризированноеРабочееМесто") });
             else
                 w.Write("");
         }
@@ -182,7 +180,7 @@ namespace Kesco.App.Web.Docs.Directions
             var email = dir.MailNameField.ValueString + "@" + dir.DomainField.ValueString;
 
             if (!Validation.IsEmail(email))
-                w.Write(LocalResx.GetString("_Msg_EmailНеКорректен"));
+                w.Write(page.Resx.GetString("DIRECTIONS_Msg_EmailНеКорректен"));
             else
                 w.Write("");
         }
@@ -237,7 +235,7 @@ namespace Kesco.App.Web.Docs.Directions
                 return;
             }
 
-            w.Write(LocalResx.GetString("_NTF_EmailNotUnique"));
+            w.Write(page.Resx.GetString("DIRECTIONS_NTF_EmailNotUnique"));
         }
 
         /// <summary>
@@ -255,7 +253,7 @@ namespace Kesco.App.Web.Docs.Directions
             }
 
             if (!Validation.IsLogin(dir.LoginField.ValueString))
-                w.Write(LocalResx.GetString("_Msg_ЛогинНеКорректен"));
+                w.Write(page.Resx.GetString("DIRECTIONS_Msg_ЛогинНеКорректен"));
             else
                 w.Write("");
         }
@@ -285,7 +283,7 @@ namespace Kesco.App.Web.Docs.Directions
                     Config.DS_document, sqlParams))
             {
                 if (dbReader.HasRows)
-                    w.Write(LocalResx.GetString("_Msg_ЛогинСуществует"));
+                    w.Write(page.Resx.GetString("DIRECTIONS_Msg_ЛогинСуществует"));
                 else
                     w.Write("");
             }
@@ -311,16 +309,16 @@ namespace Kesco.App.Web.Docs.Directions
 
 
             if ((bitMask & 1) == 1 && (p.Login.Length == 0))
-                ntfList.Add(LocalResx.GetString("_Msg_СотрудникНеИмеетЛогина"));
+                ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
 
             if ((bitMask & 2) == 2 && (p.Login.Length == 0)
                 && dir.SotrudnikField.ValueString.Length > 0 && !dir.Sotrudnik.Unavailable &&
                 (dir.Sotrudnik.Login.Length == 0))
-                ntfList.Add(LocalResx.GetString("_Msg_СотрудникНеИмеетЛогина"));
+                ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
 
             if (dir.SotrudnikField.ValueString.Length > 0 &&
                 dir.SotrudnikField.ValueString.Equals(dir.SotrudnikParentField.ValueString))
-                ntfList.Add(LocalResx.GetString("_NTF_СотрудникСовпадает").ToLower());
+                ntfList.Add(page.Resx.GetString("DIRECTIONS_NTF_СотрудникСовпадает").ToLower());
 
             if (ntfList.Count > 0)
                 page.RenderNtf(w, ntfList, NtfStatus.Error);
@@ -347,22 +345,23 @@ namespace Kesco.App.Web.Docs.Directions
             switch (p.Status)
             {
                 case 0:
-                    if ((bitMask & 2) == 2) ntfList.Add(LocalResx.GetString("_Msg_СотрудникНеУволен"));
+                    if ((bitMask & 2) == 2) ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникНеУволен"));
                     break;
                 case 1:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние1"));
+                    if ((bitMask & 2) != 2)
+                        ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние1"));
                     break;
                 case 2:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние2"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние2"));
                     break;
                 case 3:
-                    if ((bitMask & 1) == 1) ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние3"));
+                    if ((bitMask & 1) == 1) ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние3"));
                     break;
                 case 4:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние4"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние4"));
                     break;
                 case 5:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние5"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние5"));
                     break;
             }
         }
@@ -383,13 +382,13 @@ namespace Kesco.App.Web.Docs.Directions
             }
             
             if (dir.Sotrudnik.PersonEmployeeId == null)
-                ntfList.Add(LocalResx.GetString("_Msg_СотрудникНетЛица"));
+                ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникНетЛица"));
 
             if (dir.Sotrudnik.Workplaces.Count == 0)
-                ntfList.Add(LocalResx.GetString("_Msg_СотрудникНетРабМеста"));
+                ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста"));
 
             if (dir.Sotrudnik.Photos.Count == 0)
-                ntfList.Add(LocalResx.GetString("_Msg_ФотоНет"));
+                ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_ФотоНет"));
 
             if (ntfList.Count > 0)
                 page.RenderNtf(w, ntfList, NtfStatus.Error);
@@ -414,19 +413,19 @@ namespace Kesco.App.Web.Docs.Directions
             switch (dir.Sotrudnik.Status)
             {
                 case 1:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние1"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние1"));
                     break;
                 case 2:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние2"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние2"));
                     break;
                 case 3:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние3"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние3"));
                     break;
                 case 4:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние4"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние4"));
                     break;
                 case 5:
-                    ntfList.Add(LocalResx.GetString("_Msg_СотрудникСостояние5"));
+                    ntfList.Add(page.Resx.GetString("DIRECTIONS_Msg_СотрудникСостояние5"));
                     break;
             }
         }

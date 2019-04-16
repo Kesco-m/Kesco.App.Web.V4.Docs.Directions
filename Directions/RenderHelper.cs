@@ -16,15 +16,14 @@ using System.Resources;
 using System.Text;
 using Kesco.Lib.DALC;
 using Kesco.Lib.Entities;
+using Kesco.Lib.Entities.Corporate.Equipments;
 using Kesco.Lib.Log;
 
 namespace Kesco.App.Web.Docs.Directions
 {
     public class RenderHelper
     {
-        protected ResourceManager LocalResx = new ResourceManager("Kesco.App.Web.Docs.Directions.DirectionIT",
-          Assembly.GetExecutingAssembly());
-        
+       
         public void Photo(EntityPage page, TextWriter w, Direction dir)
         {
             if (dir.SotrudnikField.Value == null)
@@ -34,7 +33,7 @@ namespace Kesco.App.Web.Docs.Directions
             }
 
             w.Write(
-                "<a href='#' onclick=\"window.open('{2}?id={1}','_blank','status=no,toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes');\"><img style='padding-top:10px' src='{0}?id={1}&w=100' border=0 width='100px'></a>",
+                "<a href='#' onclick=\"window.open('{2}?id={1}','_blank','status=no,toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes');\"><img style='padding-top:10px' src='{0}?id={1}&w=120' border=0 width='120px'></a>",
                 Config.user_photo, dir.SotrudnikField.Value, Config.user_form);
         }
         
@@ -47,7 +46,7 @@ namespace Kesco.App.Web.Docs.Directions
         {
             if (dir.SotrudnikPostField.ValueString.Length > 0)
             {
-                page.RenderNtf(w, new List<string> { dir.SotrudnikPostField.ValueString }, NtfStatus.Information);
+                page.RenderNtf(w, new List<string> { dir.SotrudnikPostField.ValueString }, NtfStatus.Empty, false, false);
                 return;
             }
 
@@ -68,7 +67,7 @@ namespace Kesco.App.Web.Docs.Directions
                 if (dir.SotrudnikPostField.Value.ToString()=="")
                     page.RenderNtf(w, new List<string> { "у сотрудника нет должности в штатном расписании" }, NtfStatus.Error);
                 else 
-                    page.RenderNtf(w, new List<string> { dir.SotrudnikPostField.ValueString }, NtfStatus.Information);
+                    page.RenderNtf(w, new List<string> { dir.SotrudnikPostField.ValueString }, NtfStatus.Empty, false, false);
             }
             else
                 page.RenderNtf(w, new List<string> { "у сотрудника нет должности в штатном расписании" }, NtfStatus.Error);
@@ -96,20 +95,20 @@ namespace Kesco.App.Web.Docs.Directions
 
             ws.Write("Непосредственный руководитель - ");
             page.RenderLinkEmployee(ws, "btnSupervisor", sData.Rows[0]["КодРуководителя"].ToString(),
-                sData.Rows[0]["Руководитель"].ToString(), NtfStatus.Information);
+                sData.Rows[0]["Руководитель"].ToString(), NtfStatus.Empty);
 
-            ws.Write("<br/>");
+            ws.Write(" ");
             ws.Write(sData.Rows[0]["ДолжностьРуководителя"]);
             if (!sData.Rows[0]["КодЛицаКомпанииСотрудника"].Equals(sData.Rows[0]["КодЛицаКомпанииРуководителя"]))
             {
                 ws.Write(" - ");
                 page.RenderLinkPerson(ws, "btnSupevisorPerson", sData.Rows[0]["КодЛицаКомпанииРуководителя"].ToString(),
-                    sData.Rows[0]["НазваниеКомпанииРуководителя"].ToString(), NtfStatus.Information);
+                    sData.Rows[0]["НазваниеКомпанииРуководителя"].ToString(), NtfStatus.Empty);
             }
 
             sInfo.Add(ws.ToString());
 
-            page.RenderNtf(w, sInfo, NtfStatus.Information);
+            page.RenderNtf(w, sInfo, NtfStatus.Empty, false, false);
         }
 
         private void PersonData(EntityPage page, TextWriter w, Direction dir, string personId, string defaultText, NtfStatus ntf)
@@ -168,13 +167,13 @@ namespace Kesco.App.Web.Docs.Directions
                 if (dt.Rows[0]["КодЛицаКомпанииСотрудника"].ToString().Length > 0)
                 {
                     PersonData(page, wr, dir, dt.Rows[0]["КодЛицаКомпанииСотрудника"].ToString(), "",
-                        NtfStatus.Information);
+                        NtfStatus.Empty);
                     sInfo.Add(wr.ToString());
                 }
             }
 
             if (sInfo.Count > 0)
-                page.RenderNtf(w, sInfo, NtfStatus.Information);
+                page.RenderNtf(w, sInfo, NtfStatus.Empty,false, false);
             else
                 w.Write("");
         }
@@ -189,19 +188,19 @@ namespace Kesco.App.Web.Docs.Directions
 
             var wr = new StringWriter();
 
-            wr.Write(LocalResx.GetString("_lbl_ОтветственнаяКомпания") + " - ");
+            wr.Write(page.Resx.GetString("DIRECTIONS_lbl_ОтветственнаяКомпания") + " - ");
 
             if (employee.OrganizationId == null)
             {
                 wr.Write("<font color='red'>");
-                wr.Write(LocalResx.GetString("_Msg_СотрудникНетЛицаЗаказчика"));
+                wr.Write(page.Resx.GetString("DIRECTIONS_Msg_СотрудникНетЛицаЗаказчика"));
                 wr.Write("</font>");
                 page.RenderNtf(w, new List<string>(new[] { wr.ToString() }), NtfStatus.Information);
                 return;
             }
 
-            PersonData(page, wr, dir, employee.OrganizationId.ToString(), "", NtfStatus.Information);
-            page.RenderNtf(w, new List<string>(new[] { wr.ToString() }), NtfStatus.Information);
+            PersonData(page, wr, dir, employee.OrganizationId.ToString(), "", NtfStatus.Empty);
+            page.RenderNtf(w, new List<string>(new[] { wr.ToString() }), NtfStatus.Empty, false, false);
         }
 
         public void WorkPlaceType(EntityPage page, TextWriter w, Direction dir, bool renderDelete=true)
@@ -212,10 +211,10 @@ namespace Kesco.App.Web.Docs.Directions
 
            
             w.Write("<fieldset class=\"marginL paddingT paddingB paddingR marginT disp_inlineBlock\">");
-            w.Write("<legend>{0}:</legend>", "Организовать сотруднику");
+            w.Write("<legend>{0}:</legend>", page.Resx.GetString("DIRECTIONS_Field_WpType"));
             if ((bitmask & 1) == 1)
             {
-                w.Write("<div class=\"marginL disp_inlineBlockS\">{0}</div><br>", "рабочее место в офисе");
+                w.Write("<div class=\"marginL disp_inlineBlockS\">{0}</div><br>", page.Resx.GetString("DIRECTIONS_Field_WpType_1"));
                 if (dir.WorkPlaceField.ValueString.Length == 0)
                     page.RenderNtf(w, new List<string> {"не указано рабочее место"});
                 else
@@ -223,10 +222,10 @@ namespace Kesco.App.Web.Docs.Directions
 
             }
             if ((bitmask & 2) == 2)
-                w.Write("<div class=\"marginL marginT disp_inlineBlockS\">{0}</div><br>", "рабочее место вне офиса");
+                w.Write("<div class=\"marginL marginT disp_inlineBlockS\">{0}</div><br>", page.Resx.GetString("DIRECTIONS_Field_WpType_2"));
 
             if ((bitmask & 4) == 4)
-                w.Write("<div class=\"marginL marginT disp_inlineBlockS\">{0}</div>", "учетную запись без создания рабочего места");
+                w.Write("<div class=\"marginL marginT disp_inlineBlockS\">{0}</div>", page.Resx.GetString("DIRECTIONS_Field_WpType_4"));
 
             w.Write("</fieldset>");
         }
@@ -253,12 +252,20 @@ namespace Kesco.App.Web.Docs.Directions
                 {
                     w.Write("#");
                     w.Write(dir.WorkPlaceField.ValueString);
-                    ntf.Add(LocalResx.GetString("_Msg_РабочееНеДоступно"));
+                    ntf.Add(page.Resx.GetString("DIRECTIONS_Msg_РабочееНеДоступно"));
                     page.RenderNtf(w, ntf);
 
                     return;
                 }
                 label = l.NamePath1;
+                var icon = "";
+                var title = "";
+
+                dir.LocationWorkPlace.GetLocationSpecifications(out icon, out title);
+                if (icon.Length > 0)
+                    label+=string.Format("&nbsp;<img width=\"10\" height=\"10\" src=\"/styles/{0}\" title=\"{1}\" border=0/>", icon, title);
+
+
             }
 
             page.RenderLinkLocation(w, dir.WorkPlaceField.ValueString, "");
@@ -281,7 +288,7 @@ namespace Kesco.App.Web.Docs.Directions
 
         }
 
-        public string EquipmentEmployee(EntityPage page, TextWriter w, Direction dir, string idEq, string className)
+        public string EquipmentEmployee(EntityPage page, TextWriter w, Direction dir, string idEq, bool isNtf)
         {
             var empls = "";
             var hasResp = false;
@@ -305,26 +312,130 @@ namespace Kesco.App.Web.Docs.Directions
                         using (var wr = new StringWriter())
                         {
                             var respId = dbReader.GetInt32(colКодСотрудника);
-                            if (respId != dir.SotrudnikField.ValueInt)
-                            {
-                                page.RenderLinkEmployee(wr, "resp" + respId,
-                                    dbReader.GetInt32(colКодСотрудника).ToString(), dbReader.GetString(colСотрудник),
-                                    NtfStatus.Empty);
-                                empls += (empls.Length > 0 ? ", " : "") + wr.ToString();
-                            }
+                            if (respId == dir.SotrudnikField.ValueInt || (!string.IsNullOrEmpty(dir.Sotrudnik.CommonEmployeeID) && respId == int.Parse(dir.Sotrudnik.CommonEmployeeID))) continue;
+
+                            page.RenderLinkEmployee(wr, "resp" + respId,
+                                dbReader.GetInt32(colКодСотрудника).ToString(), dbReader.GetString(colСотрудник),
+                                NtfStatus.Error,
+                                isNtf);
+                            empls += (empls.Length > 0 ? ", " : "") + wr;
                         }
                     }
                 }
             }
 
             if (string.IsNullOrEmpty(empls) && !hasResp)
-                empls = " [" + LocalResx.GetString("_Msg_OpenEquipNotResp") + "]";
+                empls = " [" + page.Resx.GetString("DIRECTIONS_Msg_OpenEquipNotResp") + "]";
             else if (!string.IsNullOrEmpty(empls))
                 empls = " [" + empls + "]";
 
             return empls;
         }
 
+        public void EquipmentInPlace(EntityPage page, string idContainer, Direction dir, string idLocation)
+        {
+            var w = new StringWriter();
+            
+            w.Write("<div style=\"font-weight:bold;\">");
+            w.Write("Оборудование на расположении ");
+            var loc = new Location(idLocation);
+            if (!loc.Unavailable)
+            {
+                page.RenderLinkLocation(w, idLocation);
+                w.Write(loc.NamePath1);
+                page.RenderLinkEnd(w);
+            }
+            else
+                w.Write(loc.Name);
+            w.Write("</div>");
+            
+            var listEq = loc.EquipmentsIt;
+
+            w.Write("<div class=\"marginT2\" style=\"overflow: auto; height: 130px\">");
+
+            if (listEq.Count > 0)
+            {
+                listEq.OrderBy(x => x.TypeName).ToList().ForEach(delegate(Equipment eq)
+                {
+                    w.Write("<div style=\"white-space:nowrap;\">");
+                    page.RenderLinkEquipment(w, eq.Id, "", "открыть форму оборудования");
+                    w.Write("{0} {1}", eq.TypeName, eq.ModelName);
+                    page.RenderLinkEnd(w);
+
+                    if (eq.EmployeeId != dir.SotrudnikField.ValueInt)
+                    {
+                        w.Write(" [");
+
+                        if (eq.EmployeeId != 0)
+                            page.RenderLinkEmployee(w, "eml_" + eq.Id, eq.EmployeeId.ToString(), eq.EmployeeName,
+                                NtfStatus.Empty);
+                        else
+                        {
+                            w.Write("<span style=\"color:red\">{0}</span>", "не выдано");
+                        }
+                        w.Write("]");
+                    }
+
+                    w.Write("</div>");
+                });
+            }
+            else
+            {
+                w.Write("<div>IT-оборудование отсутствует на данном расположении или у Вас нет прав на его просмотр.</div>");
+            }
+
+            w.Write("</div>");
+
+            page.JS.Write("var obj_{0} = document.getElementById('{0}'); if(obj_{0}){{obj_{0}.innerHTML='{1}';}}", idContainer,
+              HttpUtility.JavaScriptStringEncode(w.ToString()));
+            page.JS.Write("directions_anotherEquipmentList();");
+        }
+
+        /// <summary>
+        /// Оборудование сотрудника на чужих рабочих местах
+        /// </summary>
+        /// <param name="page">Текущая страница</param>
+        /// <param name="idContainer">Контейнер вывода текста</param>
+        /// <param name="dir">Текущий документ</param>
+        public void EquipmentAnotherPlace(EntityPage page, string idContainer, Direction dir)
+        {
+            var w = new StringWriter();
+            var listEq = dir.Sotrudnik.EmployeeEquipmentsAnotherWorkPlaces();
+            w.Write("<div style=\"font-weight:bold;\">");
+            w.Write("Оборудование сотрудника ");
+            page.RenderLinkEmployee(w,"adinfEml",dir.SotrudnikField.ValueString, dir.Sotrudnik.FIO, NtfStatus.Empty);
+            w.Write(", находится не на его рабочем месте");
+            w.Write("</div>");
+            w.Write("<div class=\"marginT2\" style=\"overflow: auto; height: 130px\">");
+            if (listEq.Count > 0)
+            {
+                
+                listEq.OrderBy(x => x.TypeName).ToList().ForEach(delegate(Equipment eq)
+                {
+                    w.Write("<div style=\"white-space:nowrap;\">");
+                    page.RenderLinkEquipment(w, eq.Id,"","открыть форму оборудования");
+                    w.Write("{0} {1}", eq.TypeName, eq.ModelName);
+                    page.RenderLinkEnd(w);
+                    w.Write(" -> ");
+                    
+                    if (eq.LocationId == 0) return;
+                    page.RenderLinkLocation(w, eq.LocationId.ToString());
+                    w.Write(eq.LocationName);
+                    page.RenderLinkEnd(w);
+                    w.Write("</div>");
+                });
+                
+            }
+            else
+            {
+                w.Write("нет данных об оборудовании на чужих рабочих местах");
+            }
+            w.Write("</div>");
+
+            page.JS.Write("var obj_{0} = document.getElementById('{0}'); if(obj_{0}){{obj_{0}.innerHTML='{1}';}}", idContainer,
+              HttpUtility.JavaScriptStringEncode(w.ToString()));
+            page.JS.Write("directions_anotherEquipmentList();");
+        }
 
         public void SotrudnikCadrWorkPlaces (EntityPage page, TextWriter w, Direction dir)
         {
@@ -337,27 +448,39 @@ namespace Kesco.App.Web.Docs.Directions
             
             foreach (var wp in wps)
             {
+                if (dir.WorkPlaceField.ValueString.Length > 0 && wp.Id == dir.WorkPlaceField.ValueString) continue;
+                
                 var icon = "";
                 var title = "";
 
-                wp.GetWorkPlaceSpecifications(out icon, out title);
+                wp.GetLocationSpecifications(out icon, out title);
 
                 wr.Write("<div style=\"margin-left:30px;\">");
-                page.RenderLinkLocation(wr, wp.Id, wp.Id, wp.Path, NtfStatus.Information);
+                page.RenderLinkLocation(wr, wp.Id, wp.Id, wp.Name, NtfStatus.Empty);
                 if (icon.Length > 0)
                     wr.Write("&nbsp;<img width=\"10\" height=\"10\" src=\"/styles/{0}\" title=\"{1}\" border=0/>", icon, title);
+                if ((dir.WorkPlaceField.ValueString.Length == 0 || dir.WorkPlaceField.ValueString.Length > 0 && wp.Id != dir.WorkPlaceField.ValueString) && wp.EquipmentsIt.Count>0)
+                    wr.Write("&nbsp;<img width=\"10\" height=\"10\" src=\"/styles/detail.gif\" title=\"{0}\" style=\"cursor:pointer\" onclick=\"directions_openEquipment({1});\" border=0/>", page.Resx.GetString("DIRECTIONS_Title_ShowEq"), wp.Id);
                 wr.Write("</div>");
             }
             var text = wr.ToString();
             if (text.Length > 0)
             {
-                text = "Рабочие места сотрудника:" + text;
-                page.RenderNtf(w, new List<string>(new[] { text }), NtfStatus.Information);
+
+                text = string.Format("{0}: {1}", page.Resx.GetString("DIRECTIONS_Lbl_WpsEpl"), text);
+                page.RenderNtf(w, new List<string>(new[] { text }), NtfStatus.Empty, false, false);
             }
-            wr = new StringWriter();
-            wr.Write("сотруднику выдано оборудование, которое находится не на его рабочем месте");
-            page.RenderNtf(w, new List<string>(new[] { wr.ToString() }), NtfStatus.Error);
-            
+
+            var listEq = dir.Sotrudnik.EmployeeEquipmentsAnotherWorkPlaces();
+
+            if (listEq.Count > 0)
+            {
+                wr = new StringWriter();
+                wr.Write("{0} <img src=\"/styles/detail.gif\" width=\"10\" height=\"10\" style=\"cursor:pointer\" onclick=\"directions_openAnotherEquipment();\" title=\"{1}\"/>", page.Resx.GetString("DIRECTIONS_NTF_ExcessEq"), page.Resx.GetString("DIRECTIONS_Title_ShowEq"));
+                page.RenderNtf(w, new List<string>(new[] {wr.ToString()}), NtfStatus.Error, false, false);
+                
+            }
+
         }
 
     }

@@ -1,7 +1,7 @@
 ﻿.directionGroupHeader{ font-style: italic;}
 .floatLeft{ float: left;}
 .clearLeft{ clear: left;}
-.bgcolor{ background-color: white;}
+.bgcolor{}
 .marginL{margin-left: 5px;}
 .marginL2{margin-left: 15px;}
 .marginR{margin-right: 5px;}
@@ -41,5 +41,4 @@ hr {
 .TDBL {BORDER-LEFT: solid 1px black;}
 .TDDataPL {PADDING-LEFT: 10px;}
 .TDDataPL0 {PADDING-LEFT: 0px;}
-.NtfMsg {FONT-SIZE: 7pt; COLOR:red;}
 .NoCI {COLOR:red;}  

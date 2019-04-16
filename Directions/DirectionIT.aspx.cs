@@ -41,9 +41,7 @@ namespace Kesco.App.Web.Docs.Directions
     public abstract partial class DirectionIT : DocPage
     {
         private RenderHelper _render;
-        protected ResourceManager LocalResx = new ResourceManager("Kesco.App.Web.Docs.Directions.DirectionIT",
-            Assembly.GetExecutingAssembly());
-
+       
         protected Direction Dir
         {
             get { return (Direction) Doc; }
@@ -384,6 +382,12 @@ namespace Kesco.App.Web.Docs.Directions
                 case "SendMessageDocument":
                     JS.Write(DocViewInterop.SendMessageDocument(param["docid"], param["empids"], param["msg"]));
                     break;
+                case "OpenAnotherEquipmentDetails":
+                    Render.EquipmentAnotherPlace(this, "divAdvInfoValidation_Body", Dir);
+                    break;
+                case "OpenEquipmentDetails":
+                    Render.EquipmentInPlace(this, "divAdvInfoValidation_Body", Dir, param["IdLocation"]);
+                    break;
                 default:
                     base.ProcessCommand(cmd, param);
                     break;
@@ -432,11 +436,11 @@ namespace Kesco.App.Web.Docs.Directions
                     return false;
                 }
                 if (Dir.LoginField.ValueString.Length == 0)
-                    errors.Add(LocalResx.GetString("_NTF_NoLogin"));
+                    errors.Add(Resx.GetString("DIRECTIONS_NTF_NoLogin"));
                 if (Dir.MailNameField.ValueString.Length == 0)
-                    errors.Add(LocalResx.GetString("_NTF_NoEmail"));
+                    errors.Add(Resx.GetString("DIRECTIONS_NTF_NoEmail"));
                 if (Dir.DomainField.ValueString.Length == 0)
-                    errors.Add(LocalResx.GetString("_NTF_NoDomain"));
+                    errors.Add(Resx.GetString("DIRECTIONS_NTF_NoDomain"));
 
                 if (errors.Count > 0) return false;
             }
@@ -445,10 +449,22 @@ namespace Kesco.App.Web.Docs.Directions
             if (Dir.SotrudnikParentCheckField.ValueString.Length != 0 &&
                 Dir.SotrudnikParentField.ValueString.Length == 0)
             {
-                if (Dir.SotrudnikParentCheckField.ValueInt == 1)
-                    errors.Add("Не заполнено поле 'как у сотрудника'");
-                else
-                    errors.Add("Не заполнено поле 'вместо сотрудника'");
+                errors.Add(Dir.SotrudnikParentCheckField.ValueInt == 1
+                    ? "Не заполнено поле 'как у сотрудника'"
+                    : "Не заполнено поле 'вместо сотрудника'");
+
+                if (Dir.SotrudnikParentCheckField.ValueInt == 2 && Dir.SotrudnikField.ValueString.Length > 0 &&
+                    !Dir.Sotrudnik.Unavailable &&
+                    Dir.Sotrudnik.Login.Length > 0
+                    && Dir.SotrudnikParentField.ValueString.Length > 0 && !Dir.SotrudnikParent.Unavailable &&
+                    Dir.SotrudnikParent.Login.Length > 0
+                    && Dir.Sotrudnik.Login != Dir.SotrudnikParent.Login
+                    )
+                {
+                    errors.Add(
+                        "Невозможно сохранить указание, т.к. и сотрудник, на которого делается указание и сотрудник 'вместо' имеют различные учетные записи!");
+
+                }
 
                 return false;
             }
@@ -526,7 +542,7 @@ namespace Kesco.App.Web.Docs.Directions
 
                 SetInitControls();
             }
-
+      
             JS.Write(@"directions_clientLocalization = {{
 CONFIRM_StdMessage:""{0}"",
 CONFIRM_StdTitle:""{1}"", 
@@ -542,7 +558,8 @@ DIRECTIONS_FORM_AG_Title:""{10}"",
 DIRECTIONS_FORM_Role_Title:""{11}"",
 DIRECTIONS_FORM_Type_Title:""{12}"",
 DIRECTIONS_FORM_WP_Title:""{13}"",
-DIRECTIONS_FORM_Mail_Title:""{14}""
+DIRECTIONS_FORM_Mail_Title:""{14}"",
+DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 }};",
                 Resx.GetString("CONFIRM_StdMessage"),
                 Resx.GetString("CONFIRM_StdTitle"),
@@ -558,7 +575,8 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 Resx.GetString("DIRECTIONS_FORM_Role_Title"),
                 Resx.GetString("DIRECTIONS_FORM_Type_Title"),
                 Resx.GetString("DIRECTIONS_FORM_WP_Title"),
-                Resx.GetString("DIRECTIONS_FORM_Mail_Title")
+                Resx.GetString("DIRECTIONS_FORM_Mail_Title"),
+                Resx.GetString("DIRECTIONS_FORM_ADVINFO_Title")
                 );
         }
 
@@ -570,8 +588,8 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             {
                 ID = "btnOldVersion",
                 V4Page = this,
-                Text = LocalResx.GetString("btnOldVersion"),
-                Title = LocalResx.GetString("btnOldVersion"),
+                Text = Resx.GetString("DIRECTIONS_btnOldVersion"),
+                Title = Resx.GetString("DIRECTIONS_btnOldVersion"),
                 IconJQueryUI = ButtonIconsEnum.Alert,
                 Width = 125,
                 OnClick = string.Format("v4_windowOpen('{0}','_self');", HttpUtility.JavaScriptStringEncode(WebExtention.UriBuilder(ConfigurationManager.AppSettings["URI_Direction_OldVersion"], CurrentQS)))
@@ -620,7 +638,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             if (employee.Unavailable)
             {
                 efSotrudnik.ValueText = "#" + employee.Id;
-                ntf.Add(LocalResx.GetString("_Msg_СотрудникНеДоступен"), NtfStatus.Error);
+                ntf.Add(Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"), NtfStatus.Error);
                 return;
             }
 
@@ -648,7 +666,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             if (p.Unavailable)
             {
                 efSotrudnikParent.ValueText = "#" + p.Id;
-                ntf.Add(LocalResx.GetString("_Msg_СотрудникНеДоступен"), NtfStatus.Error);
+                ntf.Add(Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"), NtfStatus.Error);
                 return;
             }
 
@@ -749,7 +767,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                 {
                     if (!string.IsNullOrEmpty(employee.CommonEmployeeID))
                     {
-                        ShowMessage(LocalResx.GetString("_NTF_СотрудникВГруппе1"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efSotrudnik.HtmlID);
+                        ShowMessage(Resx.GetString("DIRECTIONS_NTF_СотрудникВГруппе1"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efSotrudnik.HtmlID);
                         Dir.SotrudnikField.ValueString = "";
                         efSotrudnik.Focus();
                         return;
@@ -775,8 +793,8 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             {
                 if (!Regex.IsMatch(Dir.RedirectNumField.ValueString, RegexPattern.PhoneNumber))
                 {
-                    ShowMessage(LocalResx.GetString("_Msg_CheckPhoneNumber"), efMobilphone,
-                        LocalResx.GetString("_Msg_AlertTitle"));
+                    ShowMessage(Resx.GetString("DIRECTIONS_Msg_CheckPhoneNumber"), efMobilphone,
+                        Resx.GetString("alertMessage"));
                     Dir.RedirectNumField.ValueString = "";
                     efMobilphone.Value = "";
                 }
@@ -883,9 +901,9 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
 
         protected void efSotrudnikParent_OnChanged(object sender, ProperyChangedEventArgs e)
         {
-            if (Dir.SotrudnikParentField.ValueString.Length > 0 && Dir.SotrudnikParent != null && !Dir.SotrudnikParent.Unavailable && Dir.SotrudnikParent.CommonEmployeeID.Length>0)
+            if (Dir.SotrudnikParentField.ValueString.Length > 0 && Dir.SotrudnikParent != null && !Dir.SotrudnikParent.Unavailable && !string.IsNullOrEmpty(Dir.SotrudnikParent.CommonEmployeeID))
             {
-                ShowMessage(LocalResx.GetString("_NTF_СотрудникВГруппе2"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efSotrudnikParent.HtmlID);
+                ShowMessage(Resx.GetString("DIRECTIONS_NTF_СотрудникВГруппе2"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efSotrudnikParent.HtmlID);
                 Dir.SotrudnikParentField.ValueString = "";
                 return;
             }
@@ -893,13 +911,13 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             if (Dir.SotrudnikField.Value != null && Dir.SotrudnikField.Value.Equals(Dir.SotrudnikParentField.Value))
             {
                 Dir.SotrudnikParentField.ValueString = e.OldValue;
-                ShowMessage(LocalResx.GetString("_NTF_СотрудникСовпадает"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning,
+                ShowMessage(Resx.GetString("DIRECTIONS_NTF_СотрудникСовпадает"), Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning,
                     efSotrudnikParent.HtmlID);
             }
             else if (Dir.SotrudnikParentField.ValueString.Length > 0)
                 if (Dir.SotrudnikParent != null)
                     ShowConfirm(
-                        string.Format(LocalResx.GetString("_Msg_FillFormByEmpl") + " " + Dir.SotrudnikParent.FullName + "?"),
+                        string.Format(Resx.GetString("DIRECTIONS_Msg_FillFormByEmpl") + " " + Dir.SotrudnikParent.FullName + "?"),
                         "cmdasync('cmd', 'SotrudnikParentSetInfo');", null);
 
             efSotrudnikParent.IsRequired = Dir.SotrudnikParentField.ValueString.Length <= 0;
@@ -1000,7 +1018,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             var inx = 0;
             foreach (var wp in wps)
             {
-                if (!wp.WorkPlacePar.Equals((int) ТипыРабочихМест.КомпьютеризированноеРабочееМесто)) continue;
+                if (!wp.WorkPlace.Equals((int) ТипыРабочихМест.КомпьютеризированноеРабочееМесто)) continue;
                 w.Write("<div>");
                 w.Write("<nobr>");
                 w.Write(
@@ -1008,7 +1026,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
                     wp.Id, inx);
                 w.Write("<span class='marginL'>");
                 RenderLinkLocation(w, wp.Id);
-                w.Write(wp.Path);
+                w.Write(wp.Name);
                 RenderLinkEnd(w);
                 w.Write("</span>");
                 w.Write("</nobr>");
@@ -1017,7 +1035,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             }
 
             if (wps.Count == 0)
-                RenderNtf(w, new List<string>(new[] {LocalResx.GetString("_Msg_СотрудникНетРабМеста")}),
+                RenderNtf(w, new List<string>(new[] { Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста") }),
                     NtfStatus.Error);
 
             RefreshControlText(w, "divWPL_Body");
@@ -1966,7 +1984,7 @@ DIRECTIONS_FORM_Mail_Title:""{14}""
             Dir.AdvancedGrants().ForEach(delegate(AdvancedGrant ag)
             {
                 var check = false;
-
+                if (ag.NotAlive == "1") return;
                 if (Dir.PositionAdvancedGrants != null)
                 {
                     var p = Dir.PositionAdvancedGrants.FirstOrDefault(x => x.GrantId.ToString() == ag.Id);
