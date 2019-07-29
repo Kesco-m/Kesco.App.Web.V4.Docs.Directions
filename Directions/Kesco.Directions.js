@@ -1,6 +1,14 @@
 ﻿//================================================= Управление
 var directions_clientLocalization = {};
 
+function directions_clearRadio(divId) {
+    setTimeout(function() {
+            $("#" + divId + ' input[type="radio"]').prop("checked", false);
+        },
+        10);
+
+}
+
 function directions_setElementFocus(className, elId) {
     var obj;
     if (elId != null && elId.length > 0)
@@ -8,7 +16,7 @@ function directions_setElementFocus(className, elId) {
     else
         obj = $("." + className).first();
 
-    if (obj) obj.focus();
+    if (obj) setTimeout(function() { obj.focus(); }, 10);
 }
 
 function directions_setAttribute(elId, attrName, attrValue) {
@@ -37,23 +45,43 @@ function directions_SetDivPhoneStyle(addClass, removeClass) {
 
 //================================================= Отображение блока Internet
 
-function directions_Data_Lan(x) {
+function directions_Data_Lan(lan, user) {
 
-    if (x == 0) $('[data-lan]').not('[data-lan=""]').hide();
-    else $('[data-lan]').not('[data-lan=""]').show();
+    if (lan == 0) {
+        $("[data-lan]").not('[data-lan=""]').hide();
+    } else {
+        $("[data-lan]").not('[data-lan=""]').each(function(index, item) {
+            var datalan = parseInt($(item).attr("data-lan"));
+            var datauser = $(item).attr("data-user") ? parseInt($(item).attr("data-user")) : 0;
+
+            if ((datalan & lan) == lan && lan > 0) {
+                if (datauser > 0) {
+                    if ((datauser & user) == user && user > 0) {
+                        $(item).show();
+                    } else {
+                        $(item).hide();
+                    }
+                } else {
+                    $(item).show();
+                }
+
+            }
+        });
+    }
 }
 
 //================================================= Отображение блока Мобильный телефон
 
 function directions_Data_MobilPhone(x) {
 
-    if (x == 0) $('[data-phone]').not('[data-phone=""]').hide();
-    else $('[data-phone]').not('[data-phone=""]').show();
+    if (x == 0) $("[data-phone]").not('[data-phone=""]').hide();
+    else $("[data-phone]").not('[data-phone=""]').show();
 }
 
 //================================================= Выбор рабочего места
 
 directions_SetPositionWorkPlaceList.form = null;
+
 function directions_SetPositionWorkPlaceList() {
 
     if (null == directions_SetPositionWorkPlaceList.form) {
@@ -69,7 +97,7 @@ function directions_SetPositionWorkPlaceList() {
                 icons: {
                     primary: v4_buttonIcons.Document
                 },
-                click: function() { cmdasync('cmd', 'AdvSearchWorkPlace'); }
+                click: function() { cmdasync("cmd", "AdvSearchWorkPlace"); }
             },
             {
                 id: "btnWPL_Cancel",
@@ -77,14 +105,20 @@ function directions_SetPositionWorkPlaceList() {
                 icons: {
                     primary: v4_buttonIcons.Cancel
                 },
-                width: 75,
+                width: 100,
                 click: directions_CloseWorkPlaceList
             }
         ];
 
-            directions_SetPositionWorkPlaceList.form = v4_dialog("divWorkPlaceList", $("#divWorkPlaceList"), title, width, height, onOpen, null, buttons);
-            
-        
+        directions_SetPositionWorkPlaceList.form = v4_dialog("divWorkPlaceList",
+            $("#divWorkPlaceList"),
+            title,
+            width,
+            height,
+            onOpen,
+            null,
+            buttons);
+
 
     }
 
@@ -92,25 +126,42 @@ function directions_SetPositionWorkPlaceList() {
 }
 
 
-function directions_Data_WP(mask, lan) {
-    $('[data-wp]').not('[data-wp=""]').each(function (index, item) {
-        var value = parseInt($(item).attr("data-wp"));
-        
-        if ((value & mask) == 0) {
-            $(item).hide();
+function directions_Data_WP(wp, lan, user) {
+    $("[data-wp]").not('[data-wp=""]').each(function(index, item) {
+        var datawp = parseInt($(item).attr("data-wp"));
+        var datalan = $(item).attr("data-lan") ? parseInt($(item).attr("data-lan")) : 0;
+        var datauser = $(item).attr("data-user") ? parseInt($(item).attr("data-user")) : 0;
+
+        if ((datawp & wp) == wp && wp > 0) {
+            if (datalan > 0) {
+                if ((datalan & lan) == lan && lan > 0) {
+                    if (datauser > 0) {
+                        if ((datauser & user) == user && user > 0) {
+                            $(item).show();
+                        } else {
+                            $(item).hide();
+                        }
+                    }
+                    $(item).show();
+                } else {
+                    $(item).hide();
+                }
+            } else {
+                $(item).show();
+            }
+
         } else {
-            if ($(item).attr("data-lan") && lan == 0) return;
-            $(item).show();
+            $(item).hide();
         }
     });
-
 }
 
 function directions_SetWorkPlace(value, label) {
+
     if (value == null && value.length == 0) return;
     if (label == null) label = "";
     cmdasync("cmd", "SetWorkPlace", "value", value, "label", label);
-    directions_CloseWorkPlaceList();
+
 }
 
 function directions_ClearWorkPlace() {
@@ -120,7 +171,7 @@ function directions_ClearWorkPlace() {
 function directions_CloseWorkPlaceList() {
     if (null != directions_SetPositionWorkPlaceList.form)
         directions_SetPositionWorkPlaceList.form.dialog("close");
-    directions_setElementFocus(null, "efWorkPlaceType4_0");
+    directions_setElementFocus(null, "efPhoneDesk_0");
 }
 
 function directions_AdvSearchWorkPlace(control, callbackKey, result, isMultiReturn) {
@@ -132,6 +183,7 @@ function directions_AdvSearchWorkPlace(control, callbackKey, result, isMultiRetu
 //================================================= Выбор имени почтового ящика
 
 directions_SetMailNamesList.form = null;
+
 function directions_SetMailNamesList() {
 
     if (null == directions_SetMailNamesList.form) {
@@ -146,14 +198,22 @@ function directions_SetMailNamesList() {
                 icons: {
                     primary: v4_buttonIcons.Cancel
                 },
-                width: 75,
+                width: 100,
                 click: directions_CloseMailNameList
             }
         ];
-        var dialogPostion = { my: "top", at: "bottom", of: $('#efMailName_0') };
-        directions_SetMailNamesList.form = v4_dialog("divMailNames", $("#divMailNames"), title, width, height, onOpen, null, buttons, dialogPostion);
+        var dialogPostion = { my: "top", at: "bottom", of: $("#efMailName_0") };
+        directions_SetMailNamesList.form = v4_dialog("divMailNames",
+            $("#divMailNames"),
+            title,
+            width,
+            height,
+            onOpen,
+            null,
+            buttons,
+            dialogPostion);
 
-        
+
     }
 
     directions_SetMailNamesList.form.dialog("open");
@@ -175,6 +235,7 @@ function directions_CloseMailNameList() {
 //================================================= Позиции Роли
 
 directions_SetPositionRolesAdd.form = null;
+
 function directions_SetPositionRolesAdd() {
 
     if (null == directions_SetPositionRolesAdd.form) {
@@ -202,12 +263,13 @@ function directions_SetPositionRolesAdd() {
                     primary: v4_buttonIcons.Delete
                 },
                 width: 75,
-                click: function () {
-                    v4_showConfirm( directions_clientLocalization.CONFIRM_StdMessage,
-                                    directions_clientLocalization.CONFIRM_StdTitle,
-                                    directions_clientLocalization.CONFIRM_StdCaptionYes, 
-                                    directions_clientLocalization.CONFIRM_StdCaptionNo, 
-                                    directions_deleteRoleCallBack(directions_getAttribute("divPositionRolesAdd", "data-id"), 1), 400);
+                click: function() {
+                    v4_showConfirm(directions_clientLocalization.CONFIRM_StdMessage,
+                        directions_clientLocalization.CONFIRM_StdTitle,
+                        directions_clientLocalization.CONFIRM_StdCaptionYes,
+                        directions_clientLocalization.CONFIRM_StdCaptionNo,
+                        directions_deleteRoleCallBack(directions_getAttribute("divPositionRolesAdd", "data-id"), 1),
+                        400);
                 }
             },
             {
@@ -216,13 +278,20 @@ function directions_SetPositionRolesAdd() {
                 icons: {
                     primary: v4_buttonIcons.Cancel
                 },
-                width: 75,
+                width: 100,
                 click: directions_ClosePositionRolesAdd
             }
         ];
 
-            directions_SetPositionRolesAdd.form = v4_dialog("divPositionRolesAdd", $("#divPositionRolesAdd"), title, width, height, onOpen, null, buttons);
-            
+        directions_SetPositionRolesAdd.form = v4_dialog("divPositionRolesAdd",
+            $("#divPositionRolesAdd"),
+            title,
+            width,
+            height,
+            onOpen,
+            null,
+            buttons);
+
     }
 
     directions_SetPositionRolesAdd.form.dialog("open");
@@ -232,12 +301,13 @@ function directions_ClosePositionRolesAdd(setFocus) {
     if (null != directions_SetPositionRolesAdd.form)
         directions_SetPositionRolesAdd.form.dialog("close");
     directions_setAttribute("divPositionRolesAdd", "data-id", "");
-    directions_setElementFocus(null, setFocus != null ? setFocus : 'btnLinkRolesAdd');
+    directions_setElementFocus(null, setFocus != null ? setFocus : "btnLinkRolesAdd");
 }
 
 //================================================= Позиции Типы
 
 directions_SetPositionTypesAdd.form = null;
+
 function directions_SetPositionTypesAdd() {
 
     if (null == directions_SetPositionTypesAdd.form) {
@@ -254,7 +324,7 @@ function directions_SetPositionTypesAdd() {
                     primary: v4_buttonIcons.Ok
                 },
                 width: 75,
-                click: function() { cmdasync('cmd', 'SavePositionType', 'check', 1); }
+                click: function() { cmdasync("cmd", "SavePositionType", "check", 1); }
             },
             {
                 id: "btnPTypes_Delete",
@@ -264,11 +334,12 @@ function directions_SetPositionTypesAdd() {
                 },
                 width: 75,
                 click: function() {
-                    v4_showConfirm( directions_clientLocalization.CONFIRM_StdMessage,
-                                    directions_clientLocalization.CONFIRM_StdTitle,
-                                    directions_clientLocalization.CONFIRM_StdCaptionYes,
-                                    directions_clientLocalization.CONFIRM_StdCaptionNo, 
-                                    directions_deleteTypeAllCallBack(directions_getAttribute("divPositionTypesAdd", "data-id"), 1), 400);
+                    v4_showConfirm(directions_clientLocalization.CONFIRM_StdMessage,
+                        directions_clientLocalization.CONFIRM_StdTitle,
+                        directions_clientLocalization.CONFIRM_StdCaptionYes,
+                        directions_clientLocalization.CONFIRM_StdCaptionNo,
+                        directions_deleteTypeAllCallBack(directions_getAttribute("divPositionTypesAdd", "data-id"), 1),
+                        400);
 
                 }
             },
@@ -278,13 +349,19 @@ function directions_SetPositionTypesAdd() {
                 icons: {
                     primary: v4_buttonIcons.Cancel
                 },
-                width: 75,
+                width: 100,
                 click: directions_ClosePositionTypesAdd
             }
         ];
-            directions_SetPositionTypesAdd.form = v4_dialog("divPositionTypesAdd", $("#divPositionTypesAdd"), title, width, height, onOpen, null, buttons);
+        directions_SetPositionTypesAdd.form = v4_dialog("divPositionTypesAdd",
+            $("#divPositionTypesAdd"),
+            title,
+            width,
+            height,
+            onOpen,
+            null,
+            buttons);
 
-           
 
     }
 
@@ -295,12 +372,13 @@ function directions_SetPositionTypesAdd() {
 function directions_ClosePositionTypesAdd(setFocus) {
     if (null != directions_SetPositionTypesAdd.form)
         directions_SetPositionTypesAdd.form.dialog("close");
-    directions_setElementFocus(null, setFocus != null ? setFocus : 'btnLinkTypesAdd');
+    directions_setElementFocus(null, setFocus != null ? setFocus : "btnLinkTypesAdd");
 }
 
 //================================================= Позиции папки
 
 directions_SetPositionCFAdd.form = null;
+
 function directions_SetPositionCFAdd() {
 
     if (null == directions_SetPositionCFAdd.form) {
@@ -329,13 +407,20 @@ function directions_SetPositionCFAdd() {
                 icons: {
                     primary: v4_buttonIcons.Cancel
                 },
-                width: 75,
+                width: 100,
                 click: directions_ClosePositionCFAdd
             }
         ];
 
-        directions_SetPositionCFAdd.form = v4_dialog("divCommonFoldersAdd", $("#divCommonFoldersAdd"), title, width, height, onOpen, null, buttons);
-        
+        directions_SetPositionCFAdd.form = v4_dialog("divCommonFoldersAdd",
+            $("#divCommonFoldersAdd"),
+            title,
+            width,
+            height,
+            onOpen,
+            null,
+            buttons);
+
     }
 
     directions_SetPositionCFAdd.form.dialog("open");
@@ -351,7 +436,7 @@ function directions_ClosePositionCFAdd() {
 function directions_PositionCF_Save() {
 
     var selected = {};
-    $(".div_cf input:checked")  .each(function() {
+    $(".div_cf input:checked").each(function() {
         var id = $(this).attr("data-id");
         var name = $(this).attr("data-name");
         selected[id] = name;
@@ -371,91 +456,24 @@ function directions_PositionCF_Clear() {
 }
 
 
-//================================================= Позиции права
-
-directions_SetPositionAGAdd.form = null;
-function directions_SetPositionAGAdd() {
-
-    if (null == directions_SetPositionAGAdd.form) {
-        var title = directions_clientLocalization.DIRECTIONS_FORM_AG_Title;
-        var width = 350;
-        var height = 240;
-        var onOpen = function() { directions_setElementFocus("AG"); };
-        var buttons = [
-            {
-                id: "btnAG_Clear",
-                text: directions_clientLocalization.cmdUncheck,
-                click: directions_PositionAG_Clear
-            },
-            {
-                id: "btnAG_Save",
-                text: directions_clientLocalization.cmdOK,
-                icons: {
-                    primary: v4_buttonIcons.Ok
-                },
-                width: 75,
-                click: directions_PositionAG_Save
-            },
-            {
-                id: "btnAG_Cancel",
-                text: directions_clientLocalization.cmdCancel,
-                icons: {
-                    primary: v4_buttonIcons.Cancel
-                },
-                width: 75,
-                click: directions_ClosePositionAGAdd
-            }
-        ];
-
-            directions_SetPositionAGAdd.form = v4_dialog("divAdvancedGrantAdd", $("#divAdvancedGrantAdd"), title, width, height, onOpen, null, buttons);
-            
-    }
-
-    directions_SetPositionAGAdd.form.dialog("open");
-}
-
-function directions_ClosePositionAGAdd() {
-    if (null != directions_SetPositionAGAdd.form)
-        directions_SetPositionAGAdd.form.dialog("close");
-
-}
-
-function directions_PositionAG_Save() {
-
-    var selected = {};
-    $(".div_ag input:checked").each(function () {
-        var id = $(this).attr("data-id");
-        var name = $(this).attr("data-name");
-        var nameEn = $(this).attr("data-name-en");
-        selected[id] = name + '#' + nameEn;
-    });
-    var value = JSON.stringify(selected);
-    cmdasync("cmd", "SavePositionAG", "value", value);
-    directions_PositionAG_Clear();
-    directions_ClosePositionAGAdd();
-
-    directions_setElementFocus(null, "efAdvInfo_0");
-}
-
-function directions_PositionAG_Clear() {
-    $(".div_ag input:checked").each(function() {
-        this.checked = false;
-    });
-}
-
 //================================================= Дополнительный функиции
 
 function directions_openAnotherEquipment() {
-    cmd("cmd", "OpenAnotherEquipmentDetails");
+    cmdasync("cmd", "OpenAnotherEquipmentDetails");
 }
 
 function directions_openEquipment(idLocation) {
-    cmd("cmd", "OpenEquipmentDetails", "IdLocation", idLocation);
+    cmdasync("cmd", "OpenEquipmentDetails", "IdLocation", idLocation);
+}
+
+function directions_groupMembers(idGroup) {
+    cmdasync("cmd", "OpenGroupMembers", "IdGroup", idGroup);
 }
 
 //================================================= Выбор рабочего места
 
 directions_anotherEquipmentList.form = null;
+
 function directions_anotherEquipmentList() {
 
     if (null == directions_anotherEquipmentList.form) {
@@ -463,7 +481,7 @@ function directions_anotherEquipmentList() {
         var title = directions_clientLocalization.DIRECTIONS_FORM_ADVINFO_Title;
         var width = 483;
         var height = 253;
-        var onOpen = function () { directions_setElementFocus(null, "btnAEQ_Add"); };
+        var onOpen = function() { directions_setElementFocus(null, "btnAEQ_Add"); };
         var buttons = [
             {
                 id: "btnAEQ_Add",
@@ -475,28 +493,43 @@ function directions_anotherEquipmentList() {
             }
         ];
 
-            directions_anotherEquipmentList.form = v4_dialog("divAdvInfoValidation", $("#divAdvInfoValidation"), title, width, height, onOpen, null, buttons);
-        
+        directions_anotherEquipmentList.form = v4_dialog("divAdvInfoValidation",
+            $("#divAdvInfoValidation"),
+            title,
+            width,
+            height,
+            onOpen,
+            null,
+            buttons);
+
     }
 
-        directions_anotherEquipmentList.form.dialog("open");
+    directions_anotherEquipmentList.form.dialog("open");
 }
 
 function directions_closeAnotherEquipmentList() {
     if (null != directions_anotherEquipmentList.form) {
-        var obj = document.getElementById('divAdvInfoValidation_Body');
-        if (obj) obj.innerHTML = '';
+        var obj = document.getElementById("divAdvInfoValidation_Body");
+        if (obj) obj.innerHTML = "";
         directions_anotherEquipmentList.form.dialog("close");
     }
 }
 
 //================================================= Callback confirm
 function directions_deleteTypeAllCallBack(id, close) {
-    return 'cmdasync("cmd", "DeletePositionByCatalog", "catalog",' + id + ', "closeForm", "' + (close == 1 ? 1 : 0) + '");'; 
+    return 'cmdasync("cmd", "DeletePositionByCatalog", "catalog",' +
+        id +
+        ', "closeForm", "' +
+        (close == 1 ? 1 : 0) +
+        '");';
 }
 
 function directions_deleteTypeCallBack(catalog, theme) {
-    return 'cmdasync("cmd", "DeletePositionType", "catalog", "' + catalog + '", "theme", "' + theme + '", "closeForm", "0");';
+    return 'cmdasync("cmd", "DeletePositionType", "catalog", "' +
+        catalog +
+        '", "theme", "' +
+        theme +
+        '", "closeForm", "0");';
 }
 
 function directions_deleteAGCallBack(id) {
@@ -510,8 +543,11 @@ function directions_deleteCFCallBack(id) {
 function directions_deleteRoleAllCallBack(id) {
     return 'cmdasync("cmd", "DeletePositionByRole", "role", "' + id + '");';
 }
+
 function directions_deleteRoleCallBack(id, close) {
-    return 'cmdasync("cmd", "DeletePositionRoleByGuid", "guid", "' + id + '", "closeForm", "' + (close == 1 ? 1 : 0) + '");';
+    return 'cmdasync("cmd", "DeletePositionRoleByGuid", "guid", "' +
+        id +
+        '", "closeForm", "' +
+        (close == 1 ? 1 : 0) +
+        '");';
 }
-
-

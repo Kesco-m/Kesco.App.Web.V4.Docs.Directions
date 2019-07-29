@@ -10,6 +10,6 @@
 namespace Kesco.App.Web.Docs.Directions {
     
     
-    public partial class DirectionITSigned {
+    public partial class DirectionItSigned {
     }
 }

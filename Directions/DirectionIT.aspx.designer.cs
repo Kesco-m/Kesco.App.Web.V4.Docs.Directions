@@ -22,31 +22,31 @@ namespace Kesco.App.Web.Docs.Directions {
         protected global::Kesco.Lib.Web.DBSelect.V4.DBSEmployee efSotrudnik;
         
         /// <summary>
-        /// efWorkPlaceType1 элемент управления.
+        /// rdWorkPlaceType1 элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::Kesco.Lib.Web.Controls.V4.CheckBox efWorkPlaceType1;
+        protected global::Kesco.Lib.Web.Controls.V4.Radio rdWorkPlaceType1;
         
         /// <summary>
-        /// efWorkPlaceType2 элемент управления.
+        /// rdWorkPlaceType2 элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::Kesco.Lib.Web.Controls.V4.CheckBox efWorkPlaceType2;
+        protected global::Kesco.Lib.Web.Controls.V4.Radio rdWorkPlaceType2;
         
         /// <summary>
-        /// efWorkPlaceType4 элемент управления.
+        /// rdWorkPlaceType4 элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::Kesco.Lib.Web.Controls.V4.CheckBox efWorkPlaceType4;
+        protected global::Kesco.Lib.Web.Controls.V4.Radio rdWorkPlaceType4;
         
         /// <summary>
         /// efPhoneDesk элемент управления.
@@ -85,13 +85,13 @@ namespace Kesco.App.Web.Docs.Directions {
         protected global::Kesco.Lib.Web.Controls.V4.ComboBox efPLExit;
         
         /// <summary>
-        /// efMobilphone элемент управления.
+        /// efRedirectNum элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::Kesco.Lib.Web.Controls.V4.TextBox efMobilphone;
+        protected global::Kesco.Lib.Web.Controls.V4.TextBox efRedirectNum;
         
         /// <summary>
         /// efComputer элемент управления.

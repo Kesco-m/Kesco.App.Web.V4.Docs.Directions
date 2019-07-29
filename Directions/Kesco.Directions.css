@@ -1,44 +1,118 @@
-﻿.directionGroupHeader{ font-style: italic;}
-.floatLeft{ float: left;}
-.clearLeft{ clear: left;}
-.bgcolor{}
-.marginL{margin-left: 5px;}
-.marginL2{margin-left: 15px;}
-.marginR{margin-right: 5px;}
-.marginT{margin-top: 3px;}
-.marginT2{margin-top: 7px;}
-        
-.paddingT{padding-top: 5px;}
-.paddingB{padding-bottom: 5px;}
-.paddingR{padding-right: 5px;}
+﻿.directionGroupHeader { font-style: normal; }
+
+.floatLeft { float: left; }
+
+.clearLeft { clear: left; }
+
+.bgcolor { }
+
+.marginL { margin-left: 5px; }
+
+.marginL2 { margin-left: 15px; }
+
+.marginR { margin-right: 5px; }
+
+.marginT { margin-top: 3px; }
+
+.marginT2 { margin-top: 7px; }
+
+.marginT3 { margin-top: 4px; }
+
+.paddingT { padding-top: 5px; }
+
+.paddingB { padding-bottom: 5px; }
+
+.paddingR { padding-right: 5px; }
        
         
-.w25 { width: 25px; white-space: nowrap;}
-.w75 { width: 75px; white-space: nowrap;}
-.w100 { width: 100px; white-space: nowrap;}
-        
-.w145{ width: 145px;}
-.w170{ width: 170px;}
-.w185{ width: 185px; white-space: nowrap;}
-.w210{ width: 210px; white-space: nowrap;}
-.w220{ width: 220px; white-space: nowrap;}
-.w300{ width: 300px;}
+.w25 {
+    white-space: nowrap;
+    width: 25px;
+}
+
+.w75 {
+    white-space: nowrap;
+    width: 75px;
+}
+
+.w70 {
+    white-space: nowrap;
+    width: 70px;
+}
+
+.w100 {
+    white-space: nowrap;
+    width: 100px;
+}
+
+.w120 {
+    white-space: nowrap;
+    width: 120px;
+}
+
+.w145 { width: 145px; }
+
+.w170 { width: 170px; }
+
+.w185 {
+    white-space: nowrap;
+    width: 185px;
+}
+
+.w210 {
+    white-space: nowrap;
+    width: 210px;
+}
+
+.w215 {
+    white-space: nowrap;
+    width: 210px;
+}
+
+.w220 {
+    white-space: nowrap;
+    width: 220px;
+}
+
+.w270 {
+    white-space: nowrap;
+    width: 270px;
+}
+
+.w300 { width: 300px; }
        
                  
-.disp_inline{display: inline-table;}
-.disp_inlineBlock{display: inline-block;  vertical-align: top;}
-.disp_inlineBlockS{display: inline-block;  height: 99%; vertical-align: top;}
-       
-.disp_hr{display: inline-table; width: 200px;}
+.disp_inline { display: inline-table; }
+
+.disp_inlineBlock {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.disp_inlineBlockS {
+    display: inline-block;
+    height: 99%;
+    vertical-align: top;
+}
+
+.disp_hr {
+    display: inline-table;
+    width: 200px;
+}
+
 hr {
+    background-color: lightgrey; /* Цвет линии для браузера Firefox и Opera */
     border: none; /* Убираем границу для браузера Firefox */
     color: lightgrey; /* Цвет линии для остальных браузеров */
-    background-color: lightgrey; /* Цвет линии для браузера Firefox и Opera */
     height: 1px; /* Толщина линии */
 }
 
-.TDBB {BORDER-BOTTOM: solid 1px black;}
-.TDBL {BORDER-LEFT: solid 1px black;}
-.TDDataPL {PADDING-LEFT: 10px;}
-.TDDataPL0 {PADDING-LEFT: 0px;}
-.NoCI {COLOR:red;}  
+.TDBB { BORDER-BOTTOM: solid 1px black; }
+
+.TDBL { BORDER-LEFT: solid 1px black; }
+
+.TDDataPL { PADDING-LEFT: 10px; }
+
+.TDDataPL0 { PADDING-LEFT: 0px; }
+
+.NoCI { COLOR: red; }
