@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
@@ -10,11 +9,11 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
-using Kesco.Lib.BaseExtention;
 using Kesco.Lib.BaseExtention.Enums.Controls;
-using Kesco.Lib.DALC;
+using Kesco.Lib.BaseExtention.Enums.Docs;
 using Kesco.Lib.Entities;
 using Kesco.Lib.Entities.Corporate;
+using Kesco.Lib.Entities.Documents;
 using Kesco.Lib.Entities.Documents.EF.Directions;
 using Kesco.Lib.Entities.Persons;
 using Kesco.Lib.Entities.Persons.PersonOld;
@@ -22,6 +21,7 @@ using Kesco.Lib.Log;
 using Kesco.Lib.Web.Controls.V4;
 using Kesco.Lib.Web.Controls.V4.Common.DocumentPage;
 using Kesco.Lib.Web.Settings;
+using Role = Kesco.Lib.BaseExtention.Enums.Corporate.Role;
 
 namespace Kesco.App.Web.Docs.Directions
 {
@@ -30,7 +30,57 @@ namespace Kesco.App.Web.Docs.Directions
     /// </summary>
     public partial class DirectionItSigned : DocPage
     {
+        private bool isRedirect = false;
+
+        /// <summary>
+        ///     Конструктор
+        /// </summary>
+        protected DirectionItSigned()
+        {
+            IsRenderDocTitle = false;
+        }
+
         //========================================================================================================== Execute
+
+        private void ExecuteTransferConfirm()
+        {
+            ShowConfirm(Dir.Resx.GetString("DIRECTIONS_MSG_ConfirmTransfer"), "cmdasync('cmd','ExecuteTransfer');", null);
+        }
+
+        /// <summary>
+        ///    Выполнение переезда оборудования сотрудника
+        /// </summary>
+        private void ExecuteTransfer()
+        {
+            if (Dir.IsNew) return;
+            var cm = new SqlCommand(SQLQueries.INSERT_НовоеРасположениеОборудованияСотрудника);
+            cm.Connection = new SqlConnection(Config.DS_user);
+            cm.CommandType = CommandType.Text;
+            cm.CommandTimeout = 0;
+
+            cm.Parameters.AddWithValue("@КодРасположения_Old", Dir.WorkPlaceToField.ValueInt);
+            cm.Parameters.AddWithValue("@КодРасположения_New", Dir.WorkPlaceField.ValueInt);
+            cm.Parameters.AddWithValue("@КодСотрудника", Dir.SotrudnikField.ValueInt);
+
+            try
+            {
+                cm.Connection.Open();
+                cm.ExecuteNonQuery();                
+                RefreshFormData();
+            }
+            catch(Exception ex)
+            {
+                throw new DetailedException(ex.Message, ex, cm);
+            }
+            finally
+            {
+                if (cm.Connection != null && cm.Connection.State.Equals(ConnectionState.Open))
+                    cm.Connection.Close();
+            }
+
+        }
+
+
         /// <summary>
         ///     Выполнение указания
         /// </summary>
@@ -99,11 +149,7 @@ namespace Kesco.App.Web.Docs.Directions
         //========================================================================================================== Globals
 
         #region Глобальные объекты
-
-        /// <summary>
-        ///     Группа посменной работы без логина
-        /// </summary>
-        private bool _isCommonEmployeeNoLogin;
+                   
 
         /// <summary>
         ///     Объект отрисовки дополнительной информации
@@ -118,7 +164,7 @@ namespace Kesco.App.Web.Docs.Directions
         /// <summary>
         ///     Объект текущего документа Указание IT на организацию работы
         /// </summary>
-        protected Direction Dir => (Direction) Doc;
+        protected Direction Dir => Doc == null ? new Direction() : (Direction) Doc;
 
         /// <summary>
         ///     Инициализация объекта отрисовки информации
@@ -139,6 +185,7 @@ namespace Kesco.App.Web.Docs.Directions
         {
             if (!IsOpenInEditableMode(Request)) return base.RedirectPageByCondition();
 
+            isRedirect = true;
             V4Redirect("DirectionIT.aspx");
             return true;
         }
@@ -150,6 +197,8 @@ namespace Kesco.App.Web.Docs.Directions
         /// <param name="e">Аргументы</param>
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (isRedirect) return;
+
             if (!V4IsPostBack)
             {
                 SetCultureText();
@@ -159,7 +208,7 @@ namespace Kesco.App.Web.Docs.Directions
             JS.Write(@"directions_clientLocalization = {{
 DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 }};",
-                Resx.GetString("DIRECTIONS_FORM_ADVINFO_Title")
+                Dir.Resx.GetString("DIRECTIONS_FORM_ADVINFO_Title")
             );
         }
 
@@ -174,15 +223,15 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             var wp = new WindowsPrincipal(wi);
 
 
-            if (wp.IsInRole("TEST\\Programists") || wp.IsInRole("EURO\\Domain Admins")
-            )
+            if (Dir.AccessEthernetField.ValueInt > 0 &&
+                (wp.IsInRole("TEST\\Programists") || wp.IsInRole("EURO\\Domain Admins")))
             {
                 var btnExecute = new Button
                 {
                     ID = "btnExecute",
                     V4Page = this,
-                    Text = Resx.GetString("DIRECTIONS_btnGO"),
-                    Title = Resx.GetString("DIRECTIONS_btnGO_Title"),
+                    Text = Dir.Resx.GetString("DIRECTIONS_btnGO"),
+                    Title = Dir.Resx.GetString("DIRECTIONS_btnGO_Title"),
                     IconJQueryUI = ButtonIconsEnum.Ok,
                     Width = 105,
                     OnClick = "cmdasync('cmd','Execute');"
@@ -190,18 +239,21 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 AddMenuButton(btnExecute);
             }
 
-            var btnOldVersion = new Button
+            if (Dir.WorkPlaceTypeField.Value != null && Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто
+                && Dir.Signed && !Dir.Finished && CurrentUser.HasRole((int)Role.Специалист_по_инвентаризации_оборудования))
             {
-                ID = "btnOldVersion",
-                V4Page = this,
-                Text = Resx.GetString("btnOldVersion"),
-                Title = Resx.GetString("btnOldVersion_Title"),
-                IconJQueryUI = ButtonIconsEnum.Alert,
-                Width = 150,
-                OnClick =
-                    $"v4_windowOpen('{HttpUtility.JavaScriptStringEncode(WebExtention.UriBuilder(ConfigurationManager.AppSettings["URI_Direction_OldVersion"], CurrentQS))}','_self');"
-            };
-            AddMenuButton(btnOldVersion);
+                var btnExecuteTransfer = new Button
+                {
+                    ID = "btnExecuteTransfer",
+                    V4Page = this,
+                    Text = Dir.Resx.GetString("DIRECTIONS_btnGOTransfer"),
+                    Title = Dir.Resx.GetString("DIRECTIONS_btnGOTransfer_Title"),
+                    IconJQueryUI = ButtonIconsEnum.Ok,
+                    Width = 175,
+                    OnClick = "cmdasync('cmd','ExecuteTransferConfirm');"
+                };
+                AddMenuButton(btnExecuteTransfer);
+            }
         }
 
         /// <summary>
@@ -219,17 +271,6 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         }
 
         /// <summary>
-        ///     Загрузка данных текущего документа
-        /// </summary>
-        /// <param name="idEntity">Идентификатор документа</param>
-        protected override void EntityLoadData(string idEntity)
-        {
-            base.EntityLoadData(idEntity);
-            if (idEntity.IsNullEmptyOrZero()) return;
-            Dir.LoadDocumentPositions();
-        }
-
-        /// <summary>
         ///     Первичное заполнение элементов управления на основании свойств документа
         /// </summary>
         protected override void DocumentToControls()
@@ -241,6 +282,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// </summary>
         protected override void SetControlProperties()
         {
+            ItemName = "DirectionIT";
         }
 
         /// <summary>
@@ -255,14 +297,21 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 case "Execute":
                     Execute();
                     break;
+                case "ExecuteTransfer":
+                    ExecuteTransfer();
+                    break;
+                case "ExecuteTransferConfirm":
+                    ExecuteTransferConfirm();
+                    break;
                 case "OpenAnotherEquipmentDetails":
-                    RenderData.EquipmentAnotherPlace(this, "divAdvInfoValidation_Body", Dir);
+                    RenderData.EquipmentAnotherPlace(this, "divSotrudnikAnotherWorkPlaces", Dir);
                     break;
                 case "OpenEquipmentDetails":
-                    RenderData.EquipmentInPlace(this, "divAdvInfoValidation_Body", Dir, param["IdLocation"]);
+                    RenderData.EquipmentInPlace(this, param["IdContainer"], Dir, param["IdLocation"]);
                     break;
+
                 case "OpenGroupMembers":
-                    RenderData.GroupMembers(this, "divAdvInfoValidation_Body", Dir, param["IdGroup"]);
+                    RenderData.GroupMembers(this, param["IdContainer"], Dir, param["IdGroup"]);
                     break;
                 default:
                     base.ProcessCommand(cmd, param);
@@ -304,9 +353,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="w">Поток вывода</param>
         /// <param name="msg">Данные</param>
         /// <param name="br">Нужен перенос после вывода</param>
-        private void GetNtfFormatMsg(TextWriter w, string msg, bool br)
+        private void GetNtfFormatMsg(TextWriter w, string msg, bool br, string title = "")
         {
-            w.Write("{1}<font class='v4NtfError'>{0}</font>", msg, br ? "<br>" : "");
+            w.Write("{1}<font class='v4Error v4ContextHelp' {2}>{0}</font>", msg, br ? "<br>" : "", string.IsNullOrEmpty(title)?"": $"title=\"{HttpUtility.HtmlEncode(title)}\"");
         }
 
         /// <summary>
@@ -329,16 +378,17 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="fl">Отличается от требуемого</param>
         /// <param name="br">Нужен перевод на новуб строку после вывода</param>
         /// <param name="marginL">Нужен ли отступ слева</param>
-        private void GetCompleteInfo(TextWriter w, string msg, bool fl, bool br, bool marginL = false)
+        private void GetCompleteInfo(TextWriter w, string msg, bool fl, bool br, bool marginL = false,
+            string title = "", bool isContextHelp = false)
         {
-            if (!string.IsNullOrEmpty(msg) && msg == Resx.GetString("DIRECTIONS_lNoComplete") && fl)
+            if (!string.IsNullOrEmpty(msg) && msg == Dir.Resx.GetString("DIRECTIONS_lNoComplete") && fl)
             {
                 w.Write("<br>&nbsp;");
                 return;
             }
-
+            var className = msg == Dir.Resx.GetString("DIRECTIONS_lNoComplete") ? "v4Recommended" : "v4Error";
             var str =
-                $"{(br ? "<br>" : "")}<span class=\"{(!fl ? "NoCI" : "")}{(marginL ? " marginL" : "")}\">{(string.IsNullOrEmpty(msg) ? "" : msg)}</span>";
+                $"{(br ? "<br>" : "")}<span {(string.IsNullOrEmpty(title) ? "" : $"style=\"cursor:help;\" title=\"{HttpUtility.HtmlEncode(title)}\"")} class=\"{(!fl ? className + (isContextHelp? " v4ContextHelp" : "") : "")}{(marginL ? " marginL" : "")}\">{(string.IsNullOrEmpty(msg) ? "" : msg)}</span>";
 
             w.Write(str);
         }
@@ -384,24 +434,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             using (var w = new StringWriter())
             {
                 RenderData.SotrudnikPost(this, w, Dir);
-                JS.Write("var objSP=document.getElementById('spSotrudnikPost'); if (objSP) objSP.innerHTML = '{0}';",
+                JS.Write("var objSP=document.getElementById('divSotrudnikPost'); if (objSP) objSP.innerHTML = '{0}';",
                     HttpUtility.JavaScriptStringEncode(w.ToString()));
             }
         }
 
-        /// <summary>
-        ///     Обновление работодателя сотрудника
-        /// </summary>
-        private void RefreshSotrudnikAOrg()
-        {
-            using (var w = new StringWriter())
-            {
-                RenderData.SotrudnikAOrg(this, w, Dir);
-                JS.Write(
-                    "var objSAOrg=document.getElementById('spSotrudnikAOrg'); if (objSAOrg) objSAOrg.innerHTML = '{0}';",
-                    HttpUtility.JavaScriptStringEncode(w.ToString()));
-            }
-        }
 
         /// <summary>
         ///     Обновление лица заказчика сотрудника
@@ -424,7 +461,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         {
             using (var w = new StringWriter())
             {
-                RenderData.CommonEmployee(this, w, Dir);
+                RenderData.CommonEmployee(this, w, Dir, true);
                 JS.Write("var objCE=document.getElementById('divCommonEmployee'); if (objCE) objCE.innerHTML = '{0}';",
                     HttpUtility.JavaScriptStringEncode(w.ToString()));
             }
@@ -464,7 +501,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         {
             using (var w = new StringWriter())
             {
-                RenderData.WorkPlaceType(this, w, Dir, false);
+                RenderData.WorkPlaceType(this, w, Dir);
                 JS.Write(
                     "var objWPT=document.getElementById('divSotrudnikWPType'); if (objWPT) objWPT.innerHTML = '{0}';",
                     HttpUtility.JavaScriptStringEncode(w.ToString()));
@@ -496,19 +533,20 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// </summary>
         private void RefreshFormData()
         {
-            Dir.RequiredRefreshInfo = true;
-            Dir.SotrudnikRequiredRefreshInfo = true;
-            Dir.SotrudnikParentRequiredRefreshInfo = true;
+            if (Dir == null || Dir.IsNew) return;
+            Dir.LoadedExternalProperties.Clear();
+            Dir.Sotrudnik.LoadedExternalProperties.Clear();
 
             RefreshPhoto();
             RefreshSotrudnikInfo();
             RefreshSotrudnikPost();
-            RefreshSotrudnikAOrg();
             RefreshSotrudnikFinOrg();
             RefreshCommonEmployee();
             RefreshCadrWorkPlaces();
             RefreshSupervisor();
             RefreshWorkPlaceType();
+
+
             RefreshMobilPhone();
 
             var w = new StringWriter();
@@ -524,12 +562,19 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="w">Поток вывода</param>
         protected void RenderFormData(TextWriter w)
         {
+            if (Dir == null || Dir.IsNew) return;
+
+            var bitMask = Dir.WorkPlaceTypeField.ValueInt;
+            if (bitMask == 0 && Dir.WorkPlaceField.ValueString.Length > 0)
+                bitMask = 1;
+
             w.Write("<table class='bgcolor marginT2' cellpadding=0 cellspacing=0 style='width:99%;' >");
 
-            _isCommonEmployeeNoLogin = IsCommonEmployeeNoLogin();
-
             RenderHeader(w);
-            if (!_isCommonEmployeeNoLogin) // Для сотрудника в группе с УЗ выводим только Логин, Email
+
+            if (bitMask != (int) DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи
+                && bitMask != (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы
+                && bitMask != (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте)
             {
                 RenderPhoneEquip(w);
                 RenderAdvancedGrants(w, 4);
@@ -538,20 +583,98 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 RenderAdvEquip(w);
             }
 
+            if (Dir.AccessEthernetField.ValueString == "1")
+            {
+                RenderAeAccess(w);
+                RenderLanguage(w);
+                RenderEmail(w);
 
-            RenderAeAccess(w);
-            RenderLanguage(w);
-            RenderEmail(w);
+                RenderAdvancedGrants(w, 1);
+                //RenderSotrudnikParent(w);
+                RenderSFolder(w);
+                RenderRoles(w);
+                RenderTypes(w);
+            }
 
-            RenderAdvancedGrants(w, 1);
-            RenderSotrudnikParent(w);
-            RenderSFolder(w);
-            RenderRoles(w);
-            RenderTypes(w);
 
             RenderNote(w);
             w.Write("</table>");
         }
+
+        private void RenderTranferEquipRequired(TextWriter w)
+        {
+            var dv = new DataView();
+            dv.Table = DtEquip;
+            dv.RowFilter =
+                $"КодРасположения = {Dir.WorkPlaceToField.ValueInt} AND (КодСотрудника = {Dir.SotrudnikField.ValueInt} OR КодСотрудника IS NULL)";
+            dv.Sort =
+                "ЕстьТелефонныйНомер DESC, ЕстьХарактеристикиМонитора DESC, ЕстьХарактеристикиКомпьютера DESC, Оборудование";
+
+            w.Write(Dir.WorkPlaceToField.Value + "->1");
+            for (var i = 0; i < dv.Count; i++)
+            {
+                w.Write("<div class=\"marginL\">");
+
+                RenderLinkEquipment(w, $"eq_{dv[i]["КодОборудования"]}", dv[i]["КодОборудования"].ToString(), $"{dv[i]["Оборудование"]}", NtfStatus.Error, Dir.Resx.GetString("DIRECTIONS_Msg_OpenEquip"), "", "transfereq");
+
+                w.Write("</div>");
+            }
+
+            if (dv.Count == 0)
+                RenderNtf(w, new List<Notification>
+                {
+                    new Notification
+                    {
+                        Message = "на данном расположении нет оборудования сотрудника",
+                        DashSpace = false,
+                        SizeIsNtf = false,
+                        Status = NtfStatus.Empty,
+                        CSSClass = "marginL"
+                    }
+                });
+        }
+
+        private void RenderTranferEquipComplete(TextWriter w)
+        {
+            var dv = new DataView();
+            dv.Table = DtEquip;
+            dv.RowFilter =
+                $"КодРасположения = {Dir.WorkPlaceField.ValueInt} AND (КодСотрудника IS NULL OR КодСотрудника={Dir.SotrudnikField.ValueString})";
+            dv.Sort =
+                "ЕстьТелефонныйНомер DESC, ЕстьХарактеристикиМонитора DESC, ЕстьХарактеристикиКомпьютера DESC, Оборудование";
+
+            for (var i = 0; i < dv.Count; i++)
+            {
+                w.Write("<div class=\"marginL\">");
+
+                RenderLinkEquipment(w, $"eq_{dv[i]["КодОборудования"]}", dv[i]["КодОборудования"].ToString(), $"{dv[i]["Оборудование"]}", NtfStatus.Empty, Dir.Resx.GetString("DIRECTIONS_Msg_OpenEquip"), "", "transfereqcomplete");
+
+                w.Write("</div>");
+            }
+
+            dv.RowFilter =
+                $"КодРасположения = {Dir.WorkPlaceField.ValueInt} AND (КодСотрудника IS NOT NULL AND КодСотрудника <> {Dir.SotrudnikField.ValueString})";
+            dv.Sort =
+                "ЕстьТелефонныйНомер DESC, ЕстьХарактеристикиМонитора DESC, ЕстьХарактеристикиКомпьютера DESC, Оборудование";
+
+            w.Write(Dir.WorkPlaceField.Value + "-To");
+
+            if (dv.Count > 0)
+                w.Write($"<div class=\"v4Error marginL\">{"Лишнее оборудование на рабочем месте:"}</div>");
+
+            for (var i = 0; i < dv.Count; i++)
+            {
+                w.Write("<div class=\"marginL2\">");
+
+                RenderLinkEquipment(w, $"eq_{dv[i]["КодОборудования"]}", dv[i]["КодОборудования"].ToString(), $"{dv[i]["Оборудование"]}", NtfStatus.Error, Dir.Resx.GetString("DIRECTIONS_Msg_OpenEquip"), "", "transfereqcomplete");
+
+                w.Write("&nbsp;");
+                RenderLinkEmployee(w, $"link{dv[i]["КодСотрудника"]}", dv[i]["КодСотрудника"].ToString(), $"[{dv[i]["Сотрудник"]}]", NtfStatus.Error, false, "transferemplcomplete");
+                
+                w.Write("</div>");
+            }
+        }
+
 
         /// <summary>
         ///     Вывода предупреждения, что указание не подписано непосредственным руководителем
@@ -559,20 +682,51 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="w">Поток вывода</param>
         protected void RenderNoSignSupervisor(TextWriter w)
         {
+            if (Dir == null || Dir.IsNew) return;
             var super = Dir.Sotrudnik.Supervisor;
 
             if (super == null || super.Unavailable) return;
-            if (super.Login.Length == 0) return;
+            if (!super.AccountDisabled.HasValue || super.AccountDisabled.Value!=0 || !super.HasAccount_) return;
 
             var fl = Dir.DocSigns.Where(t => !t.Unavailable).Any(t => t.EmployeeId.Equals(int.Parse(super.Id)));
             if (fl || Dir.ChangePersonID == int.Parse(super.Id)) return;
 
             w.Write(
-                "<div id='spNoSignSupervisor' class='v4Error v4ContextHelp' style='float:right; margin-right:1%;' title='{0}'>",
-                Resx.GetString("DIRECTIONS_Msg_NoSignSupervisor_Title"));
-            w.Write(Resx.GetString("DIRECTIONS_Msg_NoSignSupervisor"));
+                "<div id='spNoSignSupervisor' class='v4Error v4ContextHelp' style='text-align:right; width:99%;' title='{0}'>",
+                Dir.Resx.GetString("DIRECTIONS_Msg_NoSignSupervisor_Title"));
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoSignSupervisor"));
             w.Write("</div>");
         }
+
+        protected void RenderCheckTypeDirection(TextWriter w)
+        {
+            if (Dir == null || Dir.IsNew) return;
+            var empl = Dir.Sotrudnik;
+
+            if (!string.IsNullOrEmpty(empl.CommonEmployeeID))
+            {
+                if (Dir.WorkPlaceTypeField.ValueInt != (int)DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы)
+                {
+                    w.Write("<div id='spCheckTypeDirection' class='v4Error v4ContextHelp' style='width:99%;' title='{0}'>", Dir.Resx.GetString("DIRECTIONS_Msg_CheckTypeDirection_Title"));
+
+                    w.Write("<div>");
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_CheckTypeDirection"));
+                    w.Write(" ");
+                    RenderData.CommonEmployee(this, w, Dir, true, NtfStatus.Error);
+                    w.Write("</div>");
+                    w.Write("<div>");
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_CheckTypeDirection_1"));
+
+                    var dtp = new DocType( DocTypeEnum.УказаниеВОтделИтНаОрганизациюРабочегоМеста);
+                    var url = dtp.URL + "?docid=" + Dir.Id;
+                   // RenderLink(w,"Создать указание", dtp.URL, )
+
+                    w.Write("</div>");
+                    w.Write("</div>");
+                }
+            }
+        }
+
 
         /// <summary>
         ///     Вывод заголока таблицы Требуется/Выполнено
@@ -625,18 +779,25 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         private void RenderPhoneEquipRequired(TextWriter w)
         {
             var bitMask = 0;
-
+            var empl = Dir.Sotrudnik;
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%' colspan=3>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_Phone") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_Phone") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL' nowrap>");
             if (Dir.PhoneEquipField.ValueString.Length == 0)
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                if (empl != null && !empl.SimRequired)
+                    if (DisplayByDirectionType(DirectionsDemand.RequiredEquipment))
+                    {
+                        w.Write(
+                            $"<span {(Dir.CompTypeField.ValueString.Length > 0 ? "class=\"v4Error v4ContextHelp\"  title=\"" + Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired_Title_Phone") + "\"" : "")}>");
+                        w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                        w.Write("</span>");
+                    }
             }
             else
             {
@@ -670,14 +831,26 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 if ((bitMask & 8) == 8) w.Write(LPlExitOutCountry);
                 else if ((bitMask & 4) == 4) w.Write(LPlExitOutTown);
                 else if ((bitMask & 2) == 2) w.Write(LPlExitTown);
-                //else if ((bitMask & 2) == 2) w.Write(lPLExitOutTown);
                 else if ((bitMask & 1) == 1) w.Write(LPlExitInSide);
             }
 
             w.Write("</td>");
             w.Write("</tr>");
+
+            if ((bitMask & 1) == 1 || (bitMask & 2) == 2)
+            {
+                w.Write("<tr>");
+                w.Write("<td colspan=\"3\" class=\"TDDataPL\">");
+                
+                RenderMobilPhone(w);
+                
+                w.Write("</td>");
+                w.Write("</tr>");
+            }
+
             w.Write("</table>");
         }
+
 
         /// <summary>
         ///     Вывод информации о телефонном оборудовании - что выполнено
@@ -686,6 +859,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="dv">Отфильтрованные данные телефонному оборудованию</param>
         private void RenderInsidePhoneComplete(TextWriter w, DataView dv)
         {
+            if (dv == null) return;
             var sb = new StringBuilder();
             var fl = false;
 
@@ -700,6 +874,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             var flC = Dir.PhoneEquipField.ValueString.Length == 0 ||
                       Dir.PhoneEquipField.ValueString.Length != 0 && bitmask == 0;
 
+            var flL = true;
+            var flV = Dir.PhoneLinkField.ValueInt;
+
             if (dv.Count > 0)
             {
                 fl = true;
@@ -709,27 +886,80 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                     if (i == 0)
                         sb.AppendFormat("<div>&nbsp;</div>");
 
-                    sb.AppendFormat("<div class=\"marginL {0}\">", flC ? "NoCI" : "");
+                    sb.AppendFormat("<div class=\"marginL {0}\">", flC ? "v4Error" : "");
 
                     var phoneNumber = dv[i]["НомерТелефона"].Equals(DBNull.Value)
                         ? ""
                         : dv[i]["НомерТелефона"].ToString();
 
                     if (phoneNumber.Length > 0)
-                        sb.AppendFormat("{0} ", dv[i]["НомерТелефона"]);
+                        using (var wr = new StringWriter())
+                        {
+                            RenderLinkPhoneNumber(wr, $"ph_{dv[i]["КодТелефонногоНомера"]}", dv[i]["КодТелефонногоНомера"].ToString(), phoneNumber, NtfStatus.Empty, "открыть форму редактирования телефонного номера","", "insideph");
+                            
+                            sb.Append(wr + " ");
+                        }
+
+                    var redirect = dv[i]["Переадресация"].Equals(DBNull.Value)
+                        ? ""
+                        : dv[i]["Переадресация"].ToString();
+
+                    if (redirect.Length > 0)
+                        sb.AppendFormat(" <span title='{0}' style=\"cursor:help;\">-></span> {1} ",
+                            "переадресация на номер", redirect);
+                    else
+                        sb.AppendFormat(
+                            " <span title='{0}' style=\"cursor:help;\">-></span> <span class=\"v4Error v4ContextHelp\" title=\"{1}\">{2}</span> ",
+                            "переадресация на номер", "Необходимо указать номер для переадресации", "отсутствует");
 
                     var empls = RenderData.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(),
                         false);
                     using (var wr = new StringWriter())
                     {
-                        RenderLinkEquipment(wr, dv[i]["КодОборудования"].ToString(), flC ? "class=\"NoCI\"" : "",
-                            "title=\"" + Resx.GetString("DIRECTIONS_Msg_OpenEquip") + "\"");
-                        wr.Write(dv[i]["Оборудование"]);
-                        RenderLinkEnd(wr);
+                        RenderLinkEquipment(w, $"eq_{dv[i]["КодОборудования"]}", dv[i]["КодОборудования"].ToString(), $"{dv[i]["Оборудование"]}", flC ? NtfStatus.Error: NtfStatus.Empty, Dir.Resx.GetString("DIRECTIONS_Msg_OpenEquip"), "", "insidephone");
+
                         wr.Write(empls);
 
                         sb.AppendFormat("{0}", wr);
                     }
+
+                    var phoneLink = dv[i]["УслугиСвязи"].Equals(DBNull.Value)
+                        ? ""
+                        : dv[i]["УслугиСвязи"].ToString();
+
+
+                    if (phoneLink.Length > 0)
+                    {
+                        if (Dir.PhoneLinkField.ValueString.Length > 0)
+                        {
+                            if ((flV & 8) == 8 && phoneLink == "4") flL = false;
+                            else if ((flV & 4) == 4 && phoneLink == "3") flL = false;
+                            else if ((flV & 2) == 2 && phoneLink == "2") flL = false;
+                            else if ((flV & 1) == 1 && phoneLink == "0") flL = false;
+                        }
+
+                        sb.AppendFormat(" <span {0} style=\"cursor:help;\" title=\"{1}\">",
+                            flL ? "class=\"v4Error v4ContextHelp\"" : "", "Услуги связи");
+                        switch (phoneLink)
+                        {
+                            case "0":
+                                sb.Append(LPlExitInSide);
+                                break;
+                            case "1":
+                                sb.Append(LPlExitTown);
+                                break;
+                            case "3":
+                                sb.Append(LPlExitOutTown);
+                                break;
+                            case "4":
+                                sb.Append(LPlExitOutCountry);
+                                break;
+                        }
+
+                        sb.Append("</span>");
+                        flL = true;
+                    }
+
 
                     sb.Append("</div>");
                 }
@@ -741,7 +971,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             }
             else
             {
-                GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), flC, true);
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), flC, true, true,
+                    "телефонное оборудование не выдано");
                 w.Write("<br>");
             }
         }
@@ -752,12 +983,12 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <returns>Список оборудования с телефонныит номерами</returns>
         private DataView GetInsidePhoneComplete()
         {
+            if (DtEquip.Columns.Count == 0) return null;
+
             return new DataView
             {
                 Table = DtEquip,
-                RowFilter = DtEquip.Columns.Contains("ЕстьТелефонныйНомер")
-                    ? "(НомерТелефона IS NOT NULL AND ЕстьХарактеристикиSIM=0) OR ЕстьТелефонныйНомер > 0"
-                    : "(НомерТелефона IS NOT NULL AND ЕстьХарактеристикиSIM=0)",
+                RowFilter = "НомерТелефона IS NOT NULL AND ЕстьТелефонныйНомер > 0",
                 Sort = "НомерТелефона, Оборудование"
             };
         }
@@ -769,7 +1000,17 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="w">Поток вывода</param>
         protected void RenderMobilPhone(TextWriter w)
         {
-            var bitMask = Dir.PhoneEquipField.ValueString.Length == 0 ? 0 : Dir.PhoneEquipField.ValueInt;
+            var bitmask = Dir.WorkPlaceTypeField.ValueInt;
+            if (bitmask == 0 && Dir.WorkPlaceField.ValueString.Length > 0)
+                bitmask = 1;
+
+            if (bitmask == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто
+                || bitmask == (int) DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи
+                || bitmask == (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы
+                || bitmask == (int) DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте)
+                return;
+
+            var bitPhone = Dir.PhoneEquipField.ValueString.Length == 0 ? 0 : Dir.PhoneEquipField.ValueInt;
             var fl = false;
             string phoneNum;
             var empl = Dir.Sotrudnik;
@@ -781,11 +1022,22 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             if (Dir.RedirectNumField.ValueString.Length == 0 && dv.Count == 0 && !empl.SimRequired)
             {
-                w.Write("");
+                RenderNtf(w, new List<Notification> { 
+                    new Notification() {  
+                            Message = Dir.Resx.GetString("DIRECTIONS_Msg_Err_МобТелефон"),
+                            Status = NtfStatus.Error,
+                            SizeIsNtf = false,
+                            DashSpace = false,
+                            Description = Dir.Resx.GetString("DIRECTIONS_Msg_Err_МобТелефон_Title")
+                    } 
+                });
+                                
                 return;
             }
 
-            w.Write("<div class=\"marginT\">{0}:</div>", Resx.GetString("DIRECTIONS_Field_MobilPhone"));
+            if (Dir.PhoneEquipField.ValueString.Length > 0 || Dir.RedirectNumField.ValueString.Length > 0)
+                w.Write("<div class=\"marginT\">{0}:</div>",
+                    Dir.Resx.GetString("DIRECTIONS_Field_MobilPhone")?.ToLower());
             w.Write("<div class=\"marginL2 marginT\">");
             if (Dir.RedirectNumField.ValueString.Length > 0)
             {
@@ -794,10 +1046,12 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 Dir.FormatingMobilNumber(ref phoneNum);
 
                 w.Write(
-                    "<a href='#' title='" + Resx.GetString("DIRECTIONS_Msg_CopyBuffer") +
+                    "<a href='#' title='" + Dir.Resx.GetString("DIRECTIONS_Msg_CopyBuffer") +
                     "' onclick=\"copyToClipboard('{0}')\">", phoneNum);
                 w.Write(Dir.RedirectNumField.ValueString);
                 w.Write("</a>");
+
+                ValidationMessages.CheckPhoneNumberIsMobile(this, w, Dir, Dir.RedirectNumField.ValueString);
             }
 
 
@@ -809,7 +1063,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 if (dv[i]["НомерТелефона"].Equals(DBNull.Value))
                 {
                     w.Write("<span ><img src='/styles/sim.gif' border=0>");
-                    w.Write(Resx.GetString("DIRECTIONS_Msg_ВыданаSim"));
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_ВыданаSim"));
                     w.Write("</span>");
                     continue;
                 }
@@ -819,7 +1073,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
 
                 w.Write(
-                    "<a href='#' title='" + Resx.GetString("DIRECTIONS_Msg_CopyBuffer") +
+                    "<a href='#' title='" + Dir.Resx.GetString("DIRECTIONS_Msg_CopyBuffer") +
                     "' onclick=\"copyToClipboard('{0}')\">", phoneNum);
                 w.Write(phoneNum);
                 w.Write("</a>");
@@ -827,17 +1081,17 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
 
             if (!fl)
-                if ((bitMask & 16) != 16 && !empl.SimRequired)
+                if ((bitPhone & 16) != 16 && !empl.SimRequired)
                     RenderNtf(w,
                         new List<Notification>
                         {
                             new Notification
                             {
-                                Message = Resx.GetString("DIRECTIONS_Msg_NoSpecified"),
+                                Message = Dir.Resx.GetString("DIRECTIONS_Msg_NoSpecified"),
                                 Status = NtfStatus.Error,
                                 SizeIsNtf = false,
                                 DashSpace = false,
-                                Description = Resx.GetString("DIRECTIONS_Msg_NoSpecified_Title")
+                                Description = Dir.Resx.GetString("DIRECTIONS_Msg_NoSpecified_Title")
                             }
                         });
 
@@ -846,21 +1100,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 {
                     var simNumber = empl.SimNumber;
                     w.Write(
-                        $"{(Dir.RedirectNumField.ValueString.Length > 0 ? ";" : "")} {Resx.GetString("DIRECTIONS_Msg_SimGive")}{(empl.SimNumber.Length > 0 ? " [" + simNumber + "]" : "")}");
-
-                    if (Dir.SotrudnikPostField.ValueString != empl.SimPost)
-                        RenderNtfInline(w,
-                            new List<Notification>
-                            {
-                                new Notification
-                                {
-                                    Message = $" [{empl.SimPost}]",
-                                    Status = NtfStatus.Error,
-                                    SizeIsNtf = false,
-                                    DashSpace = false,
-                                    Description = Resx.GetString("DIRECTIONS_NTF_PostNoEqualsCadr")
-                                }
-                            }, "", false);
+                        $"{(Dir.RedirectNumField.ValueString.Length > 0 ? ";" : "")} {Dir.Resx.GetString("DIRECTIONS_Msg_SimGive")}{(empl.SimNumber.Length > 0 ? " [" + simNumber + "]" : "")}");
                 }
 
             w.Write("</div>");
@@ -879,14 +1119,112 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         private void RenderCompEquip(TextWriter w)
         {
             var dv = GetCompEquipComplete();
+            var bitMask = Dir.CompTypeField.ValueInt;
+            var existsLaptop = false;
+            var rowFilter = dv.RowFilter;
+
+            var wr0 = new StringWriter();
+            var wr1 = new StringWriter();
+
+            wr0.Write("<tr>");
+            wr0.Write("<td colspan=2 valign='top' class='XXX'>");
+            RenderCompEquipRequired(wr0);
+            wr0.Write("</td>");
+            wr0.Write("<td colspan=2 class='TDBL XXX' valign='top' style=\"padding-left:2px;\">");
+            RenderCompEquipComplete(wr0, dv, rowFilter);
+            wr0.Write("</td>");
+            wr0.Write("</tr>");
+
+           
+            dv.RowFilter = $"({rowFilter}) AND КодТипаОборудования = 2";
+            if (((bitMask & 4) == 4) || dv.Count > 0)
+            {
+                existsLaptop = true;                
+                wr1.Write("<td colspan=2 class='TDBB TDDataPL' valign='top'>");
+                RenderLaptopEquipRequired(wr1);
+                wr1.Write("</td>");
+                wr1.Write("<td colspan=2 class='TDBB TDBL' valign='top' style=\"padding-left:2px;\">");
+                RenderLaptopEquipComplete(wr1, dv);
+                wr1.Write("</td>");
+                wr1.Write("</tr>");
+            }
+
+            var stfr_wr0 = wr0.ToString();
+
+            if (!existsLaptop)
+                stfr_wr0 = stfr_wr0.Replace("XXX", "TDBB");
+
+            w.Write(stfr_wr0);
+            w.Write(wr1.ToString());
+
+        }
+
+        /// <summary>
+        ///     Вывод информации о ноутбуке - что требуется
+        /// </summary>
+        /// <param name="w">Поток вывода</param>
+        private void RenderLaptopEquipRequired(TextWriter w)
+        {           
+            var bitMask = Dir.CompTypeField.ValueInt;
+            var col = new StringCollection();
+
+            if ((bitMask & 4) == 4)
+                col.Add(LCompN);
+
+
+            w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");            
             w.Write("<tr>");
-            w.Write("<td colspan=2 class='TDBB' valign='top'>");
-            RenderCompEquipRequired(w);
-            w.Write("</td>");
-            w.Write("<td colspan=2 class='TDBB TDBL' valign='top' style=\"padding-left:2px;\">");
-            RenderCompEquipComplete(w, dv);
+            w.Write("<td colspan=2 >");
+
+            if (col.Count == 0)
+                w.Write("&nbsp;");
+
+            for (var i = 0; i < col.Count; i++)
+            {
+                if (i > 0) w.Write("<br>");
+                w.Write(col[i]);
+            }
+            
+
             w.Write("</td>");
             w.Write("</tr>");
+
+
+            w.Write("</table>");
+        }
+
+        /// <summary>
+        ///     Вывод информации о ноутбуке - что выполнено
+        /// </summary>
+        /// <param name="w">Поток вывода</param>
+        /// <param name="dv">Список компьютерного оборудования</param>
+        private void RenderLaptopEquipComplete(TextWriter w, DataView dv)
+        {
+            if (dv == null) return;
+                       
+            var bitMask = Dir.CompTypeField.ValueInt;
+            var flC = (bitMask & 4) == 4;
+
+            if (dv.Count == 0)
+            {
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), !flC, false, true,
+                    "ноутбук не выдан");
+                return;
+            }
+
+            for (var i = 0; i < dv.Count; i++)
+            {
+                
+                var className = !flC ? "class='v4Error'" : "";
+
+                w.Write("<div class=\"marginL {0}\">", className);
+                var empls = RenderData.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), false);
+
+                RenderLinkEquipment(w, $"eq_{dv[i]["КодОборудования"]}", dv[i]["КодОборудования"].ToString(), $"{dv[i]["Оборудование"]}", !flC ? NtfStatus.Error : NtfStatus.Empty, Dir.Resx.GetString("DIRECTIONS_Msg_OpenEquip"), "", "laptop");
+
+                w.Write(empls);
+                w.Write("</div>");
+            }
         }
 
         /// <summary>
@@ -898,44 +1236,50 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_Computer") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_Computer") + ":");
             w.Write("</td>");
             w.Write("</tr>");
-            w.Write("<tr>");
-            w.Write("<td colspan=2 class='TDDataPL'>");
+
             if (Dir.CompTypeField.ValueString.Length == 0)
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                w.Write("<tr>");
+                w.Write("<td colspan=2 class='TDDataPL'>");
+
+                if (DisplayByDirectionType(DirectionsDemand.RequiredEquipment))
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+
+                w.Write("</td>");
+                w.Write("</tr>");
             }
-            else
-            {
+            else {
                 var bitMask = Dir.CompTypeField.ValueInt;
-
                 var col = new StringCollection();
-
-                if ((bitMask & 1) == 1)
-                    col.Add(LCompT);
-
-                if ((bitMask & 2) == 2)
-                    col.Add(LCompP);
-
-                if ((bitMask & 4) == 4)
-                    col.Add(LCompN);
-
-
-                for (var i = 0; i < col.Count; i++)
+                if ((bitMask & 1) == 1 || (bitMask & 2) == 2)
                 {
-                    if (i > 0) w.Write("<br>");
-                    w.Write(col[i]);
+                    w.Write("<tr>");
+                    w.Write("<td colspan=2 class='TDDataPL'>");
+
+                    if ((bitMask & 1) == 1)
+                        col.Add(LCompT);
+
+                    if ((bitMask & 2) == 2)
+                        col.Add(LCompP);
+
+                    for (var i = 0; i < col.Count; i++)
+                    {
+                        if (i > 0) w.Write("<br>");
+                        w.Write(col[i]);
+                    }
+
+                    w.Write("</td>");
+                    w.Write("</tr>");
                 }
 
-                if ((bitMask & 2) == 2 || (bitMask & 1) == 1)
-                    if (Dir.AccessEthernetField.ValueString.Length == 0)
-                        GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_NoAccessEthernet"));
+
+
             }
 
-            w.Write("</td>");
-            w.Write("</tr>");
+
             w.Write("</table>");
         }
 
@@ -944,13 +1288,22 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// </summary>
         /// <param name="w">Поток вывода</param>
         /// <param name="dv">Список компьютерного оборудования</param>
-        private void RenderCompEquipComplete(TextWriter w, DataView dv)
+        private void RenderCompEquipComplete(TextWriter w, DataView dv, string rowFilter)
         {
-            var flC = Dir.CompTypeField.ValueString.Length > 0;
+            if (dv == null) return;
+            var bitMask = Dir.CompTypeField.ValueInt;
 
-            if (dv.Count == 0)
-            {
-                GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), !flC, true);
+            var _rowFilter = $"({rowFilter}) AND КодТипаОборудования <> 2"; 
+
+            dv.RowFilter = _rowFilter;
+            
+            var flC = (bitMask & 1) == 1 || (bitMask & 2) == 2;            
+
+            if (dv.Count == 0 && flC)
+            {                                              
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), !flC, true, true,
+                    "компьютерное оборудование не выдано");
+               
                 return;
             }
 
@@ -958,14 +1311,13 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             {
                 if (i == 0)
                     w.Write("<div>&nbsp;</div>");
-                var className = !flC ? "class='NoCI'" : "";
+                var className = !flC ? "class='v4Error'" : "";
 
                 w.Write("<div class=\"marginL {0}\">", className);
                 var empls = RenderData.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), false);
-                RenderLinkEquipment(w, dv[i]["КодОборудования"].ToString(), className,
-                    "title=\"" + Resx.GetString("DIRECTIONS_Msg_OpenEquip") + "\"");
-                w.Write(dv[i]["Оборудование"]);
-                RenderLinkEnd(w);
+
+                RenderLinkEquipment(w, $"eq_{dv[i]["КодОборудования"]}", dv[i]["КодОборудования"].ToString(), $"{dv[i]["Оборудование"]}", !flC ? NtfStatus.Error : NtfStatus.Empty, Dir.Resx.GetString("DIRECTIONS_Msg_OpenEquip"), "", "comp");
+                
                 w.Write(empls);
                 w.Write("</div>");
             }
@@ -977,6 +1329,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <returns>Список компьютерного оборудования</returns>
         private DataView GetCompEquipComplete()
         {
+            if (Dir == null || Dir.IsNew) return null;
             return new DataView
             {
                 Table = DtEquip,
@@ -1018,15 +1371,21 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_AdvEq") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_AdvEq") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (Dir.AdvEquipField.ValueString.Length == 0)
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+            {
+                if (DisplayByDirectionType(DirectionsDemand.RequiredEquipment))
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+            }
             else
+            {
                 w.Write(Dir.AdvEquipField.ValueString);
+            }
+
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("</table>");
@@ -1043,23 +1402,23 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             if (dv.Count == 0)
             {
-                GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), !flC, true);
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), !flC, true, false,
+                    "дополнительное оборудование не выдано");
                 return;
             }
 
-            var className = !flC ? "class='NoCI'" : "";
+            var className = !flC ? "class='v4Error'" : "";
 
             for (var i = 0; i < dv.Count; i++)
             {
                 if (i == 0)
                     w.Write("<div>&nbsp;</div>");
 
-                w.Write("<div class=\"marginL {0}\">", !flC ? "NoCI" : "");
+                w.Write("<div class=\"marginL {0}\">", !flC ? "v4Error" : "");
                 var empls = RenderData.EquipmentEmployee(this, null, Dir, dv[i]["КодОборудования"].ToString(), false);
-                RenderLinkEquipment(w, dv[i]["КодОборудования"].ToString(), className,
-                    "title=\"" + HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Msg_OpenEquip")) + "\"");
-                w.Write(HttpUtility.HtmlEncode(dv[i]["Оборудование"]));
-                RenderLinkEnd(w);
+
+                RenderLinkEquipment(w, $"eq_{dv[i]["КодОборудования"]}", dv[i]["КодОборудования"].ToString(), $"{dv[i]["Оборудование"]}", !flC ? NtfStatus.Error : NtfStatus.Empty, Dir.Resx.GetString("DIRECTIONS_Msg_OpenEquip"), "", "adveq");
+
                 w.Write(empls);
                 w.Write("</div>");
             }
@@ -1074,9 +1433,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             return new DataView
             {
                 Table = DtEquip,
-                RowFilter = DtEquip.Columns.Contains("ЕстьТелефонныйНомер")
-                    ? "ЕстьХарактеристикиКомпьютера=0 AND ЕстьХарактеристикиМонитора=0 AND ЕстьХарактеристикиSIM=0 AND ЕстьТелефонныйНомер=0 AND НомерТелефона IS NULL"
-                    : "ЕстьХарактеристикиКомпьютера=0 AND ЕстьХарактеристикиМонитора=0 AND ЕстьХарактеристикиSIM=0 AND НомерТелефона IS NULL",
+                RowFilter =
+                    "ЕстьХарактеристикиКомпьютера = 0 AND ЕстьХарактеристикиМонитора = 0 AND НомерТелефона IS NULL",
                 Sort = "КодТипаОборудования, Оборудование"
             };
         }
@@ -1118,21 +1476,15 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_AEAccess") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_AEAccess") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
 
-            var bitMask = Dir.AccessEthernetField.ValueString.Length == 0 ? 0 : Dir.AccessEthernetField.ValueInt;
-
             var col = new StringCollection();
 
-            if ((bitMask & 1) == 1 || (bitMask & 2) == 2)
-                col.Add(Dir.LoginField.ValueString.Length > 0 ? Dir.LoginField.ValueString : LAeOffice);
-
-            if ((bitMask & 2) == 2)
-                col.Add(LAeVpn);
+            col.Add(Dir.LoginField.ValueString.Length > 0 ? Dir.LoginField.ValueString : LAeOffice);
 
 
             for (var i = 0; i < col.Count; i++)
@@ -1143,6 +1495,10 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             if (Dir.LoginField.ValueString.Length > 0)
                 RenderData.LoginCheck(this, w, Dir, new List<Notification>(), true);
+
+            if (Dir.SotrudnikParentField.ValueString.Length != 0 &&
+                Dir.SotrudnikParentCheckField.ValueString.Length != 0)
+                RenderSotrudnikParentRequired(w);
 
             w.Write("</td>");
             w.Write("</tr>");
@@ -1155,35 +1511,34 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="w">Поток вывода</param>
         private void RenderAeAccessComplete(TextWriter w)
         {
+            if (Dir.SotrudnikField.ValueString.Length <= 0 || Dir.Sotrudnik.Unavailable) return;
+
             var fl = false;
 
-            if (Dir.SotrudnikField.ValueString.Length > 0 && !Dir.Sotrudnik.Unavailable)
+            if (Dir.Sotrudnik.Login.Length > 0)
             {
-                if (Dir.Sotrudnik.Login != null)
-                    fl = Dir.LoginField.ValueString.ToLower().Equals(Dir.Sotrudnik.Login.ToLower());
+                fl = Dir.LoginField.ValueString.ToLower().Equals(Dir.Sotrudnik.Login.ToLower());
+                var f = Dir.Sotrudnik.PersonalFolder;
+                var href = Regex.Replace(f, "\\\\[^\\\\]+$", "").Replace(":", "|").Replace("\\", "/");
+                var ntfs = new List<Notification>();
 
-                if (!string.IsNullOrEmpty(Dir.Sotrudnik.Login))
-                {
-                    var f = Dir.Sotrudnik.PersonalFolder;
-                    var href = Regex.Replace(f, "\\\\[^\\\\]+$", "").Replace(":", "|").Replace("\\", "/");
-                    var ntfs = new List<Notification>();
+                w.Write("<div class=\"marginL\">");
+                GetCompleteInfo(w,
+                    "<nobr>" + Dir.Sotrudnik.Login + " " + "<a href='file:///" + href + "' target='_blabk'>" + f +
+                    "</a>" + "</nobr>", fl);
 
-                    w.Write("<div class=\"marginL\">");
-                    GetCompleteInfo(w,
-                        "<nobr>" + Dir.Sotrudnik.Login + " " + "<a href='file:///" + href + "' target='_blabk'>" + f +
-                        "</a>" + "</nobr>", fl);
+                var adsiPath =
+                    RenderData.ADSI_RenderInfoByEmployee(this, w, Dir, ntfs, Dir.Sotrudnik, 1);
+                RenderNtfInline(w, ntfs, ";", true);
 
-                    var adsiPath = RenderData.ADSI_RenderInfoByLogin(this, w, ntfs, Dir.LoginField.ValueString, Dir.Sotrudnik, 1);
-                    RenderNtfInline(w, ntfs, ";", true);
+                w.Write("</div>");
 
-                    w.Write("</div>");
-
-                    if (adsiPath.Length > 0) w.Write("<div class=\"marginL\">{0}</div>", adsiPath);
-                }
-                else
-                {
-                    GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), fl, true);
-                }
+                if (adsiPath.Length > 0) w.Write("<div class=\"marginL\">{0}</div>", adsiPath);
+            }
+            else
+            {
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), fl, true, true,
+                    "доступ к корпоративной сети не предоставлен");
             }
         }
 
@@ -1219,13 +1574,18 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_Lang") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_Lang") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
-            if (Dir.SotrudnikLanguageField.ValueString.Length == 0) w.Write("ru");
-            else w.Write(Dir.SotrudnikLanguageField.ValueString);
+
+            if (DisplayByDirectionType(DirectionsDemand.RequiredEthernet))
+            {
+                if (Dir.SotrudnikLanguageField.ValueString.Length == 0) w.Write("");
+                else w.Write(Dir.SotrudnikLanguageField.ValueString);
+            }
+
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("</table>");
@@ -1239,18 +1599,20 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         {
             if (Dir.SotrudnikField.ValueString.Length == 0 || Dir.Sotrudnik.Unavailable)
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
+                w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
-            var l = Dir.SotrudnikLanguageField.ValueString.Length == 0
-                ? "ru"
-                : Dir.SotrudnikLanguageField.ValueString.ToLower();
+            var l = string.IsNullOrEmpty(Dir.SotrudnikLanguageField.ValueString)? "" : Dir.SotrudnikLanguageField.ValueString.ToLower();
             var fl = Dir.Sotrudnik.Language.ToLower().Equals(l);
 
-            w.Write("<div class=\"marginL\">");
-            GetCompleteInfo(w, Dir.Sotrudnik.Language, fl);
+            w.Write($"<div class=\"marginL\">");
+            var errMsg = "Предпочитаемый язык интерфейса не соответствует требуемому";
+            if (string.IsNullOrEmpty(Dir.Sotrudnik.Language))
+                errMsg = "В указании не указан предпочитаемый язык";
+            GetCompleteInfo(w, Dir.Sotrudnik.Language, fl, true, false, !fl ? errMsg : "", true);
             w.Write("</div>");
+            
         }
 
         #endregion
@@ -1291,7 +1653,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (Dir.MailNameField.ValueString.Length == 0 || Dir.DomainField.ValueString.Length == 0)
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                if (DisplayByDirectionType(DirectionsDemand.RequiredEthernet))
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             }
             else
             {
@@ -1315,21 +1678,34 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         {
             if (Dir.SotrudnikField.ValueString.Length == 0 || Dir.Sotrudnik.Unavailable)
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
+                w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
 
             string email;
-            email = Dir.Sotrudnik.Email.Length > 0 ? Dir.Sotrudnik.Email : Resx.GetString("DIRECTIONS_lNoComplete");
+            var title = "";
+
+            if (Dir.Sotrudnik.Email.Length > 0)
+            {
+                email = Dir.Sotrudnik.Email;
+            }
+            else
+            {
+                email = Dir.Resx.GetString("DIRECTIONS_lNoComplete");
+                title = "почтовый ящик не сделан";
+            }
+
+            email = Dir.Sotrudnik.Email.Length > 0 ? Dir.Sotrudnik.Email : Dir.Resx.GetString("DIRECTIONS_lNoComplete");
 
             var emaildd = Dir.MailNameField.ValueString.Length == 0 || Dir.DomainField.ValueString.Length == 0
-                ? Resx.GetString("DIRECTIONS_lNoComplete")
+                ? Dir.Resx.GetString("DIRECTIONS_lNoComplete")
                 : Dir.MailNameField.ValueString + "@" + Dir.DomainField.ValueString;
 
             var fl = email.ToLower().Equals(emaildd.ToLower());
             w.Write("<div class=\"marginL\">");
-            GetCompleteInfo(w, email, fl);
+
+            GetCompleteInfo(w, email, fl, true, false, title);
             w.Write("</div>");
         }
 
@@ -1347,7 +1723,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         ///     Вывод информации о сотруднике "как/вместо"
         /// </summary>
         /// <param name="w">Поток вывода</param>
-        private void RenderSotrudnikParent(TextWriter w)
+        private void RenderSotrudnikParent_NotUse(TextWriter w)
         {
             if (Dir.SotrudnikParentField.ValueString.Length == 0 ||
                 Dir.SotrudnikParentCheckField.ValueString.Length == 0) return;
@@ -1365,11 +1741,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         private void RenderSotrudnikParentRequired(TextWriter w)
         {
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
-            w.Write("<tr>");
-            w.Write("<td width='100%'>");
-            w.Write(HAccessEml);
-            w.Write("</td>");
-            w.Write("</tr>");
+            //w.Write("<tr>");
+            //w.Write("<td width='100%'>");
+            //w.Write(HAccessEml);
+            //w.Write("</td>");
+            //w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
 
@@ -1388,28 +1764,29 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             var p = Dir.SotrudnikParent;
             if (p == null || p.Unavailable)
             {
-                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"));
+                GetNtfFormatMsg(w, Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"));
                 return;
             }
 
             if (Dir.SotrudnikField.ValueString.Length > 0 &&
                 Dir.SotrudnikParentField.ValueString.Equals(Dir.SotrudnikField.ValueString))
-                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_NTF_СотрудникСовпадает")?.ToLower());
+                GetNtfFormatMsg(w, Dir.Resx.GetString("DIRECTIONS_NTF_СотрудникСовпадает")?.ToLower());
 
-            if ((bitMask & 1) == 1 && p.Login.Length == 0)
-                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
+            if ((bitMask & 1) == 1 && !p.HasAccount_)
+                GetNtfFormatMsg(w, Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
 
-            if ((bitMask & 2) == 2 && p.Login.Length == 0
+            if ((bitMask & 2) == 2 && !p.HasAccount_
                                    && Dir.SotrudnikField.ValueString.Length > 0 && !Dir.Sotrudnik.Unavailable &&
-                                   Dir.Sotrudnik.Login.Length == 0)
-                GetNtfFormatMsg(w, Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
+                                   !Dir.Sotrudnik.HasAccount_)
+                GetNtfFormatMsg(w, Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНеИмеетЛогина"));
 
             using (var sw = new StringWriter())
             {
                 var ntfs = new List<Notification>();
                 ValidationMessages.CheckSotrudnikParentStatus(this, sw, Dir, ntfs);
 
-                var adsiPath = RenderData.ADSI_RenderInfoByEmployee(this, w, ntfs, p, Dir.SotrudnikParentCheckField.ValueInt);
+                var adsiPath =
+                    RenderData.ADSI_RenderInfoByEmployee(this, w, Dir, ntfs, p, Dir.SotrudnikParentCheckField.ValueInt);
                 RenderNtfInline(w, ntfs, ";", true);
 
                 if (adsiPath.Length > 0) w.Write("<div>{0}</div>", adsiPath);
@@ -1451,20 +1828,24 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Folders") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_Positions_Folders") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (!Dir.PositionCommonFolders.Any())
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                if (DisplayByDirectionType(DirectionsDemand.RequiredAccessData))
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             }
             else
             {
                 var sortedList = Dir.PositionCommonFolders.OrderBy(o => o.CommonFolderName).ToList();
                 sortedList.ForEach(delegate(PositionCommonFolder p) { w.Write("<div>{0}</div>", p.CommonFolderName); });
             }
+
+            ValidationMessages.CheckGroupInconsistencies(w, Dir, "Общие папки");
+
 
             w.Write("</td>");
             w.Write("</tr>");
@@ -1482,9 +1863,10 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             if (commonFolders == null)
             {
                 if (!Dir.PositionCommonFolders.Any())
-                    w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoData"));
                 else
-                    GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), false, true);
+                    GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), false, true, true,
+                        "доступ к общим папкам не предоставлен");
                 return;
             }
 
@@ -1492,13 +1874,14 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             if (sortedList.Count == 0 && !Dir.PositionCommonFolders.Any())
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
+                w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
             if (sortedList.Count == 0 && Dir.PositionCommonFolders.Any())
             {
-                GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), false, true);
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), false, true, true,
+                    "доступ к общим папкам не предоставлен");
                 return;
             }
 
@@ -1533,8 +1916,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             if (list.Count == 0) return;
 
             w.Write("<div class=\"marginL\">");
-            GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false, false,
-                false);
+            GetCompleteInfo(w, HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false, false,
+                false, "доступ к общим папкам не предоставлен");
             w.Write("</div>");
             list.OrderBy(x => x).ToList().ForEach(delegate(string x)
                 {
@@ -1576,7 +1959,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Roles") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_Positions_Roles") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
@@ -1584,7 +1967,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             if (!Dir.PositionRoles.Any())
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                if (DisplayByDirectionType(DirectionsDemand.RequiredAccessData))
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
             }
             else
             {
@@ -1627,7 +2011,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 dv.Sort = "Role, RoleId, Person";
 
                 int rowSpan;
-                w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
+                w.Write("<table cellpadding=0 cellspacing=0>");
                 for (var i = 0; i < dv.Count; i++)
                 {
                     w.Write("<tr>");
@@ -1646,12 +2030,12 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                     w.Write("<td>");
                     w.Write("<table width='100%' height='100%' cellpadding=0 cellspacing=0 border=0>");
                     w.Write("<tr>");
-                    w.Write("<td noWrap align='left'>");
+                    w.Write("<td noWrap align='left' class=\"paddingL\">");
                     if (dv[i]["PersonId"].ToString().Length > 0)
                         RenderLinkPerson(w, "person" + dv[i]["PersonId"], dv[i]["PersonId"].ToString(),
                             dv[i]["Person"].ToString());
                     else
-                        w.Write(HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCompany")));
+                        w.Write(HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCompany")));
                     w.Write("</td>");
                     w.Write("</tr>");
                     w.Write("</table>");
@@ -1661,6 +2045,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
                 w.Write("</table>");
             }
+
+            ValidationMessages.CheckGroupInconsistencies(w, Dir, "Роли");
 
             w.Write("</td>");
             w.Write("</tr>");
@@ -1678,13 +2064,14 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             if (listRoles.Count == 0 && !Dir.PositionRoles.Any())
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
+                w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
             if (listRoles.Count == 0 && Dir.PositionRoles.Any())
             {
-                GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), false, true);
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), false, true, true,
+                    "требуемые роли не назначены");
                 return;
             }
 
@@ -1742,7 +2129,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             dv.Table = dtR;
             dv.Sort = "Role, RoleId, Person";
 
-            w.Write("<br><table cellpadding=0 cellspacing=0 width='100%' class=\"marginL\">");
+            w.Write("<br><table cellpadding=0 cellspacing=0 class=\"marginL\">");
             for (var i = 0; i < dv.Count; i++)
             {
                 var fl = CheckRoleComleteByRequired(dv[i]);
@@ -1762,14 +2149,15 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 }
 
                 w.Write("<td>");
-                w.Write("<table width='100%' height='100%' cellpadding=0 cellspacing=0 border=0>");
+                w.Write("<table cellpadding=0 cellspacing=0 border=0>");
                 w.Write("<tr>");
-                w.Write("<td noWrap align='left'>");
+                w.Write("<td noWrap align='left' class=\"paddingL\">");
                 if (dv[i]["PersonId"].ToString().Length > 0)
                     page.RenderLinkPerson(w, "personC" + dv[i]["PersonId"], dv[i]["PersonId"].ToString(),
                         dv[i]["Person"].ToString(), !fl ? NtfStatus.Error : NtfStatus.Empty, false);
                 else
-                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCompany")), fl, false,
+                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCompany")), fl,
+                        false,
                         false);
                 w.Write("</td>");
                 w.Write("</tr>");
@@ -1808,9 +2196,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 w.Write("<td>");
 
                 if (p.PersonId == 0)
-                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCompany")), false,
-                        false,
-                        false);
+                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCompany")), false,false,false);
                 else
                     page.RenderLinkPerson(w, "perr" + p.PersonId, p.PersonId.ToString(), p.PersonName, NtfStatus.Error);
 
@@ -1823,9 +2209,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             {
                 wr.Write("<tr>");
                 wr.Write("<td colspan = 2 style=\"padding-left:2px;\">");
-                GetCompleteInfo(wr, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false,
+                GetCompleteInfo(wr, HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false,
                     false,
-                    false);
+                    false, "требуемые роли не назначены");
                 wr.Write("</td>");
                 wr.Write("</tr>");
 
@@ -1887,16 +2273,20 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
             w.Write("<tr>");
             w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Types") + ":");
+            w.Write(Dir.Resx.GetString("DIRECTIONS_Field_Positions_Types") + ":");
             w.Write("</td>");
             w.Write("</tr>");
             w.Write("<tr>");
             w.Write("<td colspan=2 class='TDDataPL'>");
             if (!Dir.PositionTypes.Any())
             {
-                w.Write($"<span {(Dir.AccessEthernetField.ValueString.Length > 0 ? "class=\"NoCI\"" : "")}>");
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
-                w.Write("</span>");
+                if (DisplayByDirectionType(DirectionsDemand.RequiredAccessData))
+                {
+                    w.Write(
+                        $"<span {(Dir.AccessEthernetField.ValueString.Length > 0 ? "class=\"v4Error v4ContextHelp\" title=\"" + Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired_Title") + "\"" : "")}>");
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                    w.Write("</span>");
+                }
             }
             else
             {
@@ -1951,7 +2341,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 dv.Sort = "Catalog, CatalogId, Theme";
 
                 int rowSpan;
-                w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
+                w.Write("<table cellpadding=0 cellspacing=0 border=0>");
                 for (var i = 0; i < dv.Count; i++)
                 {
                     w.Write("<tr>");
@@ -1965,18 +2355,18 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                         if (!dv[i]["CatalogId"].Equals(""))
                             w.Write(dv[i]["Catalog"]);
                         else
-                            w.Write(Resx.GetString("DIRECTIONS_Rnd_AllCatalog"));
+                            w.Write(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCatalog"));
                         w.Write("</td>");
                     }
 
                     w.Write("<td>");
-                    w.Write("<table width='100%' height='100%' cellpadding=0 cellspacing=0 border=0>");
+                    w.Write("<table  cellpadding=0 cellspacing=0 border=0>");
                     w.Write("<tr>");
-                    w.Write("<td align='left'>");
+                    w.Write("<td align='left' class=\"paddingL\">");
                     if (dv[i]["ThemeId"].ToString().Length > 0)
                         w.Write(HttpUtility.HtmlEncode(dv[i]["Theme"]));
                     else
-                        w.Write(HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")));
+                        w.Write(HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")));
                     w.Write("</td>");
                     w.Write("</tr>");
                     w.Write("</table>");
@@ -1986,6 +2376,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
                 w.Write("</table>");
             }
+
+            ValidationMessages.CheckGroupInconsistencies(w, Dir, "Типы лиц");
+
 
             w.Write("</td>");
             w.Write("</tr>");
@@ -2003,13 +2396,14 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             if (!listTypes.Any() && !Dir.PositionTypes.Any())
             {
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoData"));
+                w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoData"));
                 return;
             }
 
             if (!listTypes.Any() && Dir.PositionTypes.Any())
             {
-                GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), false, true);
+                GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), false, true, true,
+                    "доступ к типам лиц не предоставлен");
                 return;
             }
 
@@ -2065,7 +2459,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
             dv.Table = dtR;
             dv.Sort = "Catalog, CatalogId, Theme";
 
-            w.Write("<br><table cellpadding=0 cellspacing=0 width='100%' class=\"marginL\">");
+            w.Write("<br><table cellpadding=0 cellspacing=0 class=\"marginL\">");
 
             for (var i = 0; i < dv.Count; i++)
             {
@@ -2084,13 +2478,13 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                         var catName = dv[i]["Catalog"].ToString();
                         GetCompleteInfo(w,
                             string.IsNullOrEmpty(catName)
-                                ? HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Pos_CatalogNoName"))
+                                ? HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Pos_CatalogNoName"))
                                 : catName, fl, false,
                             false);
                     }
                     else
                     {
-                        GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCatalog")), fl,
+                        GetCompleteInfo(w, HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCatalog")), fl,
                             false,
                             false);
                     }
@@ -2099,23 +2493,23 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 }
 
                 w.Write("<td>");
-                w.Write("<table width='100%' height='100%' cellpadding=0 cellspacing=0 border=0>");
+                w.Write("<table cellpadding=0 cellspacing=0 border=0>");
                 w.Write("<tr>");
-                w.Write("<td align='left'>");
+                w.Write("<td align='left' class=\"paddingL\">");
                 if (!dv[i]["ThemeId"].Equals("") && !dv[i]["ThemeId"].Equals(DBNull.Value))
                 {
                     var thmName = dv[i]["Theme"].ToString();
                     GetCompleteInfo(w,
                         string.IsNullOrEmpty(thmName)
-                            ? HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Pos_TypeNoName"))
+                            ? HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Pos_TypeNoName"))
                             : thmName, fl, false, false);
                 }
                 else
                 {
-                    var msgAllTypes = HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllTypePerson"));
+                    var msgAllTypes = HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllTypePerson"));
                     GetCompleteInfo(w,
                         string.IsNullOrEmpty(msgAllTypes)
-                            ? HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Pos_TypeAllNoName"))
+                            ? HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Pos_TypeAllNoName"))
                             : msgAllTypes, fl, false, false);
                 }
 
@@ -2168,7 +2562,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                     if (catalogObject == null || catalogObject.Unavailable)
                     {
                         if (!p.CatalogId.HasValue)
-                            nameEntity = Resx.GetString("DIRECTIONS_Rnd_AllCatalog");
+                            nameEntity = Dir.Resx.GetString("DIRECTIONS_Rnd_AllCatalog");
                         else
                             nameEntity = "#" + p.CatalogId.Value;
                     }
@@ -2184,7 +2578,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
                 if (!p.ThemeId.HasValue || p.ThemeId.Value == 0)
                 {
-                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")), false,
+                    GetCompleteInfo(w, HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")),
+                        false,
                         false,
                         false);
                 }
@@ -2209,8 +2604,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
             wr.Write("<tr>");
             wr.Write("<td colspan = 2 style=\"padding-left:2px;\">");
-            GetCompleteInfo(wr, HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false, false,
-                false);
+            GetCompleteInfo(wr, HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_lNoComplete") + ":"), false,
+                false,
+                false, "доступ к типам лиц не предоставлен");
             wr.Write("</td>");
             wr.Write("</tr>");
 
@@ -2252,6 +2648,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         /// <param name="bitMask">относится к</param>
         private void RenderAdvancedGrants(TextWriter w, int bitMask)
         {
+            if (Dir == null || Dir.IsNew) return;
+
             Dir.AdvancedGrants.FindAll(x => x.RefersTo == bitMask).ForEach(delegate(AdvancedGrant grant)
             {
                 var p = Dir.PositionAdvancedGrants.FirstOrDefault(x => x.GrantId.ToString() == grant.Id);
@@ -2271,68 +2669,73 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                     w.Write("</td>");
                     w.Write("<td colspan=2 class='TDBB TDBL' valign='top' style=\"padding-left:2px;\">");
 
-                    var existGrant = Dir.Sotrudnik.AdvancedGrants.FirstOrDefault(y => y == p.GrantId);
-                    if (existGrant > 0)
-                        GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lComplete").ToLower(), true, false, true);
+                    var existGrant = Dir.Sotrudnik.AdvancedGrants
+                        .Where(y => y.Key == p.GrantId && y.Value.HasValue && y.Value == 1)
+                        .Select(e => (KeyValuePair<int, byte?>?) e)
+                        .FirstOrDefault();
+
+                    if (existGrant != null)
+                    {
+                        GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lComplete").ToLower(), true, false, true, "");
+                    }
                     else
-                        GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lNoComplete"), false, false, true);
+                    {
+                        existGrant = Dir.Sotrudnik.AdvancedGrants.Where(y => y.Key == p.GrantId && y.Value == null)
+                            .Select(e => (KeyValuePair<int, byte?>?) e)
+                            .FirstOrDefault();
+
+                        if (existGrant != null)
+                            w.Write("");
+                        else
+                            GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lNoComplete"), false, false, true, "");
+                    }
+
                     w.Write("</td>");
                     w.Write("</tr>");
                 });
 
+            var bit = (int) Math.Pow(2, Dir.WorkPlaceTypeField.ValueInt - 1);
+
             Dir.AdvancedGrants
-                .FindAll(x =>
-                    x.RefersTo == bitMask &&
-                    !x.NotAlive &&
-                    Dir.Sotrudnik.AdvancedGrants.Any(y => y == int.Parse(x.Id)) &&
-                    Dir.PositionAdvancedGrants.FindAll(y => y.RefersTo == bitMask)
-                        .All(y => y.GrantId.ToString() != x.Id)).ToList()
+                .FindAll(x => x.RefersTo == bitMask && x.TaskChoose > 0 && Dir.WorkPlaceTypeField.ValueInt > 0 &&
+                              (x.TaskChoose & bit) == bit
+                              && Dir.Sotrudnik.AdvancedGrants.Any(y =>
+                                  y.Key == int.Parse(x.Id) && y.Value.HasValue && y.Value == 1)
+                              && Dir.PositionAdvancedGrants.FindAll(y => y.RefersTo == bitMask)
+                                  .All(y => y.GrantId.ToString() != x.Id)).ToList()
                 .OrderBy(z => z.OrderOutput).ToList().ForEach(
                     delegate(AdvancedGrant grant)
                     {
                         w.Write("<tr>");
                         w.Write("<td colspan=2 class='TDBB' valign='top'>");
                         w.Write(IsRusLocal ? grant.Name : grant.NameEn);
-                        w.Write("<div class=\"TDDataPL\">");
-                        w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
-                        w.Write("</div>");
+                        if (DisplayByDirectionType(DirectionsDemand.RequiredEthernet))
+                        {
+                            w.Write("<div class=\"TDDataPL\">");
+                            w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_NoRequired"));
+                            w.Write("</div>");
+                        }
+
                         w.Write("</td>");
                         w.Write("<td colspan=2 class='TDBB TDBL' valign='top' style=\"padding-left:2px;\">");
 
-                        GetCompleteInfo(w, Resx.GetString("DIRECTIONS_lComplete").ToLower(), false, true, true);
+                        GetCompleteInfo(w, Dir.Resx.GetString("DIRECTIONS_lComplete").ToLower(), false, true, true, "");
 
                         w.Write("</td>");
                         w.Write("</tr>");
                     });
-        }
 
-        /// <summary>
-        ///     Вывод информации о дополнительных правах - что требуется
-        /// </summary>
-        /// <param name="w">Поток вывода</param>
-        private void RenderAdvancedGrantsRequired(TextWriter w)
-        {
-            w.Write("<table cellpadding=0 cellspacing=0 width='100%'>");
-            w.Write("<tr>");
-            w.Write("<td width='100%'>");
-            w.Write(Resx.GetString("DIRECTIONS_Field_Positions_Grants") + ":");
-            w.Write("</td>");
-            w.Write("</tr>");
-            w.Write("<tr>");
-            w.Write("<td colspan=2 class='TDDataPL'>");
+            var wr = new StringWriter();
+            ValidationMessages.CheckGroupInconsistencies(wr, Dir, "Доп. параметры", bitMask);
 
-            if (!Dir.PositionAdvancedGrants.Any())
-                w.Write(Resx.GetString("DIRECTIONS_Msg_NoRequired"));
-            else
-                Dir.PositionAdvancedGrants.OrderBy(x => x.GrantDescription).ToList().ForEach(
-                    delegate(PositionAdvancedGrant p)
-                    {
-                        w.Write("<div>{0}</div>", IsRusLocal ? p.GrantDescription : p.GrantDescriptionEn);
-                    });
-
-            w.Write("</td>");
-            w.Write("</tr>");
-            w.Write("</table>");
+            if (wr.ToString().Length > 0)
+            {
+                w.Write("<tr>");
+                w.Write("<td colspan=4 class='TDBB' valign='top'>");
+                w.Write(wr);
+                w.Write("</td>");
+                w.Write("</tr>");
+            }
         }
 
         #endregion
@@ -2372,11 +2775,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
 
         #endregion
 
-
-
         #endregion
-
-
 
 
         //========================================================================================================== Adv Functions
@@ -2384,37 +2783,47 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
         #region Дополнительные функции
 
         /// <summary>
+        ///     Функция определяющая, надо ли выводить требования
+        /// </summary>
+        /// <param name="demand">Что требуется</param>
+        /// <returns>true|false</returns>
+        private bool DisplayByDirectionType(DirectionsDemand demand)
+        {
+            return true;
+        }
+
+        /// <summary>
         ///     Метод получения ресурсов локализации - удалить в будущем
         /// </summary>
         private void SetCultureText()
         {
-            HAccessEml = Resx.GetString("DIRECTIONS_hAccessEml");
-            HDadaEml = Resx.GetString("DIRECTIONS_hDadaEml");
-            HEquipEml = Resx.GetString("DIRECTIONS_hEquipEml");
-            LAeOffice = Resx.GetString("DIRECTIONS_lAEOfiice");
-            LAeVpn = Resx.GetString("DIRECTIONS_lAEVpn");
-            LAiMobile = Resx.GetString("DIRECTIONS_lAIMobile");
-            LAiModem = Resx.GetString("DIRECTIONS_lAIModem");
-            LAiOffice = Resx.GetString("DIRECTIONS_lAIOffice");
-            LCompN = Resx.GetString("DIRECTIONS_lCompN");
-            LCompP = Resx.GetString("DIRECTIONS_lCompP");
-            LCompT = Resx.GetString("DIRECTIONS_lCompT");
-            LPhoneDect = Resx.GetString("DIRECTIONS_Field_Phone_Dect");
-            LPhoneDesk = Resx.GetString("DIRECTIONS_Field_Phone_Table");
-            LPhoneIp = Resx.GetString("DIRECTIONS_lPhoneIP");
-            LPhoneIpCam = Resx.GetString("DIRECTIONS_Field_Phone_WebCam");
-            LPhoneSim = Resx.GetString("DIRECTIONS_lPhoneSim");
+            HAccessEml = Dir.Resx.GetString("DIRECTIONS_hAccessEml");
+            HDadaEml = Dir.Resx.GetString("DIRECTIONS_hDadaEml");
+            HEquipEml = Dir.Resx.GetString("DIRECTIONS_hEquipEml");
+            LAeOffice = Dir.Resx.GetString("DIRECTIONS_lAEOfiice");
+            LAeVpn = Dir.Resx.GetString("DIRECTIONS_lAEVpn");
+            LAiMobile = Dir.Resx.GetString("DIRECTIONS_lAIMobile");
+            LAiModem = Dir.Resx.GetString("DIRECTIONS_lAIModem");
+            LAiOffice = Dir.Resx.GetString("DIRECTIONS_lAIOffice");
+            LCompN = Dir.Resx.GetString("DIRECTIONS_lCompN");
+            LCompP = Dir.Resx.GetString("DIRECTIONS_Field_Computer_Desktop");
+            LCompT = Dir.Resx.GetString("DIRECTIONS_lCompT");
+            LPhoneDect = Dir.Resx.GetString("DIRECTIONS_Field_Phone_Dect");
+            LPhoneDesk = Dir.Resx.GetString("DIRECTIONS_Field_Phone_Table");
+            LPhoneIp = Dir.Resx.GetString("DIRECTIONS_lPhoneIP");
+            LPhoneIpCam = Dir.Resx.GetString("DIRECTIONS_Field_Phone_WebCam");
+            LPhoneSim = Dir.Resx.GetString("DIRECTIONS_lPhoneSim");
 
-            LPlExitInSide = Resx.GetString("DIRECTIONS_lPLExitInSide");
-            LPlExitOutCountry = Resx.GetString("DIRECTIONS_lPLExitOutCountry");
-            LPlExitOutTown = Resx.GetString("DIRECTIONS_lPLExitOutTown");
-            LPlExitTown = Resx.GetString("DIRECTIONS_lPLExitTown");
+            LPlExitInSide = Dir.Resx.GetString("DIRECTIONS_lPLExitInSide");
+            LPlExitOutCountry = Dir.Resx.GetString("DIRECTIONS_lPLExitOutCountry");
+            LPlExitOutTown = Dir.Resx.GetString("DIRECTIONS_lPLExitOutTown");
+            LPlExitTown = Dir.Resx.GetString("DIRECTIONS_lPLExitTown");
 
-            LSotrudnikParent1 = Resx.GetString("DIRECTIONS_lSotrudnikParent1");
-            LSotrudnikParent2 = Resx.GetString("DIRECTIONS_lSotrudnikParent2");
+            LSotrudnikParent1 = Dir.Resx.GetString("DIRECTIONS_lSotrudnikParent1");
+            LSotrudnikParent2 = Dir.Resx.GetString("DIRECTIONS_lSotrudnikParent2");
 
-            LRequire = Resx.GetString("DIRECTIONS_lRequire");
-            LComplete = Resx.GetString("DIRECTIONS_lComplete");
+            LRequire = Dir.Resx.GetString("DIRECTIONS_lRequire");
+            LComplete = Dir.Resx.GetString("DIRECTIONS_lComplete");
         }
 
         /// <summary>
@@ -2436,11 +2845,12 @@ DIRECTIONS_FORM_ADVINFO_Title:""{0}"",
                 if (!string.IsNullOrEmpty(employee.CommonEmployeeID))
                 {
                     var commonEmployeeId = new Employee(employee.CommonEmployeeID);
-                    if (commonEmployeeId.Login.IsNullEmptyOrZero()) return true;
+                    if (!commonEmployeeId.HasAccount_) return true;
                 }
 
             return false;
         }
+
 
         #endregion
     }

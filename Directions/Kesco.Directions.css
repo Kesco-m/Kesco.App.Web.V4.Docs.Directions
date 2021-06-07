@@ -1,12 +1,17 @@
-﻿.directionGroupHeader { font-style: normal; }
+﻿
+.directionGroupHeader { font-style: normal; }
 
 .floatLeft { float: left; }
 
 .clearLeft { clear: left; }
 
+.clearBoth { clear: both; }
+
 .bgcolor { }
 
 .marginL { margin-left: 5px; }
+
+.marginB { margin-bottom: 5px;}
 
 .marginL2 { margin-left: 15px; }
 
@@ -22,9 +27,15 @@
 
 .paddingB { padding-bottom: 5px; }
 
+.paddingL { padding-left: 5px; }
+
 .paddingR { padding-right: 5px; }
-       
-        
+
+.gridSimple td {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
 .w25 {
     white-space: nowrap;
     width: 25px;
@@ -33,6 +44,11 @@
 .w75 {
     white-space: nowrap;
     width: 75px;
+}
+
+.w85 {
+    white-space: nowrap;
+    width: 85px;
 }
 
 .w70 {
@@ -107,7 +123,7 @@ hr {
     height: 1px; /* Толщина линии */
 }
 
-.TDBB { BORDER-BOTTOM: solid 1px black; }
+.TDBB { BORDER-BOTTOM: solid 1px black; padding-bottom:3px;}
 
 .TDBL { BORDER-LEFT: solid 1px black; }
 
@@ -115,4 +131,34 @@ hr {
 
 .TDDataPL0 { PADDING-LEFT: 0px; }
 
-.NoCI { COLOR: red; }
+
+.block1 {
+    display: inline-block;
+    width: 130px;
+}
+
+.block2 {
+    display: inline-block;
+    max-width: calc(100% - 150px);
+    min-width: 100px;
+    vertical-align: top;
+}
+
+.block1_0 {
+    display: inline-block;
+    width: 130px;
+}
+
+.block2_0 {
+    display: inline-block;
+    max-width: calc(100% - 500px);
+    min-width: 350px;
+    vertical-align: top;
+}
+
+.dispNone { display: none; }
+
+.v4Normal {
+    font-weight: normal !important;
+    text-align: center !important;
+}

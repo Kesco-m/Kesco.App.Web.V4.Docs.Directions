@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -9,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Script.Serialization;
 using Kesco.Lib.BaseExtention;
+using Kesco.Lib.BaseExtention.Enums;
 using Kesco.Lib.BaseExtention.Enums.Controls;
 using Kesco.Lib.BaseExtention.Enums.Corporate;
 using Kesco.Lib.BaseExtention.Enums.Docs;
@@ -30,11 +30,14 @@ using Role = Kesco.Lib.Entities.Corporate.Role;
 
 namespace Kesco.App.Web.Docs.Directions
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Подключаемый класс формы документа: Указание IT на организацию работы
     /// </summary>
     public abstract partial class DirectionIT : DocPage
     {
+        private bool isRedirect = false;
+
         /// <summary>
         ///     Группа посменной работы без логина
         /// </summary>
@@ -44,15 +47,43 @@ namespace Kesco.App.Web.Docs.Directions
         ///     Объект отрисовки дополнительной информации
         /// </summary>
         private RenderHelper _render;
+        protected string DIRECTIONS_Field_Phone;
+        protected string DIRECTIONS_Field_Phone_Table;
+        protected string DIRECTIONS_Field_Phone_WebCam;
+        protected string DIRECTIONS_Field_Phone_Dect;
+        protected string DIRECTIONS_Field_MobilPhone;
+        protected string DIRECTIONS_Field_Computer;
+        protected string DIRECTIONS_Field_Computer_Desktop;
+        protected string DIRECTIONS_Field_Computer_Laptop;
+        protected string DIRECTIONS_Field_AdvEq;
+        protected string DIRECTIONS_Field_AEAccess;
+        protected string DIRECTIONS_Field_AEAccess_Login;
+        protected string DIRECTIONS_Field_Lang;
+        protected string DIRECTIONS_Field_AccessData;
+        protected string DIRECTIONS_Field_AccessData_How;
+        protected string DIRECTIONS_Field_AccessData_Instead;
+        protected string DIRECTIONS_Field_Positions_Folders;
+        protected string DIRECTIONS_Field_Positions_Folders_Title;
+        protected string DIRECTIONS_Field_Positions_Roles;
+        protected string DIRECTIONS_Field_Positions_Roles_Title;
+        protected string DIRECTIONS_Field_Positions_Types;
+        protected string DIRECTIONS_Field_Positions_Types_Title;
+        protected string DIRECTIONS_Field_AdvInfo;
+        protected string DIRECTIONS_Field_WpType;
+        protected string cmdWorkplaceOther;
+        protected string DIRECTIONS_Field_Positions_Roles_Select;
+        protected string DIRECTIONS_Pos_InCompany;
+        protected string DIRECTIONS_Rnd_Catalog;
+        protected string DIRECTIONS_Rnd_TypePerson;
 
         /// <summary>
-        ///     Идентификатор контрола Like
+        ///     Конструктор
         /// </summary>
-        public override string LikeId { get; set; }
+        protected DirectionIT()
+        {
+            IsRenderDocTitle = false;
+        }
 
-        /// <summary>
-        ///     Объект текущего документа Указание IT на организацию работы
-        /// </summary>
         protected Direction Dir => (Direction) Doc;
 
         /// <summary>
@@ -71,21 +102,71 @@ namespace Kesco.App.Web.Docs.Directions
         /// </summary>
         private void SetInitControls()
         {
+            ItemName = "DirectionIT";
             efSotrudnik.Filter.Status.ValueStatus = СотоянияСотрудника.Работающие;
             efSotrudnikParent.Filter.Status.ValueStatus = СотоянияСотрудника.РаботающиеИУволенные;
             efSotrudnikParent.Filter.HasLogin.ValueHasLogin = НаличиеЛогина.ЕстьЛогин;
 
+            rdWorkPlaceType1.NextControl = "rdWorkPlaceType3";
+            rdWorkPlaceType3.NextControl = "rdWorkPlaceType5";
+            rdWorkPlaceType5.NextControl = "rdWorkPlaceType4";
+
+
+            efPhoneDesk.NextControl = "efPhoneIPCam";
+            efPhoneIPCam.NextControl = "efPhoneDect";
+            efPhoneDect.NextControl = "efComputer";
+            efComputer.NextControl = "efNotebook";
+            efNotebook.NextControl = "efAdvEq";
+            efAdvEq.NextControl = "efAccessEthernet";
 
             efPRoles_Role.NextControl = "efPRoles_Person";
             efPRoles_Person.NextControl = "btnPRoles_Save";
 
             efPTypes_Catalog.NextControl = "efPTypes_Type";
-            efPTypes_Catalog.CustomRecordText = HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCatalog"));
+            efPTypes_Catalog.CustomRecordText = HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCatalog"));
 
             efPTypes_Type.NextControl = "efPTypes_Type_0";
-            efPTypes_Type.CustomRecordText = HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllTypePerson"));
+            efPTypes_Type.CustomRecordText = HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllTypePerson"));
 
-          
+            efPRoles_Role.IsNoModifying = true; efPRoles_Role.IsShowEditingStatus = false;
+            efPRoles_Person.IsNoModifying = true; efPRoles_Person.IsShowEditingStatus = false;
+            efPTypes_Catalog.IsNoModifying = true; efPTypes_Catalog.IsShowEditingStatus = false;
+            efPTypes_Type.IsNoModifying = true; efPTypes_Type.IsShowEditingStatus = false;
+
+
+            #region Localization
+
+            DIRECTIONS_Field_Phone  = Dir.Resx.GetString("DIRECTIONS_Field_Phone");
+            DIRECTIONS_Field_Phone_Table= Dir.Resx.GetString("DIRECTIONS_Field_Phone_Table");
+            DIRECTIONS_Field_Phone_WebCam = Dir.Resx.GetString("DIRECTIONS_Field_Phone_WebCam");
+            DIRECTIONS_Field_Phone_Dect = Dir.Resx.GetString("DIRECTIONS_Field_Phone_Dect");            
+            DIRECTIONS_Field_MobilPhone = Dir.Resx.GetString("DIRECTIONS_Field_MobilPhone");
+            DIRECTIONS_Field_Computer = Dir.Resx.GetString("DIRECTIONS_Field_Computer");
+            DIRECTIONS_Field_Computer_Desktop = Dir.Resx.GetString("DIRECTIONS_Field_Computer_Desktop");
+            DIRECTIONS_Field_Computer_Laptop = Dir.Resx.GetString("DIRECTIONS_Field_Computer_Laptop");
+            DIRECTIONS_Field_AdvEq = Dir.Resx.GetString("DIRECTIONS_Field_AdvEq");
+            DIRECTIONS_Field_AEAccess = Dir.Resx.GetString("DIRECTIONS_Field_AEAccess");
+            DIRECTIONS_Field_AEAccess_Login = Dir.Resx.GetString("DIRECTIONS_Field_AEAccess_Login");
+            DIRECTIONS_Field_Lang = Dir.Resx.GetString("DIRECTIONS_Field_Lang");
+            DIRECTIONS_Field_AccessData = Dir.Resx.GetString("DIRECTIONS_Field_AccessData");
+            DIRECTIONS_Field_AccessData_How = Dir.Resx.GetString("DIRECTIONS_Field_AccessData_How");
+            DIRECTIONS_Field_AccessData_Instead = Dir.Resx.GetString("DIRECTIONS_Field_AccessData_Instead");
+            DIRECTIONS_Field_Positions_Folders = Dir.Resx.GetString("DIRECTIONS_Field_Positions_Folders");
+            DIRECTIONS_Field_Positions_Folders_Title = Dir.Resx.GetString("DIRECTIONS_Field_Positions_Folders_Title");
+            DIRECTIONS_Field_Positions_Roles = Dir.Resx.GetString("DIRECTIONS_Field_Positions_Roles");
+            DIRECTIONS_Field_Positions_Roles_Title = Dir.Resx.GetString("DIRECTIONS_Field_Positions_Roles_Title");
+            DIRECTIONS_Field_Positions_Types = Dir.Resx.GetString("DIRECTIONS_Field_Positions_Types");
+            DIRECTIONS_Field_Positions_Types_Title = Dir.Resx.GetString("DIRECTIONS_Field_Positions_Types_Title");
+            DIRECTIONS_Field_AdvInfo = Dir.Resx.GetString("DIRECTIONS_Field_AdvInfo");
+            DIRECTIONS_Field_WpType= Dir.Resx.GetString("DIRECTIONS_Field_WpType");
+            cmdWorkplaceOther = Dir.Resx.GetString("cmdWorkplaceOther");
+            DIRECTIONS_Field_Positions_Roles_Select =  Dir.Resx.GetString("DIRECTIONS_Field_Positions_Roles_Select");
+            DIRECTIONS_Pos_InCompany = Dir.Resx.GetString("DIRECTIONS_Pos_InCompany");
+            DIRECTIONS_Rnd_Catalog = Dir.Resx.GetString("DIRECTIONS_Rnd_Catalog");
+            DIRECTIONS_Rnd_TypePerson = Dir.Resx.GetString("DIRECTIONS_Rnd_TypePerson");
+
+
+            #endregion
         }
 
         #endregion
@@ -113,6 +194,8 @@ namespace Kesco.App.Web.Docs.Directions
 
             efPRoles_Role.OnRenderNtf += efPRoles_Role_OnRenderNtf;
             efPTypes_Type.BeforeSearch += efPTypes_Type_BeforeSearch;
+
+            efMailName.BeforeSearch += efMailName_BeforeSearch;
         }
 
         #endregion
@@ -158,6 +241,7 @@ namespace Kesco.App.Web.Docs.Directions
         {
             if (IsOpenInEditableMode(Request)) return base.RedirectPageByCondition();
 
+            isRedirect = true;
             V4Redirect("DirectionITSigned.aspx");
             return true;
         }
@@ -168,14 +252,25 @@ namespace Kesco.App.Web.Docs.Directions
         /// <param name="copy">Инициализация по копии</param>
         protected override void EntityInitialization(Entity copy = null)
         {
-            Doc = new Direction();
+            if (Entity == null) Doc = new Direction();
+        }
 
+        protected override void EntityFieldInit()
+        {
+            base.EntityFieldInit();
             ShowDocDate = false;
             ShowCopyButton = false;
             SetBinders();
             SetHandlers();
 
-        
+            if (!V4IsPostBack && Doc != null)
+            {
+                               
+                if (DocEditable)
+                    efSotrudnik.Focus();
+
+                SetInitControls();
+            }
         }
 
         /// <summary>
@@ -185,13 +280,9 @@ namespace Kesco.App.Web.Docs.Directions
         protected override void EntityLoadData(string idEntity)
         {
             base.EntityLoadData(idEntity);
-
-
+            
             if (!idEntity.IsNullEmptyOrZero())
             {
-                _isCommonEmployeeNoLogin = IsCommonEmployeeNoLogin();
-                if (_isCommonEmployeeNoLogin) DisplayCommonEmployeeNoLogin();
-
                 Dir.LoadDocumentPositions();
 
                 RefreshPositionCommonFolders();
@@ -207,7 +298,11 @@ namespace Kesco.App.Web.Docs.Directions
             }
 
             GetSotrudnikParentType();
-            SetAccessEthernetDisabled();
+            SetAccessEthernetState();
+
+            DisplayPhoto();
+            DisplayAdvInfo();
+                     
         }
 
         /// <summary>
@@ -217,18 +312,34 @@ namespace Kesco.App.Web.Docs.Directions
         {
             if (!V4IsPostBack)
             {
-                Dir.Languages.ForEach(delegate(Language lang) { efLang.Items.Add(lang.Id, lang.Name); });
-                Dir.DomainNames.ForEach(delegate(DomainName dName) { efDomain.Items.Add(dName.Id, dName.Id); });
+                Dir.Languages.ForEach(delegate(Language lang) { efLang.DataItems.Add(lang.Id, lang.Name); });
 
-                rdWorkPlaceType1.Items.Add(new Item("1", $" {Resx.GetString("DIRECTIONS_Field_WpType_1")}"));
-                rdWorkPlaceType2.Items.Add(new Item("2", $" {Resx.GetString("DIRECTIONS_Field_WpType_2")}"));
-                rdWorkPlaceType4.Items.Add(new Item("4", $" {Resx.GetString("DIRECTIONS_Field_WpType_4")}"));
+                Dir.DomainNames.ForEach(delegate(DomainName dName) { efDomain.DataItems.Add(dName.Id, dName.Id); });
 
-                efPLExit.Items = new Dictionary<string, string>
+                rdWorkPlaceType1.Items.Add(new Item(((int) DirectionsTypeBitEnum.РабочееМестоВОфисе).ToString(),
+                    " " + Dir.Resx.GetString(DirectionsTypeBitEnum.РабочееМестоВОфисе
+                        .GetAttribute<Specifications.DirectionsType>().RadioLabel)));
+                rdWorkPlaceType3.Items.Add(new Item(((int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса).ToString(),
+                    " " + Dir.Resx.GetString(DirectionsTypeBitEnum.РабочееМестоВнеОфиса
+                        .GetAttribute<Specifications.DirectionsType>().RadioLabel)));
+                rdWorkPlaceType4.Items.Add(new Item(((int) DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи).ToString(),
+                    " " + Dir.Resx.GetString(DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи
+                        .GetAttribute<Specifications.DirectionsType>().RadioLabel)));
+                rdWorkPlaceType5.Items.Add(new Item(
+                    ((int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы).ToString(),
+                    " " + Dir.Resx.GetString(DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы
+                        .GetAttribute<Specifications.DirectionsType>().RadioLabel)));
+                rdWorkPlaceType6.Items.Add(new Item(
+                   ((int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте).ToString(),
+                   " " + Dir.Resx.GetString(DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте
+                       .GetAttribute<Specifications.DirectionsType>().RadioLabel)));
+
+
+                efPLExit.DataItems = new Dictionary<string, object>
                 {
-                    {"1", Resx.GetString("DIRECTIONS_lPLExitInSide")},
-                    {"7", Resx.GetString("DIRECTIONS_lPLExitOutTown")},
-                    {"15", Resx.GetString("DIRECTIONS_lPLExitOutCountry")}
+                    {"1", Dir.Resx.GetString("DIRECTIONS_lPLExitInSide")},
+                    {"7", Dir.Resx.GetString("DIRECTIONS_lPLExitOutTown")},
+                    {"15", Dir.Resx.GetString("DIRECTIONS_lPLExitOutCountry")}
                 };
             }
 
@@ -237,14 +348,13 @@ namespace Kesco.App.Web.Docs.Directions
             if (Dir.IsNew)
             {
                 Dir.Date = DateTime.Today;
-                efPLExit.Value = "7";
+                Dir.PhoneLinkField.Value = "7";
             }
 
             if (V4IsPostBack || !Dir.IsNew)
             {
                 GetWorkPlaceType();
-                RefreshWorkPlace();
-                RefreshWorkPlace2();
+
                 DisplayDataWorkPlace();
 
                 GetPhoneEquip();
@@ -262,13 +372,24 @@ namespace Kesco.App.Web.Docs.Directions
         protected override void SetControlProperties()
         {
             efSotrudnik.IsRequired = true;
+
             efRedirectNum.IsRequired = true;
-            if (Dir.AccessEthernetField.ValueString.Length != 0 && Dir.AccessEthernetField.ValueInt == 1)
+
+            var display = 0;
+            var bit = Dir.PhoneEquipField.ValueInt;
+
+            if (bit == (int) DirectionsTypeBitEnum.РабочееМестоВОфисе
+                || bit == (int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса) display = 1;
+
+            RefreshMobilPhoneRequired(display);
+
+            if (Dir.AccessEthernetChange)
             {
                 efLogin.IsRequired = true;
                 efMailName.IsRequired = true;
-                if (Dir.WorkPlaceTypeField.ValueString.Length > 0 && Dir.WorkPlaceTypeField.ValueInt ==
-                    (int) DirectionsWorkPlaceTypeBitEnum.УчетнаяЗаписьБезРабочегоМеста)
+                if (Dir.WorkPlaceTypeField.ValueString.Length > 0
+                    && (Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы 
+                    || Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте))
                     efAccessEthernet.IsDisabled = true;
             }
 
@@ -284,6 +405,24 @@ namespace Kesco.App.Web.Docs.Directions
         {
             switch (cmd)
             {
+                case "CreateWorkPlace":
+                    CreateWorkPlace();
+                    break;
+                case "GoTo":
+                    V4Navigate("DirectionIT.aspx?id=" + param["idDoc"]);
+                    break;
+                case "ClearSotrudnik":
+                    Dir.SotrudnikField.ValueString = "";                    
+                    efSotrudnik.RefreshRequired = true;
+                    SotrudnikClearInfo(2);
+                    RefreshSotrudnikInfo();
+                    break;
+                case "ClearWorkPlace":
+                    ClearWorkPlace();
+                    break;
+                case "CheckWorkplaceSelected":
+                    CheckWorkplaceSelected();
+                    break;
                 case "SotrudnikParentSetInfo":
                     SotrudnikParentSetInfo();
                     break;
@@ -334,45 +473,44 @@ namespace Kesco.App.Web.Docs.Directions
                     AddPositionRole();
                     break;
                 case "RenderWorkPlaceList":
-                    //RenderWorkPlaceList(param["x"], param["y"]);
-                    RenderWorkPlaceList();
+                    var canAnother = param["CanAnother"] == null || bool.Parse(param["CanAnother"]);
+                    RenderWorkPlaceList(int.Parse(param["WPType"]), canAnother);
                     break;
                 case "RenderMailNamesList":
-                    //RenderMailNamesList(param["x"], param["y"]);
                     RenderMailNamesList();
                     break;
                 case "AdvSearchWorkPlace":
                     AdvSearchWorkPlace();
                     break;
+                case "AdvSearchWorkPlaceTo":
+                    AdvSearchWorkPlaceTo();
+                    break;
                 case "SetWorkPlace":
-                    SetWorkPlace(param["value"], param["label"]);
+                    SetWorkPlace(param["value"], param["label"], param["coWorkers"] == "1");
+                    break;
+                case "SetWorkPlace1":
+                    Dir.WorkPlaceTypeField.Value = (int) DirectionsTypeBitEnum.РабочееМестоВОфисе;
+                    Dir.WorkPlaceField.Value = null;
+                    Dir.WorkPlaceToField.Value = null;
+                    RefreshWorkPlaceTypeInfo();
+                    break;
+                case "SetTransfer":
+                    SetTransfer(param["value"], param["label"]);
+                    break;
+                case "SetWorkPlaceTo":
+                    SetWorkPlaceTo(param["value"], "", true);
                     break;
                 case "SetMailName":
                     SetMailName(param["value"]);
                     break;
-                case "ClearWorkPlace":
-                    ClearWorkPlace();
-                    break;
-                case "TestSendMessage":
-                    var jsStr = DocViewInterop.SendMessageDocument("1", "284,724,1", "Нихера не работает!!!");
-                    JS.Write(jsStr);
-                    break;
-                //case "TestCheckSimilar":
-                //    var jsStr1 = DocViewInterop.CheckSimilarDocument(HttpContext.Current, "0", "2353", "15.01.2018",
-                //        "13", "1603,15950,22778", "2");
-                //    JS.Write(jsStr1);
-                //    break;
-                //case "SendMessageDocument":
-                //    JS.Write(DocViewInterop.SendMessageDocument(param["docid"], param["empids"], param["msg"]));
-                //    break;
                 case "OpenAnotherEquipmentDetails":
-                    RenderData.EquipmentAnotherPlace(this, "divAdvInfoValidation_Body", Dir);
+                    RenderData.EquipmentAnotherPlace(this, "divSotrudnikAnotherWorkPlaces", Dir);
                     break;
                 case "OpenEquipmentDetails":
-                    RenderData.EquipmentInPlace(this, "divAdvInfoValidation_Body", Dir, param["IdLocation"]);
+                    RenderData.EquipmentInPlace(this, param["IdContainer"], Dir, param["IdLocation"]);
                     break;
                 case "OpenGroupMembers":
-                    RenderData.GroupMembers(this, "divAdvInfoValidation_Body", Dir, param["IdGroup"]);
+                    RenderData.GroupMembers(this, param["IdContainer"], Dir, param["IdGroup"]);
                     break;
                 default:
                     base.ProcessCommand(cmd, param);
@@ -380,6 +518,15 @@ namespace Kesco.App.Web.Docs.Directions
             }
         }
 
+        private bool ForceCheckBeforeSave() {
+
+            if (ValidateDocument(out List<string> li))
+                return true;
+
+            RenderErrors(li);            
+            return false;
+
+        }
 
         /// <summary>
         ///     Проверка документа перед сохранением
@@ -393,58 +540,96 @@ namespace Kesco.App.Web.Docs.Directions
 
             base.ValidateDocument(out errors);
 
-            if (Dir.WorkPlaceTypeField.ValueString.Length == 0)
+            if (Dir.WorkPlaceTypeField.ValueString.Length == 0 || Dir.WorkPlaceTypeField.ValueString == "0")
             {
-                errors.Add($"{Resx.GetString("DIRECTIONS_Msg_Err_ЧтоТребуется")}.");
+                errors.Add($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_ЧтоТребуется")}.");
                 return false;
             }
 
             var bitMask = Dir.WorkPlaceTypeField.ValueInt;
 
-            //рабочее место в офисе==============================================================
-            if ((bitMask & 1) == 1 || (bitMask & 2) == 2)
+            if (bitMask == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
             {
-                if ((bitMask & 1) == 1 && Dir.WorkPlaceField.ValueString.Length == 0)
+                if (Dir.WorkPlaceField.ValueString.Length == 0)
                 {
-                    errors.Add($"{Resx.GetString("DIRECTIONS_Msg_Err_РабМестоВОфисе")}.");
+                    errors.Add("Не указано рабочее место на котором необходимо организовать работу.");
                     return false;
                 }
 
+                if (Dir.WorkPlaceToField.ValueString.Length == 0)
+                {
+                    errors.Add("Не указано рабочее место с которого необходимо пересадить сотрудника.");
+                    return false;
+                }
+            }
+
+            if (bitMask == (int)DirectionsTypeBitEnum.РабочееМестоВОфисе || bitMask == (int)DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+            {
                 if ((Dir.PhoneEquipField.ValueString.Length == 0 || Dir.PhoneEquipField.ValueInt == 0)
                     && (Dir.CompTypeField.ValueString.Length == 0 || Dir.CompTypeField.ValueInt == 0)
                     && Dir.AdvEquipField.ValueString.Length == 0
                     && Dir.AdvInfoField.ValueString.Length == 0
                 )
                 {
-                    errors.Add($"{Resx.GetString("DIRECTIONS_Msg_Err_ТребуетсяДляРаботы")}.");
+                    errors.Add($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_ТребуетсяДляРаботы")}.");
                     return false;
                 }
             }
 
+            
+            if (bitMask == (int) DirectionsTypeBitEnum.РабочееМестоВОфисе)
+            {
+                if (Dir.WorkPlaceField.ValueString.Length == 0)
+                {
+                    errors.Add($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_РабМестоВОфисе")}.");
+                    return false;
+                }
+
+                if (Dir.RedirectNumField.ValueString.Length > 0)
+                {
+                    var wr = new StringWriter();
+                    ValidationMessages.CheckPhoneNumberIsMobile(this, wr, Dir, Dir.RedirectNumField.ValueString);
+                    if (wr.ToString().Length > 0)
+                    {
+                        var msg = Dir.Resx.GetString("DIRECTIONS_Msg_Err_МобТелефонТип").FirstWordCharToUpper();
+                        errors.Add($"{msg}.");
+                        return false;
+                    }
+
+                }
+            }
+
             //только доступ к корпоративной сети через Internet ==============================================================
-            if (bitMask == 4 ||
-                Dir.AccessEthernetField.ValueString.Length != 0 && Dir.AccessEthernetField.ValueInt == 1)
+            if (Dir.AccessEthernetChange)
             {
                 if (Dir.AccessEthernetField.ValueString.Length == 0 || Dir.AccessEthernetField.ValueInt == 0)
                 {
-                    errors.Add($"{Resx.GetString("DIRECTIONS_Msg_Err_Сеть")}.");
+                    errors.Add($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_Сеть")}.");
                     return false;
                 }
 
                 if (Dir.LoginField.ValueString.Length == 0)
-                    errors.Add(Resx.GetString("DIRECTIONS_NTF_NoLogin"));
+                    errors.Add(Dir.Resx.GetString("DIRECTIONS_NTF_NoLogin"));
+                
+                if (Dir.SotrudnikLanguageField.ValueString.Length == 0)
+                    errors.Add(Dir.Resx.GetString("DIRECTIONS_NTF_Lang"));
+
                 if (Dir.MailNameField.ValueString.Length == 0)
-                    errors.Add(Resx.GetString("DIRECTIONS_NTF_NoEmail"));
+                    errors.Add(Dir.Resx.GetString("DIRECTIONS_NTF_NoEmail"));
                 if (Dir.DomainField.ValueString.Length == 0)
-                    errors.Add(Resx.GetString("DIRECTIONS_NTF_NoDomain"));
+                    errors.Add(Dir.Resx.GetString("DIRECTIONS_NTF_NoDomain"));
 
                 if (errors.Count > 0) return false;
             }
 
             bitMask = Dir.PhoneEquipField.ValueInt;
-            if (((bitMask & 1) == 1 || (bitMask & 2) == 2) && Dir.RedirectNumField.ValueString.Length == 0)
+            if (((bitMask & 1) == 1 || (bitMask & 2) == 2)
+                && Dir.RedirectNumField.ValueString.Length == 0
+                && !Dir.Sotrudnik.SimRequired
+                && (Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.РабочееМестоВОфисе
+                    || Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса))
             {
-                errors.Add($"{Resx.GetString("DIRECTIONS_Msg_Err_МобТелефон")}.");
+                errors.Add($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_МобТелефон")}.");
                 return false;
             }
 
@@ -453,20 +638,20 @@ namespace Kesco.App.Web.Docs.Directions
                 Dir.SotrudnikParentField.ValueString.Length == 0)
             {
                 errors.Add(Dir.SotrudnikParentCheckField.ValueInt == 1
-                    ? Resx.GetString("DIRECTIONS_Msg_Err_Как")
-                    : Resx.GetString("DIRECTIONS_Msg_Err_Вместо"));
+                    ? Dir.Resx.GetString("DIRECTIONS_Msg_Err_Как")
+                    : Dir.Resx.GetString("DIRECTIONS_Msg_Err_Вместо"));
 
                 if (Dir.SotrudnikParentCheckField.ValueInt == 2
                     && Dir.SotrudnikField.ValueString.Length > 0
                     && !Dir.Sotrudnik.Unavailable
-                    && Dir.Sotrudnik.Login.Length > 0
+                    && Dir.Sotrudnik.HasAccount_
                     && Dir.SotrudnikParentField.ValueString.Length > 0
                     && !Dir.SotrudnikParent.Unavailable
-                    && Dir.SotrudnikParent.Login.Length > 0
+                    && Dir.SotrudnikParent.HasAccount_
                     && Dir.Sotrudnik.Login != Dir.SotrudnikParent.Login
                 )
                     errors.Add(
-                        $"{Resx.GetString("DIRECTIONS_Msg_Err_ВместоУчетки")}!");
+                        $"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_ВместоУчетки")}!");
 
                 return false;
             }
@@ -476,7 +661,7 @@ namespace Kesco.App.Web.Docs.Directions
                 if (!string.IsNullOrEmpty(employee.CommonEmployeeID))
                 {
                     var commonEmployeeId = new Employee(employee.CommonEmployeeID);
-                    if (!commonEmployeeId.Login.IsNullEmptyOrZero())
+                    if (commonEmployeeId.HasAccount_)
                         using (var w = new StringWriter())
                         {
                             ValidationMessages.CheckSotrudnikWorkPlaceGroup(this, w, Dir);
@@ -491,23 +676,33 @@ namespace Kesco.App.Web.Docs.Directions
             return true;
         }
 
+
         /// <summary>
         ///     Корректировка документа перед сохранением(очистка не требующих сохранения полей)
         /// </summary>
         private void ValidateDataFillCorrect()
         {
-            Dir.RequiredRefreshInfo = true;
+            Dir.LoadedExternalProperties.Remove(Direction.CacheKey_Sotrudnik);
+            Dir.LoadedExternalProperties.Remove(Direction.CacheKey_SupervisorData);
+
             var bitMask = Dir.WorkPlaceTypeField.ValueInt;
             var bitMaskPhoneEq = Dir.PhoneEquipField.ValueInt;
 
-            if ((bitMask & 1) != 1)
-            {
-                Dir.WorkPlaceField.ValueString = "";
-                if ((bitMaskPhoneEq & 2) == 2) SetPhoneEquip(2, "0");
-            }
+            if (bitMask != (int) DirectionsTypeBitEnum.РабочееМестоВОфисе
+                && bitMask != (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                Dir.WorkPlaceField.Value = null;
 
+            if (bitMask != (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                Dir.WorkPlaceToField.Value = null;
 
-            if ((bitMask & 1) != 1 && (bitMask & 2) != 2)
+            if (bitMask != (int) DirectionsTypeBitEnum.РабочееМестоВОфисе
+                && bitMask != (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                if ((bitMaskPhoneEq & 2) == 2)
+                    SetPhoneEquip(2, "0");
+
+            if (bitMask != (int) DirectionsTypeBitEnum.РабочееМестоВОфисе
+                && bitMask != (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто
+                && bitMask != (int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса)
             {
                 Dir.PhoneEquipField.ValueString = "";
                 Dir.PhoneLinkField.ValueString = "";
@@ -517,20 +712,29 @@ namespace Kesco.App.Web.Docs.Directions
                 bitMaskPhoneEq = Dir.PhoneEquipField.ValueInt;
             }
 
-            if ((bitMaskPhoneEq & 1) != 1 && (bitMaskPhoneEq & 2) != 2)
+            if ((bitMaskPhoneEq & 1) != 1 && (bitMaskPhoneEq & 2) != 2 ||
+                !string.IsNullOrEmpty(Dir.SotrudnikField.ValueString) && Dir.Sotrudnik.SimRequired ||
+                Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто ||
+                Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи ||
+                Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы ||
+                Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте)
                 Dir.RedirectNumField.ValueString = "";
 
-
-            if (Dir.AccessEthernetField.ValueString.Length == 0 || Dir.AccessEthernetField.ValueInt == 0)
+            if (!Dir.AccessEthernetChange)
             {
-                Dir.LoginField.ValueString = "";
-                Dir.MailNameField.ValueString = "";
-                Dir.DomainField.ValueString = "";
-                Dir.SotrudnikParentCheckField.ValueString = "";
-                Dir.PositionCommonFolders.Clear();
-                Dir.PositionRoles.Clear();
-                Dir.PositionTypes.Clear();
-                Dir.PositionAdvancedGrants.Clear();
+                Dir.AccessEthernetField.ValueString = "0";
+
+                Dir.LoginField.Value = null;
+                Dir.MailNameField.Value = null;
+                Dir.DomainField.Value = null;
+                Dir.SotrudnikLanguageField.Value= null;
+                Dir.SotrudnikParentCheckField.Value = null;
+                             
+                SetRequiredLogin();
+                SetRequiredMailName();
+                DisplayDataEthernet();
+
+                ClearDocumentPositions();
             }
 
             if (efSotrudnikParentCheck1.Value == "0" && efSotrudnikParentCheck2.Value == "0")
@@ -571,14 +775,7 @@ namespace Kesco.App.Web.Docs.Directions
         /// <param name="e">Аргументы</param>
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (!V4IsPostBack)
-            {
-                if (DocEditable)
-                    efSotrudnik.Focus();
-
-                SetInitControls();
-            }
-
+            if (isRedirect) return;
             JS.Write(@"directions_clientLocalization = {{
 CONFIRM_StdMessage:""{0}"",
 CONFIRM_StdTitle:""{1}"", 
@@ -606,13 +803,13 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 Resx.GetString("cmdCancel"),
                 Resx.GetString("cmdUncheck"),
                 Resx.GetString("cmdWorkplaceOther"),
-                Resx.GetString("DIRECTIONS_FORM_CF_Title"),
-                Resx.GetString("DIRECTIONS_FORM_AG_Title"),
-                Resx.GetString("DIRECTIONS_FORM_Role_Title"),
-                Resx.GetString("DIRECTIONS_FORM_Type_Title"),
-                Resx.GetString("DIRECTIONS_FORM_WP_Title"),
-                Resx.GetString("DIRECTIONS_FORM_Mail_Title"),
-                Resx.GetString("DIRECTIONS_FORM_ADVINFO_Title")
+                Dir.Resx.GetString("DIRECTIONS_FORM_CF_Title"),
+                Dir.Resx.GetString("DIRECTIONS_FORM_AG_Title"),
+                Dir.Resx.GetString("DIRECTIONS_FORM_Role_Title"),
+                Dir.Resx.GetString("DIRECTIONS_FORM_Type_Title"),
+                Dir.Resx.GetString("DIRECTIONS_FORM_WP_Title"),
+                Dir.Resx.GetString("DIRECTIONS_FORM_Mail_Title"),
+                Dir.Resx.GetString("DIRECTIONS_FORM_ADVINFO_Title")
             );
 
             if (!V4IsPostBack)
@@ -636,26 +833,6 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             }
         }
 
-        /// <summary>
-        ///     Настройка панели инструментов электронной формы
-        /// </summary>
-        protected override void SetDocMenuButtons()
-        {
-            base.SetDocMenuButtons();
-
-            var btnOldVersion = new Button
-            {
-                ID = "btnOldVersion",
-                V4Page = this,
-                Text = Resx.GetString("btnOldVersion"),
-                Title = Resx.GetString("DIRECTIONS_btnOldVersion_Title"),
-                IconJQueryUI = ButtonIconsEnum.Alert,
-                Width = 150,
-                OnClick =
-                    $"v4_windowOpen('{HttpUtility.JavaScriptStringEncode(WebExtention.UriBuilder(ConfigurationManager.AppSettings["URI_Direction_OldVersion"], CurrentQS))}','_self');"
-            };
-            AddMenuButton(btnOldVersion);
-        }
 
         /// <summary>
         ///     Проверка, что выбранный сотрудник является группой посменной работы без логина
@@ -668,7 +845,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 if (!string.IsNullOrEmpty(employee.CommonEmployeeID))
                 {
                     var commonEmployeeId = new Employee(employee.CommonEmployeeID);
-                    if (commonEmployeeId.Login.IsNullEmptyOrZero()) return true;
+                    if (!commonEmployeeId.HasAccount_) return true;
                 }
 
             return false;
@@ -680,24 +857,22 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         protected override void RefreshManualNotifications()
         {
             if (Dir.SotrudnikField.ValueString.Length == 0) return;
-
-            Dir.Sotrudnik.RequiredRefreshInfo = true;
-
-            if (DocEditable)
-                SetSotrudikHiddenField();
-
-            RenderWorkPlaceList(true);
+                      
             RefreshPhoto();
             RefreshSotrudnikPost();
-            RefreshSotrudnikAOrg();
             RefreshSotrudnikFinOrg();
             RefreshCommonEmployee();
             RefreshSotrudnikCadrWorkPlaces();
             RefreshSupervisorInfo();
+            RefreshMobilPhoneRequired(1);
             RefreshMobilphoneArea();
-            RefreshWorkPlace();
-            RefreshWorkPlace2();
-            Dir.Sotrudnik.RequiredRefreshInfo = false;
+
+            RefreshWorkPlaceTypeInfo();
+
+            SetAccessEthernetState();
+
+            DisplayDataWorkPlace();
+            DisplayAdvInfo();
         }
 
         #endregion
@@ -720,14 +895,13 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             if (Dir.SotrudnikField.ValueString.Length == 0) return;
 
             var employee = Dir.Sotrudnik;
-            employee.RequiredRefreshInfo = true;
 
             if (employee.Unavailable)
             {
                 efSotrudnik.ValueText = "#" + employee.Id;
                 ntf.Add(new Notification
                 {
-                    Message = Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"),
+                    Message = Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"),
                     Status = NtfStatus.Error,
                     SizeIsNtf = false,
                     DashSpace = false
@@ -742,12 +916,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
                 foreach (var n in ntfList)
                     ntf.Add(n);
-
-                ntfList.Clear();
-                ValidationMessages.CheckSotrudnikWorkPlace(this, w, Dir, ntfList, false);
-                foreach (var n in ntfList)
-                    ntf.Add(n);
-
+                                
                 ntfList.Clear();
                 ValidationMessages.CheckSotrudnikStatus(this, w, Dir, ntfList);
                 foreach (var n in ntfList)
@@ -772,7 +941,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 efSotrudnikParent.ValueText = "#" + p.Id;
                 ntf.Add(new Notification
                 {
-                    Message = Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"),
+                    Message = Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНеДоступен"),
                     Status = NtfStatus.Error,
                     SizeIsNtf = false,
                     DashSpace = false
@@ -795,7 +964,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                     ntf.Add(n);
 
                 var ntfs = new List<Notification>();
-                RenderData.ADSI_RenderInfoByEmployee(this, w, ntfs, p, Dir.SotrudnikParentCheckField.ValueInt);
+                RenderData.ADSI_RenderInfoByEmployee(this, w, Dir, ntfs, p, Dir.SotrudnikParentCheckField.ValueInt);
                 ntfs.ForEach(ntf.Add);
             }
         }
@@ -861,6 +1030,24 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 efPTypes_Type.Filter.Catalog.Add(efPTypes_Catalog.Value);
         }
 
+        protected void efMailName_BeforeSearch(object sender)
+        {
+            efMailName.DataItems.Clear();
+            if (Dir.SotrudnikField.ValueString.Length == 0)
+            {
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                    Resx.GetString("CONFIRM_StdTitle"));
+                return;
+            }
+
+            var empl = Dir.Sotrudnik;
+            if (empl.Unavailable) return;
+
+            var name =
+                $"{(empl.FirstNameEn.Length > 0 ? empl.FirstNameEn + "." : "")}{empl.LastNameEn}".Replace(" ", "");
+            efMailName.DataItems.Add(name, name);
+        }
+
         #endregion
 
         #region Changed
@@ -872,36 +1059,19 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <param name="e">Аргументы</param>
         protected void efSotrudnik_OnChanged(object sender, ProperyChangedEventArgs e)
         {
-            SotrudnikClearInfo(true);
+            Dir.LoadedExternalProperties.Remove(Direction.CacheKey_Sotrudnik);
+            Dir.LoadedExternalProperties.Remove(Direction.CacheKey_SupervisorData);
 
-            if (Dir.SotrudnikField.ValueString.Length > 0)
+            SotrudnikClearInfo(1);
+
+            if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                var employee = Dir.Sotrudnik;
-
-
-                if (employee != null && !employee.Unavailable)
-                {
-                    employee.RequiredRefreshInfo = true;
-                    _isCommonEmployeeNoLogin = IsCommonEmployeeNoLogin();
-
-                    if (!string.IsNullOrEmpty(employee.CommonEmployeeID))
-                        if (!_isCommonEmployeeNoLogin)
-                        {
-                            Dir.SotrudnikField.ValueString = "";
-                            SotrudnikClearInfo(true);
-                            RefreshSotrudnikInfo();
-                            ShowMessage(Resx.GetString("DIRECTIONS_NTF_СотрудникВГруппе1"),
-                                Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, $"{efSotrudnik.HtmlID}_0");
-                            return;
-                        }
-
-                    SetSotrudikHiddenField();
-                }
+                RefreshSotrudnikInfo();
+                return;
             }
 
+            DetermineWorkPlaceType();
             RefreshSotrudnikInfo();
-
-            JS.Write("setTimeout(function(){$('#rdWorkPlaceType11_0').focus();},10);");
         }
 
         /// <summary>
@@ -917,25 +1087,32 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             {
                 if (!Regex.IsMatch(Dir.RedirectNumField.ValueString, RegexPattern.PhoneNumber))
                 {
-                    ShowMessage(Resx.GetString("DIRECTIONS_Msg_CheckPhoneNumber"), efRedirectNum,
+                    ShowMessage(Dir.Resx.GetString("DIRECTIONS_Msg_CheckPhoneNumber"), efRedirectNum,
                         Resx.GetString("alertMessage"));
                     Dir.RedirectNumField.ValueString = "";
                     efRedirectNum.Value = "";
                 }
 
 
-                var areaName = "";
-                var telCodeCountry = "";
-                var telCodeInCountry = "";
-                var phone = "";
-
-                Phone.GetPhoneNumberInfo(Dir.RedirectNumField.ValueString, ref areaName, ref telCodeCountry,
-                    ref telCodeInCountry, ref direction, ref phone);
-                Dir.RedirectNumField.Value =
-                    Contact.FormatingContact(22, telCodeCountry, telCodeInCountry, phone, "");
+                FormatingRedirectNumber(ref direction);
             }
 
             RefreshMobilphoneArea(direction);
+
+        }
+
+        /// <summary>
+        ///     Форматирование введенного номера переадресации
+        /// </summary>
+        /// <param name="direction">Направление</param>
+        private void FormatingRedirectNumber(ref string direction)
+        {
+            var phone = Dir.RedirectNumField.ValueString;
+
+            var area = new AreaPhoneInfo();
+            Phone.AdjustPhoneNumber(ref area, ref phone);
+            Dir.RedirectNumField.Value =
+                Contact.FormatingContact(22, area.CountryPhoneCode, area.PhoneCodeInCountry, phone, "");
         }
 
         /// <summary>
@@ -947,18 +1124,30 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                SotrudnikClearInfo(true);
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                SotrudnikClearInfo(2);
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
 
-            SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.РабочееМестоВОфисе);
-            SetAccessEthernetDisabled();
-            DisplayDataWorkPlace();
-            RefreshWorkPlace();
-            if (Dir.WorkPlaceField.ValueString.Length == 0) RenderWorkPlaceList();
-            efSotrudnik.RenderNtf();
+            var bitMask = Dir.WorkPlaceTypeField.ValueString.Length > 0 ? Dir.WorkPlaceTypeField.ValueInt : 0;
+            var bit = int.Parse(e.NewValue);
+
+            if (bitMask == bit) return;
+
+            if (!SetWorkPlaceType(DirectionsTypeBitEnum.РабочееМестоВОфисе)) return;
+
+            if (Dir.WorkPlaceField.ValueString.Length == 0)
+            {
+                RenderWorkPlaceList((int) DirectionsTypeBitEnum.РабочееМестоВОфисе);
+            }
+            else
+            {
+                efSotrudnik.RenderNtf();
+                SetAccessEthernetState();
+                DisplayDataWorkPlace();
+                RefreshWorkPlaceTypeInfo();
+            }
         }
 
         /// <summary>
@@ -966,25 +1155,34 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// </summary>
         /// <param name="sender">Элемент управления</param>
         /// <param name="e">Аргументы</param>
-        protected void rdWorkPlaceType2_OnChanged(object sender, ProperyChangedEventArgs e)
+        protected void rdWorkPlaceType3_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
-                SotrudnikClearInfo(true);
+                SotrudnikClearInfo(2);
                 return;
             }
 
-            SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.РабочееМестоВнеОфиса);
-            SetAccessEthernetDisabled();
-            DisplayDataWorkPlace();
-            RefreshWorkPlace2();
+            if(!SetWorkPlaceType(DirectionsTypeBitEnum.РабочееМестоВнеОфиса)) return;
+
             efSotrudnik.RenderNtf();
+
+            SetAccessEthernetState();
+            DisplayDataWorkPlace();
+
+            SetRequiredLogin();
+            SetRequiredMailName();
+            DisplayDataEthernet();
+
+            RefreshWorkPlaceTypeInfo();
+            CloseInfoDialogWorkPlace();
         }
 
+      
         /// <summary>
-        ///     Событие после изменения на элемент управления "Учетная запись без места"
+        ///     Событие после изменения на элемент управления "ИзменениеУчетнойЗаписи"
         /// </summary>
         /// <param name="sender">Элемент управления</param>
         /// <param name="e">Аргументы</param>
@@ -992,36 +1190,101 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
-                SotrudnikClearInfo(true);
+                SotrudnikClearInfo(2);
                 return;
             }
 
-            SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.УчетнаяЗаписьБезРабочегоМеста);
-            DisplayDataWorkPlace();
-            if (!e.NewValue.Equals("4")) return;
-
-            if (Dir.AccessEthernetField.ValueString != "1")
-            {
-                Dir.AccessEthernetField.Value = 1;
-                efAccessEthernet.IsDisabled = true;
-            }
+            if (!SetWorkPlaceType(DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи)) return;
 
             efSotrudnik.RenderNtf();
-            DisplayDataEthernet();
 
-            SetEthernetData();
+            SetAccessEthernetState();
+            DisplayDataWorkPlace();
+
             SetRequiredLogin();
             SetRequiredMailName();
+            DisplayDataEthernet();
+
+            RefreshWorkPlaceTypeInfo();
+            CloseInfoDialogWorkPlace();
         }
 
         /// <summary>
-        ///     Событие после изменения на элемент управления "Стационарный"
+        ///     Событие после изменения на элемент управления "УчетнаяЗаписьСотрудникаГруппы"
         /// </summary>
         /// <param name="sender">Элемент управления</param>
         /// <param name="e">Аргументы</param>
-        protected void efPhoneDesk_OnChanged(object sender, ProperyChangedEventArgs e)
+        protected void rdWorkPlaceType5_OnChanged(object sender, ProperyChangedEventArgs e)
+        {
+            if (Dir.SotrudnikField.ValueString.Length == 0)
+            {
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                    Resx.GetString("CONFIRM_StdTitle"));
+                SotrudnikClearInfo(2);
+                return;
+            }
+
+            var bitMask = Dir.WorkPlaceTypeField.ValueString.Length > 0 ? Dir.WorkPlaceTypeField.ValueInt : 0;
+            var bit = int.Parse(e.NewValue);
+
+            if (bitMask == bit) return;
+
+            if (!SetWorkPlaceType(DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы)) return;
+
+            efSotrudnik.RenderNtf();
+
+            SetAccessEthernetState();
+            DisplayDataWorkPlace();
+
+            SetRequiredLogin();
+            SetRequiredMailName();
+            DisplayDataEthernet();
+
+            RefreshWorkPlaceTypeInfo();
+            CloseInfoDialogWorkPlace();
+        }
+
+        /// <summary>
+        ///     Событие после изменения на элемент управления "УчетнаяЗаписьНаГостевомМесте"
+        /// </summary>
+        /// <param name="sender">Элемент управления</param>
+        /// <param name="e">Аргументы</param>
+        protected void rdWorkPlaceType6_OnChanged(object sender, ProperyChangedEventArgs e)
+        {
+            if (Dir.SotrudnikField.ValueString.Length == 0)
+            {
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                    Resx.GetString("CONFIRM_StdTitle"));
+                SotrudnikClearInfo(2);
+                return;
+            }
+
+            var bitMask = Dir.WorkPlaceTypeField.ValueString.Length > 0 ? Dir.WorkPlaceTypeField.ValueInt : 0;
+            var bit = int.Parse(e.NewValue);
+
+            if (bitMask == bit) return;
+
+            if (!SetWorkPlaceType(DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте)) return;
+
+            SetAccessEthernetState();
+            DisplayDataWorkPlace();
+
+            SetRequiredLogin();
+            SetRequiredMailName();
+            DisplayDataEthernet();
+
+            RefreshWorkPlaceTypeInfo();
+            CloseInfoDialogWorkPlace();
+        }
+
+            /// <summary>
+            ///     Событие после изменения на элемент управления "Стационарный"
+            /// </summary>
+            /// <param name="sender">Элемент управления</param>
+            /// <param name="e">Аргументы</param>
+            protected void efPhoneDesk_OnChanged(object sender, ProperyChangedEventArgs e)
         {
             SetPhoneEquip(1, e.NewValue);
             DisplayDataPhoneDesk(true);
@@ -1080,27 +1343,14 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             SetCompType(4, e.NewValue);
         }
 
+
         /// <summary>
-        ///     Событие после изменения на элемент управления "Доступ к корпоративной сети"
+        ///     Событие после изменения на элемент управления "Предпочитаемый язык"
         /// </summary>
         /// <param name="sender">Элемент управления</param>
         /// <param name="e">Аргументы</param>
-        protected void efAccessEthernet_OnChanged(object sender, ProperyChangedEventArgs e)
+        protected void efLang_OnChanged(object sender, ProperyChangedEventArgs e)
         {
-            var bitMask = Dir.WorkPlaceTypeField.ValueInt;
-            if ((bitMask & 4) == 4 && e.NewValue == "0")
-            {
-                Dir.AccessEthernetField.Value = 1;
-                efAccessEthernet.IsDisabled = true;
-                return;
-            }
-
-            DisplayDataEthernet();
-
-            SetEthernetData();
-
-            SetRequiredLogin();
-            SetRequiredMailName();
         }
 
         /// <summary>
@@ -1136,7 +1386,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 !Dir.SotrudnikParent.Unavailable && !string.IsNullOrEmpty(Dir.SotrudnikParent.CommonEmployeeID))
             {
                 Dir.SotrudnikParentField.ValueString = "";
-                ShowMessage(Resx.GetString("DIRECTIONS_NTF_СотрудникВГруппе2"), Resx.GetString("CONFIRM_StdTitle"),
+                ShowMessage(Dir.Resx.GetString("DIRECTIONS_NTF_СотрудникВГруппе2"), Resx.GetString("CONFIRM_StdTitle"),
                     MessageStatus.Warning, efSotrudnikParent.HtmlID);
                 return;
             }
@@ -1144,7 +1394,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             if (Dir.SotrudnikField.Value != null && Dir.SotrudnikField.Value.Equals(Dir.SotrudnikParentField.Value))
             {
                 Dir.SotrudnikParentField.ValueString = e.OldValue;
-                ShowMessage(Resx.GetString("DIRECTIONS_NTF_СотрудникСовпадает"), Resx.GetString("CONFIRM_StdTitle"),
+                ShowMessage(Dir.Resx.GetString("DIRECTIONS_NTF_СотрудникСовпадает"), Resx.GetString("CONFIRM_StdTitle"),
                     MessageStatus.Warning,
                     efSotrudnikParent.HtmlID);
                 return;
@@ -1154,7 +1404,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             {
                 JS.Write("directions_setElementFocus(null,'btnLinkCFAdd');");
                 ShowConfirm(
-                    $"{Resx.GetString("DIRECTIONS_Msg_FillFormByEmpl")} {Dir.SotrudnikParent.FullName}?",
+                    $"{Dir.Resx.GetString("DIRECTIONS_Msg_FillFormByEmpl")} {Dir.SotrudnikParent.FullName}?",
                     "cmdasync('cmd', 'SotrudnikParentSetInfo');", null);
             }
 
@@ -1189,12 +1439,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         protected void efLogin_Changed(object sender, ProperyChangedEventArgs e)
         {
             SetRequiredLogin();
-            if (Dir.LoginField.ValueString.Length == 0) return;
-
-            if (Dir.SotrudnikField.ValueString.Length>0)
-                Dir.MailNameField.Value = $"{Dir.Sotrudnik.FirstNameEn}.{Dir.Sotrudnik.LastNameEn}";
-            efMailName.RenderNtf();
         }
+
 
         #region #Positions
 
@@ -1277,6 +1523,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <param name="direction">направление</param>
         protected void RenderMobilphoneArea(TextWriter w, string direction = "")
         {
+            if (Dir == null) return;
             var phoneNum = Dir.RedirectNumField.ValueString;
             if (direction.Length == 0) direction = Dir.FormatingMobilNumber(ref phoneNum);
             w.Write(direction);
@@ -1286,57 +1533,113 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         ///     Отрисовка формы выбора рабочего места
         /// </summary>
         /// <param name="refreshOnly">Только обновить список</param>
-        private void RenderWorkPlaceList(bool refreshOnly = false)
+        private void RenderWorkPlaceList(int bitMask, bool canAnother = true, bool refreshOnly = false)
         {
+            if (Dir == null) return;
             var w = new StringWriter();
 
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
+
+            var titleForm = "";
+
+
+            if (bitMask == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                titleForm = "Выберите рабочее место сотрудник, c которого необходимо организовать переезд:";
+            else if (bitMask == (int) DirectionsTypeBitEnum.РабочееМестоВОфисе)
+                titleForm = "Выберите рабочее место сотрудника, на котором необходимо организовать работу:";
+
+            if (!string.IsNullOrEmpty(titleForm))
+                w.Write($"<div class=\"paddingB\">{titleForm}</div>");
 
             var wps = Dir.Sotrudnik.Workplaces;
             var inx = 0;
             foreach (var wp in wps)
             {
-                if (!wp.WorkPlace.Equals((int) ТипыРабочихМест.КомпьютеризированноеРабочееМесто) ||
-                    wp.IsOrganized) continue;
+                if (!wp.WorkPlace.Equals((int) ТипыРабочихМест.КомпьютеризированноеРабочееМесто)) continue;
+
+                if (bitMask == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                {
+                    if (!wp.IsOrganized) continue;
+                }
+                else if (bitMask == (int) DirectionsTypeBitEnum.РабочееМестоВОфисе)
+                {
+                    if (wp.IsOrganized && Dir.Sotrudnik.HasAccountValid) continue;
+                }
+
+
                 w.Write("<div>");
                 w.Write("<nobr>");
-                w.Write(
-                    "<a id='imgWP_{1}' class='WP' tabindex=0 onkeydown='var key=v4_getKeyCode(event); if(key == 13 || key == 32) {{directions_SetWorkPlace({0});}}' onclick='directions_SetWorkPlace({0});'><img src='/styles/backtolist.gif' border='0'/></a>",
-                    wp.Id, inx);
+
+                if (bitMask == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                    w.Write(
+                        "<a id='imgWP_{1}' class='WP' tabindex=0 onkeydown='var key=v4_getKeyCode(event); if(key == 13 || key == 32) {{directions_SetWorkPlaceTo({0});}}' onclick='directions_SetWorkPlaceTo({0});'><img src='/styles/backtolist.gif' border='0'/></a>",
+                        wp.Id, inx);
+                else
+                    w.Write(
+                        "<a id='imgWP_{1}' class='WP' tabindex=0 onkeydown='var key=v4_getKeyCode(event); if(key == 13 || key == 32) {{directions_SetWorkPlace({0}, null, 1);}}' onclick='directions_SetWorkPlace({0}, null, 1);'><img src='/styles/backtolist.gif' border='0'/></a>",
+                        wp.Id, inx);
+
                 w.Write("<span class='marginL'>");
-                RenderLinkLocation(w, wp.Id);
-                w.Write(wp.Name);
-                RenderLinkEnd(w);
+                RenderLinkLocation(w, $"wp{wp.Id}", wp.Id, wp.Name,NtfStatus.Empty, "открыть расположение","","listWP");                
                 w.Write("</span>");
                 w.Write("</nobr>");
                 w.Write("</div>");
                 inx++;
             }
 
-            if (wps.Count == 0 && (Dir.WorkPlaceTypeField.ValueInt & 1) == 1 || inx == 0)
+            var isKadrovik = IsKadrovik();
+
+            if (wps.Count == 0 && Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.РабочееМестоВОфисе ||
+                inx == 0)
+            {
                 RenderNtf(w,
                     new List<Notification>
                     {
                         new Notification
                         {
-                            Message = Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста"),
+                            Message = Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста"),
                             Status = NtfStatus.Empty,
                             SizeIsNtf = false,
                             DashSpace = false
                         }
                     });
+              
+                w.Write(" ");
+                if (isKadrovik)
+                {
+                    RenderLink(w, "linkNewLocation",
+                        "",
+                        Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста_1"), 
+                        "directions_SearchWorkPlace();",
+                        "", 
+                        "",
+                        Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста_2_1"),
+                        "0"                       
+                        );
+                    
+                }
+                else
+                    w.Write(Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста_0"));
+            }
 
-            RefreshControlText(w, "divWPL_Body");
+
+            RefreshControlText(w, "divWorkPlaceList_Data");
 
             if (refreshOnly) return;
-            JS.Write("directions_SetPositionWorkPlaceList();");
-            if (wps.Count == 0)
+
+            JS.Write("$('#divWorkPlaceList_Link').show();");
+
+            if (bitMask == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто) return;
+
+            if (inx == 0 && bitMask == (int)DirectionsTypeBitEnum.РабочееМестоВОфисе && isKadrovik)
+            {                 
                 AdvSearchWorkPlace();
+            }
         }
 
         #endregion
@@ -1353,7 +1656,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <param name="controlId">Идентификатор элемента управления</param>
         private void RefreshControlText(TextWriter w, string controlId)
         {
-            JS.Write("var obj_{0} = document.getElementById('{0}'); if(obj_{0}){{obj_{0}.innerHTML='{1}';}}", controlId,
+            JS.Write(
+                "var obj_{0} = document.getElementById('{0}'); if(obj_{0}){{obj_{0}.innerHTML='{1}'; $('#{0}').show();}}",
+                controlId,
                 HttpUtility.JavaScriptStringEncode(w.ToString()));
         }
 
@@ -1365,6 +1670,24 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             var w = new StringWriter();
             RenderData.Photo(this, w, Dir);
             RefreshControlText(w, "divPhoto");
+
+            DisplayPhoto();
+        }
+
+        private void DisplayPhoto()
+        {
+            if (Dir.SotrudnikField.ValueString.Length > 0)
+                JS.Write("$(\"#divPhoto\").show();");
+            else
+                JS.Write("$(\"#divPhoto\").hide();");
+        }
+
+        private void DisplayAdvInfo()
+        {
+            if (Dir.SotrudnikField.ValueString.Length > 0)
+                JS.Write("$(\"#divAdvInfo\").show();");
+            else
+                JS.Write("$(\"#divAdvInfo\").hide();");
         }
 
         /// <summary>
@@ -1374,23 +1697,14 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             var w = new StringWriter();
             RenderData.SotrudnikPost(this, w, Dir, false);
-            RefreshControlText(w, "spSotrudnikPost");
+            RefreshControlText(w, "divSotrudnikPost");
         }
 
-        /// <summary>
-        ///     Вывод работодателя
-        /// </summary>
-        private void RefreshSotrudnikAOrg()
-        {
-            var w = new StringWriter();
-            RenderData.SotrudnikAOrg(this, w, Dir);
-            RefreshControlText(w, "spSotrudnikAOrg");
-        }
 
         private void RefreshCommonEmployee()
         {
             var w = new StringWriter();
-            RenderData.CommonEmployee(this, w, Dir);
+            RenderData.CommonEmployee(this, w, Dir, true);
             RefreshControlText(w, "divCommonEmployee");
         }
 
@@ -1410,6 +1724,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void RefreshSotrudnikCadrWorkPlaces()
         {
             var w = new StringWriter();
+
+            JS.Write("$('.wpntf').hide();");
+            if (Dir.SotrudnikField.ValueString.Length > 0)
+                Dir.Sotrudnik.LoadedExternalProperties.Remove(Employee.CacheKey_EquipmentsAnotherWorkPlaces);
+
             RenderData.SotrudnikCadrWorkPlaces(this, w, Dir);
             RefreshControlText(w, "divSotrudnikCadrWorkPlaces");
         }
@@ -1432,47 +1751,31 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             var w = new StringWriter();
             RenderMobilphoneArea(w, direction);
+            
+            
+            if (Dir.RedirectNumField.ValueString.Length > 0)
+                ValidationMessages.CheckPhoneNumberIsMobile(this, w, Dir, Dir.RedirectNumField.ValueString);                
+            
             RefreshControlText(w, "spMobilphoneArea");
         }
 
-        /// <summary>
-        ///     Вывод рабочего места сотрудника, которое необходимо организовать
-        /// </summary>
-        /// <param name="label"></param>
-        private void RefreshWorkPlace(string label = "")
+        private void RefreshWorkPlaceTypeInfo()
         {
             var w = new StringWriter();
-            var bit = Dir.WorkPlaceTypeField.ValueInt;
-
-            if ((bit & 1) == 1 && Dir.WorkPlaceField.ValueString.Length > 0)
-                RenderData.WorkPlace(this, w, label, Dir);
-            else if ((bit & 1) == 1 && Dir.WorkPlaceField.ValueString.Length == 0)
-                RenderNtf(w,
-                    new List<Notification>
-                    {
-                        new Notification
-                        {
-                            Message = Resx.GetString("DIRECTIONS_NTF_NoWorkPlace"),
-                            SizeIsNtf = false,
-                            DashSpace = false,
-                            Status = NtfStatus.Error,
-                            Description = Resx.GetString("DIRECTIONS_NTF_NoWorkPlace_Title")
-                        }
-                    });
-            RefreshControlText(w, "divWorkPlace");
+            RenderData.WorkPlaceType(this, w, Dir);
+            RefreshControlText(w, "divWorkPlaceType_Info");
         }
 
-        /// <summary>
-        ///     Проверка наличия кмрьютеризированных рабочих мест у сотрудника в офисе
-        /// </summary>
-        private void RefreshWorkPlace2()
+        private void RefreshWorkPlace8_LinkInfo(string label, bool setValue)
         {
-            var w = new StringWriter();
-            var bit = Dir.WorkPlaceTypeField.ValueInt;
+            JS.Write("directions_CloseWorkPlaceList();");
 
-            if ((bit & 2) == 2)
-                ValidationMessages.CheckExistsWorkPlaceIsComputeredNoOrganized(this, w, Dir);
-            RefreshControlText(w, "divWorkPlace2");
+            efSotrudnik.RenderNtf();
+
+            SetAccessEthernetState();
+            DisplayDataWorkPlace();
+
+            RefreshWorkPlaceTypeInfo();
         }
 
         /// <summary>
@@ -1482,12 +1785,15 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             var w = new StringWriter();
             if (efPRoles_Role.Value.Length == 0)
-            {
-                w.Write("");
-            }
+                  w.Write("");            
             else
             {
                 var r = new Role(efPRoles_Role.Value);
+                if (r.Unavailable)
+                {
+                    w.Write("");
+                    return;
+                }
                 RenderNtf(w,
                     new List<Notification>
                     {
@@ -1531,11 +1837,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
-
+            if (!ForceCheckBeforeSave()) return;
             RefreshPositionDialogCommonFolders();
             JS.Write("directions_SetPositionCFAdd();");
         }
@@ -1593,15 +1899,19 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void SavePositionCommonFolders(string jsonValues)
         {
             var isNew = Dir.IsNew;
+        
             if (isNew)
             {
                 ValidateDataFillCorrect();
+                if (!ForceCheckBeforeSave()) return;
                 var result = SaveDocument(false, "form=cf");
+
                 if (!result) return;
             }
 
             var serializer = new JavaScriptSerializer();
             var values = serializer.Deserialize<Dictionary<string, string>>(jsonValues);
+
             Dir.SavePositionsCommonFoldersByDictionary(values, !isNew);
 
             if (isNew) return;
@@ -1626,6 +1936,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void RefreshPositionCommonFolders()
         {
             var w = new StringWriter();
+
+            Dir.LoadedExternalProperties.Remove("direction._groupInconsistencies");
+
             RenderPositionCommonFolders(w);
             RefreshControlText(w, "divCommonFoldersData");
         }
@@ -1638,24 +1951,27 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             w.Write("");
             var sortedList = Dir.PositionCommonFolders.OrderBy(o => o.CommonFolderName).ToList();
+            var cnt = sortedList.Count();
+            var inx = 0;
             sortedList.ForEach(delegate(PositionCommonFolder p)
             {
+                inx++;
                 w.Write("<div class='marginL disp_inlineBlock'>");
-                if (!Dir.SotrudnikExistLogin)
-                {
-                    w.Write(
-                        "<a href='javascript:void(0);' class='DelCF' id='btnDelCF_{0}' onclick=\"{1}\" title='{2}'>",
-                        p.Id,
-                        ShowConfirmDeleteGetJS($"directions_deleteCFCallBack('{p.Id}')"),
-                        Resx.GetString("cmdDelete")
-                    );
-                    w.Write("<img src='/styles/delete.gif' class= border=0>");
-                    w.Write("</a>");
-                }
 
-                w.Write("{0};", p.CommonFolderName);
+                w.Write(
+                    "<a href='javascript:void(0);' class='DelCF' id='btnDelCF_{0}' onclick=\"{1}\" title='{2}'>",
+                    p.Id,
+                    ShowConfirmDeleteGetJS($"directions_deleteCFCallBack('{p.Id}')"),
+                    Resx.GetString("cmdDelete")
+                );
+                w.Write("<img src='/styles/delete.gif' class= border=0>");
+                w.Write("</a>");
+
+
+                w.Write("{0}{1}", p.CommonFolderName, cnt == 1 || inx == cnt ? "" : ",");
                 w.Write("</div>");
             });
+            ValidationMessages.CheckGroupInconsistencies(w, Dir, "Общие папки");
         }
 
         /// <summary>
@@ -1664,7 +1980,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <param name="empl">Сотрудник</param>
         private void FillPositionCommonFoldersByEmployee(Employee empl)
         {
-            var commonFolders = empl.CommonFolders;
+            var commonFolders = _isCommonEmployeeNoLogin ? empl.CommonFoldersFullInGroup : empl.CommonFolders;
+
             commonFolders.ForEach(delegate(CommonFolder cf)
             {
                 var cf0 = Dir.PositionCommonFolders.FirstOrDefault(x => x.CommonFolderId.ToString() == cf.Id);
@@ -1682,20 +1999,29 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
             RefreshPositionCommonFolders();
         }
 
-        /// <summary>
-        ///     Заполнение позиций дополнительных прав, на основании существующих прав сотрудника
-        /// </summary>
-        /// <param name="empl">Сотрудник</param>
+       
+
+         /// <summary>
+            ///     Заполнение позиций дополнительных прав, на основании существующих прав сотрудника
+            /// </summary>
+            /// <param name="empl">Сотрудник</param>
         private void FillPositionAdvancedGrantsByEmployee(Employee empl)
         {
-            var grants = empl.AdvancedGrants;
-            grants.ForEach(delegate(int gId)
+            if (Dir == null || Dir.WorkPlaceTypeField.ValueInt == 0) return;
+
+            var grants = _isCommonEmployeeNoLogin ? empl.AdvancedGrantsFullInGroup : empl.AdvancedGrants;
+
+            var bit = (int) Math.Pow(2, Dir.WorkPlaceTypeField.ValueInt - 1);
+
+            foreach (var entry in grants)
             {
-                var p = Dir.PositionAdvancedGrants.FirstOrDefault(x => x.GrantId == gId);
+                if (entry.Value == null || entry.Value == 0) continue;
+
+                var p = Dir.PositionAdvancedGrants.FirstOrDefault(x => x.GrantId == entry.Key);
                 if (p == null)
                 {
-                    var g = GetObjectById(typeof(AdvancedGrant), gId.ToString()) as AdvancedGrant;
-                    if (g != null && !g.Unavailable && !g.NotAlive)
+                    var g = GetObjectById(typeof(AdvancedGrant), entry.Key.ToString()) as AdvancedGrant;
+                    if (g != null && !g.Unavailable && g.TaskChoose > 0 && (g.TaskChoose & bit) == bit)
                     {
                         p = new PositionAdvancedGrant
                         {
@@ -1708,7 +2034,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                         Dir.PositionAdvancedGrants.Add(p);
                     }
                 }
-            });
+            }
+
             RefreshPositionAdvancedGrantsAvailable();
         }
 
@@ -1723,10 +2050,12 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
+            
+            if (!ForceCheckBeforeSave()) return;
 
             RefreshSotrudnikLink("efRoleEmpl", "divPRoles_Employee");
             JS.Write("directions_setAttribute('{0}', '{1}', '{2}');", "divPositionRolesAdd", "data-id", "");
@@ -1755,10 +2084,12 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
+            
+            if (!ForceCheckBeforeSave()) return;
 
             RefreshSotrudnikLink("efRoleEmpl", "divPRoles_Employee");
             efPRoles_Role.Value = value;
@@ -1779,16 +2110,18 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
 
+            if (!ForceCheckBeforeSave())  return;
 
             var p = Dir.PositionRoles.FirstOrDefault(x => x.GuidId.ToString() == value);
             if (p == null)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетЗаписи")}!", Resx.GetString("CONFIRM_StdTitle"),
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетЗаписи")}!",
+                    Resx.GetString("CONFIRM_StdTitle"),
                     MessageStatus.Warning, "btnLinkRolesAdd");
                 ReloadPositionRoles(true);
                 return;
@@ -1866,8 +2199,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 if (efPRoles_Role.Value.Length == 0)
                 {
                     ShowMessage(
-                        Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
-                        $"{Resx.GetString("DIRECTIONS_Msg_НеУказанаРоль")}.",
+                        Dir.Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
+                        $"{Dir.Resx.GetString("DIRECTIONS_Msg_НеУказанаРоль")}.",
                         Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efPRoles_Role.HtmlID);
                     return;
                 }
@@ -1887,8 +2220,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                     else
                     {
                         ShowMessage(
-                            Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
-                            $"{Resx.GetString("DIRECTIONS_MSG_ЗаписьСуществует")}.",
+                            Dir.Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
+                            $"{Dir.Resx.GetString("DIRECTIONS_MSG_ЗаписьСуществует")}.",
                             Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efPRoles_Person.HtmlID);
                         return;
                     }
@@ -1896,9 +2229,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
                 if (efPRoles_Person.Value.Length == 0)
                 {
-                    var message = Resx.GetString("DIRECTIONS_Msg_ЧтоДанныйСотрудник") + Environment.NewLine +
-                                  Resx.GetString("DIRECTIONS_Msg_РольВоВсехКомпаниях1") + Environment.NewLine +
-                                  $"{Resx.GetString("DIRECTIONS_Msg_РольВоВсехКомпаниях2")}?";
+                    var message = Dir.Resx.GetString("DIRECTIONS_Msg_ЧтоДанныйСотрудник") + Environment.NewLine +
+                                  Dir.Resx.GetString("DIRECTIONS_Msg_РольВоВсехКомпаниях1") + Environment.NewLine +
+                                  $"{Dir.Resx.GetString("DIRECTIONS_Msg_РольВоВсехКомпаниях2")}?";
                     var callbackYes = $"cmdasync('cmd','SavePositionRole', 'value', '{value}', 'check', 0);";
                     ShowConfirm(message, Resx.GetString("CONFIRM_StdTitle"), Resx.GetString("CONFIRM_StdCaptionYes"),
                         Resx.GetString("CONFIRM_StdCaptionNo"), callbackYes, "", 500);
@@ -1919,9 +2252,10 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 p = Dir.PositionRoles.FirstOrDefault(x => x.GuidId.ToString() == value);
 
                 if (p != null)
-                {
+                {                   
                     if (efPRoles_Role.ValueInt != null) p.RoleId = efPRoles_Role.ValueInt.Value;
                     p.PersonId = efPRoles_Person.ValueInt ?? 0;
+                   
                     p.Save(false);
                 }
             }
@@ -1957,6 +2291,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void RefreshPositionRoles()
         {
             var w = new StringWriter();
+
+            Dir.LoadedExternalProperties.Remove("direction._groupInconsistencies");
+
             RenderPositionRoles(w);
             RefreshControlText(w, "divPositionRolesData");
         }
@@ -1977,24 +2314,30 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 .GroupBy(p => p.RoleId)
                 .Select(g => g.First()).OrderBy(o => o.RoleObject.Name).ToList();
 
+            var cnt0 = listRoles.Count;
+            var inx0 = 0;
+
             listRoles.ForEach(delegate(PositionRole p0)
             {
+                inx0++;
+
                 w.Write("<div class='marginL disp_inlineBlock'>");
-                if (!Dir.SotrudnikExistLogin)
-                    w.Write(
-                        "<a href=\"javascript:void(0);\" id=\"btnLinkRDel_{0}\" onclick=\"{1}\" title=\"{2}\"><img border=\"0\" src=\"/styles/delete.gif\"/></a>",
-                        p0.RoleId,
-                        ShowConfirmDeleteGetJS($"directions_deleteRoleAllCallBack('{p0.RoleId}')"),
-                        Resx.GetString("cmdDelete"));
 
                 w.Write(
-                    "{0}<img src=\"/styles/PageNext.gif\" style=\"margin-left:10px: margin-right:10px;\" border=\"0\">",
+                    "<a href=\"javascript:void(0);\" id=\"btnLinkRDel_{0}\" onclick=\"{1}\" title=\"{2}\"><img border=\"0\" src=\"/styles/delete.gif\"/></a>",
+                    p0.RoleId,
+                    ShowConfirmDeleteGetJS($"directions_deleteRoleAllCallBack('{p0.RoleId}')"),
+                    Resx.GetString("cmdDelete"));
+                              
+
+                w.Write(
+                    "{0}: ",
                     p0.RoleObject.Name);
 
                 var r = Dir.PositionRoles.FirstOrDefault(x => x.PersonId == 0 && x.RoleId == p0.RoleId);
 
 
-                if (r == null && !Dir.SotrudnikExistLogin)
+                if (r == null)
                     w.Write(
                         "<a href=\"javascript:void(0);\"  class='marginL' id=\"btnLinkNew_{0}\" onclick=\"cmdasync('cmd','NewPositionRole','value','{0}');\" title=\"{1}\"><img border=\"0\" src=\"/styles/new.gif\"/></a>",
                         p0.RoleId, Resx.GetString("cmdAdd"));
@@ -2003,13 +2346,15 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
                 var listPerson =
                     Dir.PositionRoles.Where(x => x.RoleId == p0.RoleId).OrderBy(o => o.PersonName).ToList();
-
+                var cnt1 = listPerson.Count;
+                var inx1 = 0;
                 listPerson.ForEach(delegate(PositionRole p1)
                 {
+                    inx1++;
                     w.Write("<div class='marginL disp_inlineBlock'>");
                     var p = Dir.PositionRoles.Where(x => x.RoleId == p1.RoleId && x.PersonId != p1.PersonId)
                         .ToList();
-                    if (p.Count > 0 && !Dir.SotrudnikExistLogin)
+                    if (p.Count > 0)
                         w.Write(
                             "<a href=\"javascript:void(0);\" id=\"btnLinkRemove_{0}\" onclick=\"{1}\" title=\"{2}\"><img border=\"0\" src=\"/styles/delete.gif\"/></a>",
                             p1.GuidId,
@@ -2019,20 +2364,19 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
                     if (p1.PersonId == 0)
                     {
-                        w.Write(HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCompany1")));
+                        w.Write(HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCompany1")));
                     }
                     else
                     {
-                        if (!Dir.SotrudnikExistLogin)
-                            w.Write(
-                                "<a href=\"javascript:void(0);\"  id=\"btnLinkEdit_{0}\" onclick=\"cmdasync('cmd','EditPositionRole','value','{0}');\" title=\"{1}\"><img border=\"0\" src=\"/styles/edit.gif\"/></a>",
-                                p1.GuidId, Resx.GetString("cmdEdit"));
+                        w.Write(
+                            "<a href=\"javascript:void(0);\"  id=\"btnLinkEdit_{0}\" onclick=\"cmdasync('cmd','EditPositionRole','value','{0}');\" title=\"{1}\"><img border=\"0\" src=\"/styles/edit.gif\"/></a>",
+                            p1.GuidId, Resx.GetString("cmdEdit"));
 
                         w.Write("&nbsp;");
                         w.Write("<span>");
                         RenderLinkPerson(w, "p_" + p0.RoleId + "_" + p1.PersonId, p1.PersonId.ToString(),
-                            p1.PersonName);
-                        w.Write(";");
+                            p1.PersonName);                        
+                        w.Write(cnt1 == 1 || inx1 == cnt1 ? "" : ",");
                         w.Write("</span>");
                     }
 
@@ -2048,12 +2392,16 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                                 Message = p0.RoleObject.Description,
                                 Status = NtfStatus.Information,
                                 SizeIsNtf = false,
-                                DashSpace = false
+                                DashSpace = false,
+                                CSSClass = "marginL"
                             }
                         });
 
-                w.Write("<hr/>");
+                if  (inx0 != cnt0)
+                    w.Write("<hr/>");
             });
+
+            ValidationMessages.CheckGroupInconsistencies(w, Dir, "Роли");
         }
 
         /// <summary>
@@ -2062,10 +2410,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <param name="empl">Сотрудник</param>
         private void FillPositionRolesByEmployee(Employee empl)
         {
-            var roles = empl.Roles;
+            var roles = _isCommonEmployeeNoLogin ? empl.RolesFullInGroup : empl.Roles;
+
             roles.ForEach(delegate(EmployeeRole r)
             {
-                var r0 = Dir.PositionRoles.FirstOrDefault(x => x.RoleId.ToString() == r.Id);
+                var r0 = Dir.PositionRoles.FirstOrDefault(x => x.RoleId == r.RoleId && x.PersonId == r.PersonId);
                 if (r0 == null)
                 {
                     var p = new PositionRole
@@ -2094,11 +2443,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
-
+            if (!ForceCheckBeforeSave()) return;
             efPTypes_Catalog.Value = "";
             efPTypes_Type.ClearSelectedItems();
 
@@ -2115,11 +2464,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
-
+            if (!ForceCheckBeforeSave()) return;
             var p =
                 Dir.PositionTypes.FirstOrDefault(
                     x =>
@@ -2127,7 +2476,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                         value);
             if (p == null)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетЗаписи")}!", Resx.GetString("CONFIRM_StdTitle"),
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетЗаписи")}!",
+                    Resx.GetString("CONFIRM_StdTitle"),
                     MessageStatus.Warning, "btnLinkTypesAdd");
                 ReloadPositionTypes(true);
                 return;
@@ -2217,8 +2567,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 if (efPTypes_Catalog.Value.Length == 0)
                 {
                     ShowMessage(
-                        Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
-                        $"{Resx.GetString("DIRECTIONS_Msg_НетУказанКаталог")}.",
+                        Dir.Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
+                        $"{Dir.Resx.GetString("DIRECTIONS_Msg_НетУказанКаталог")}.",
                         Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efPTypes_Catalog.HtmlID);
                     return;
                 }
@@ -2228,17 +2578,17 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                      efPTypes_Catalog.Value.Equals(efPTypes_Catalog.CustomRecordId)))
                 {
                     ShowMessage(
-                        Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
-                        $"{Resx.GetString("DIRECTIONS_Msg_НетУказанКаталог1")}.",
+                        Dir.Resx.GetString("DIRECTIONS_Msg_UnbleSave") + Environment.NewLine +
+                        $"{Dir.Resx.GetString("DIRECTIONS_Msg_НетУказанКаталог1")}.",
                         Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, efPTypes_Catalog.HtmlID);
                     return;
                 }
 
                 if (efPTypes_Catalog.Value.Length == 0)
                 {
-                    var message = Resx.GetString("DIRECTIONS_Msg_ЧтоДанныйСотрудник") + Environment.NewLine +
-                                  $"{Resx.GetString("DIRECTIONS_Msg_ВсеКаталоги")}," + Environment.NewLine +
-                                  $"{Resx.GetString("DIRECTIONS_Msg_ВсеКаталоги1")}?";
+                    var message = Dir.Resx.GetString("DIRECTIONS_Msg_ЧтоДанныйСотрудник") + Environment.NewLine +
+                                  $"{Dir.Resx.GetString("DIRECTIONS_Msg_ВсеКаталоги")}," + Environment.NewLine +
+                                  $"{Dir.Resx.GetString("DIRECTIONS_Msg_ВсеКаталоги1")}?";
                     const string callbackYes = "cmdasync('cmd','SavePositionType', 'check',0);";
                     ShowConfirm(message, Resx.GetString("CONFIRM_StdTitle"), Resx.GetString("CONFIRM_StdCaptionYes"),
                         Resx.GetString("CONFIRM_StdCaptionNo"), callbackYes, "", 400);
@@ -2247,9 +2597,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
                 if (efPTypes_Type.SelectedItems.Where(x => x.Id != efPTypes_Type.CustomRecordId).ToList().Count == 0)
                 {
-                    var message = Resx.GetString("DIRECTIONS_Msg_ЧтоДанныйСотрудник") + Environment.NewLine +
-                                  $"{Resx.GetString("DIRECTIONS_Msg_ВсеТипы")}," + Environment.NewLine +
-                                  $"{Resx.GetString("DIRECTIONS_Msg_ВсеТипы1")}?";
+                    var message = Dir.Resx.GetString("DIRECTIONS_Msg_ЧтоДанныйСотрудник") + Environment.NewLine +
+                                  $"{Dir.Resx.GetString("DIRECTIONS_Msg_ВсеТипы")}," + Environment.NewLine +
+                                  $"{Dir.Resx.GetString("DIRECTIONS_Msg_ВсеТипы1")}?";
                     const string callbackYes = "cmdasync('cmd','SavePositionType', 'check',0);";
                     ShowConfirm(message, Resx.GetString("CONFIRM_StdTitle"), Resx.GetString("CONFIRM_StdCaptionYes"),
                         Resx.GetString("CONFIRM_StdCaptionNo"), callbackYes, "", 400);
@@ -2289,7 +2639,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                     var p = new PositionType
                     {
                         DocumentId = Dir.DocId,
-                        CatalogId = efPTypes_Catalog.ValueInt,
+                        CatalogId = efPTypes_Catalog.ValueInt == 0 ? null : efPTypes_Catalog.ValueInt,
                         ThemeId = null
                     };
                     p.Save(false);
@@ -2302,7 +2652,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                         var p = new PositionType
                         {
                             DocumentId = Dir.DocId,
-                            CatalogId = efPTypes_Catalog.ValueInt,
+                            CatalogId = efPTypes_Catalog.ValueInt == 0 ? null : efPTypes_Catalog.ValueInt,
                             ThemeId = item.Id.ToNullableInt()
                         };
                         p.Save(false);
@@ -2364,7 +2714,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                         var p = new PositionType
                         {
                             DocumentId = Dir.DocId,
-                            CatalogId = efPTypes_Catalog.Value.Length == 0 ? null : efPTypes_Catalog.ValueInt,
+                            CatalogId = efPTypes_Catalog.Value.Length == 0 || efPTypes_Catalog.ValueInt==0 ? null : efPTypes_Catalog.ValueInt,
                             ThemeId = item.Id.Equals(efPTypes_Type.CustomRecordId) ? null : item.Id.ToNullableInt()
                         };
 
@@ -2384,6 +2734,10 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void RefreshPositionTypes()
         {
             var w = new StringWriter();
+
+            Dir.LoadedExternalProperties.Remove("direction._groupInconsistencies");
+
+
             RenderPositionTypes(w);
             RefreshControlText(w, "divPositionTypesData");
         }
@@ -2404,40 +2758,45 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 .GroupBy(p => p.CatalogId)
                 .Select(g => g.First()).OrderBy(o => o.CatalogName).ToList().OrderBy(x => x.CatalogName).ToList();
 
+            var cnt0 = listTypes.Count;
+            var inx0 = 0;
+
             listTypes.ForEach(delegate(PositionType p0)
             {
+                inx0++;
                 var catalog0 = p0.CatalogId.HasValue
                     ? p0.CatalogId.Value.ToString()
                     : efPTypes_Catalog.CustomRecordId;
 
                 w.Write("<div class='marginL disp_inlineBlock'>");
-                if (!Dir.SotrudnikExistLogin)
-                {
-                    w.Write(
-                        "<a href=\"javascript:void(0);\"  id=\"btnLinkTEdit_{0}\" onclick=\"cmdasync('cmd','EditPositionType','value','{0}');\" title=\"{1}\"><img border=\"0\" src=\"/styles/edit.gif\"/></a>",
-                        catalog0,
-                        Resx.GetString("cmdEdit"));
-
-                    w.Write(
-                        "<a href=\"javascript:void(0);\"  class='marginL' id=\"btnLinkTDel_{0}\" onclick=\"{1}\" title=\"{2}\"><img border=\"0\" src=\"/styles/delete.gif\"/></a>",
-                        catalog0,
-                        ShowConfirmDeleteGetJS($"directions_deleteTypeAllCallBack('{catalog0}')"),
-                        Resx.GetString("cmdDelete")
-                    );
-                }
 
                 w.Write(
-                    "{0}<img src=\"/styles/PageNext.gif\" style=\"margin-left:10px: margin-right:10px;\" border=\"0\">",
+                    "<a href=\"javascript:void(0);\"  id=\"btnLinkTEdit_{0}\" onclick=\"cmdasync('cmd','EditPositionType','value','{0}');\" title=\"{1}\"><img border=\"0\" src=\"/styles/edit.gif\"/></a>",
+                    catalog0,
+                    Resx.GetString("cmdEdit"));
+
+                w.Write(
+                    "<a href=\"javascript:void(0);\"  class='marginL' id=\"btnLinkTDel_{0}\" onclick=\"{1}\" title=\"{2}\"><img border=\"0\" src=\"/styles/delete.gif\"/></a>",
+                    catalog0,
+                    ShowConfirmDeleteGetJS($"directions_deleteTypeAllCallBack('{catalog0}')"),
+                    Resx.GetString("cmdDelete")
+                );
+
+
+                w.Write(
+                    "{0}:",
                     string.IsNullOrEmpty(p0.CatalogName)
-                        ? HttpUtility.HtmlEncode(Resx.GetString("DIRECTIONS_Rnd_AllCatalog"))
+                        ? HttpUtility.HtmlEncode(Dir.Resx.GetString("DIRECTIONS_Rnd_AllCatalog"))
                         : p0.CatalogName);
                 w.Write("</div>");
 
                 var listTheme =
                     Dir.PositionTypes.Where(x => x.CatalogId.Equals(p0.CatalogId)).OrderBy(o => o.ThemeName).ToList();
-
+                var cnt1 = listTheme.Count;
+                var inx1 = 0;
                 listTheme.ForEach(delegate(PositionType p1)
                 {
+                    inx1++;
                     var catalog1 = p1.CatalogId.HasValue
                         ? p1.CatalogId.Value.ToString()
                         : efPTypes_Catalog.CustomRecordId;
@@ -2456,7 +2815,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
                     w.Write("<div class='marginL disp_inlineBlock'>");
 
-                    if (p.Count > 0 && !Dir.SotrudnikExistLogin)
+                    if (p.Count > 0)
                         w.Write(
                             "<a href=\"javascript:void(0);\" id=\"btnLinkTDel_{0}\" onclick=\"{1}\" title=\"{2}\"><img border=\"0\" src=\"/styles/delete.gif\"/></a>",
                             catalog1 + "_" + theme1,
@@ -2464,15 +2823,21 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                             Resx.GetString("cmdDelete")
                         );
 
-                    w.Write("{0};",
+                    w.Write("{0}",
                         HttpUtility.HtmlEncode(string.IsNullOrEmpty(p1.ThemeName)
-                            ? Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")
+                            ? Dir.Resx.GetString("DIRECTIONS_Rnd_AllTypePerson")
                             : p1.ThemeName));
+
+                    w.Write(cnt1 == 1 || inx1 == cnt1 ? "" : ",");
+
                     w.Write("</div>");
                 });
 
-                w.Write("<hr/>");
+                if (inx0 != cnt0)
+                    w.Write("<hr/>");
             });
+
+            ValidationMessages.CheckGroupInconsistencies(w, Dir, "Типы лиц");
         }
 
         /// <summary>
@@ -2521,7 +2886,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <param name="empl"></param>
         private void FillPositionTypesByEmployee(Employee empl)
         {
-            var types = empl.Types;
+            var types = _isCommonEmployeeNoLogin ? empl.TypesFullInGroup : empl.Types;
             types.ForEach(delegate(EmployeePersonType t)
             {
                 var t0 =
@@ -2558,6 +2923,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// </summary>
         private void RefreshPositionAdvancedGrantsAvailable()
         {
+            Dir.LoadedExternalProperties.Remove("direction._groupInconsistencies");
+
             using (var w = new StringWriter())
             {
                 RenderData.AdvancedGrants(this, w, Dir, 1);
@@ -2614,10 +2981,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 if (!Dir.IsNew)
                 {
                     p?.Save(false);
-                    Dir.RequiredRefreshInfo = true;
                     Dir.LoadPositionAdvancedGrants();
                     RefreshPositionAdvancedGrantsAvailable();
-                    Dir.RequiredRefreshInfo = false;
                 }
             }
             else
@@ -2634,10 +2999,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 if (!Dir.IsNew)
                 {
                     p.Delete(false);
-                    Dir.RequiredRefreshInfo = true;
+
                     Dir.LoadPositionAdvancedGrants();
                     RefreshPositionAdvancedGrantsAvailable();
-                    Dir.RequiredRefreshInfo = false;
                 }
                 else
                 {
@@ -2656,25 +3020,63 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         #region Adv functions
 
         /// <summary>
-        ///     Установка доступности поля "Доступ к корпоративной сети"
+        ///     Установка доступности полей "Доступ к корпоративной сети"
         /// </summary>
-        private void SetAccessEthernetDisabled()
+        private void SetAccessEthernetState()
         {
-            efAccessEthernet.IsDisabled = Dir.WorkPlaceTypeField.ValueString == "4" || Dir.SotrudnikExistLogin;
+            if (Dir.SotrudnikField.ValueString.Length == 0 || Dir.WorkPlaceTypeField.ValueString.Length == 0) return;
 
-            efLogin.IsDisabled =
-                efLang.IsDisabled =
-                    efMailName.IsDisabled =
-                        efDomain.IsDisabled =
-                            efSotrudnikParentCheck1.IsDisabled =
-                                efSotrudnikParentCheck2.IsDisabled = Dir.SotrudnikExistLogin;
+            var empl = Dir.Sotrudnik;
+            var type = Dir.WorkPlaceTypeField.ValueInt;
+            var accessEthernetWasChange = false;
 
-            if (Dir.SotrudnikExistLogin)
-                JS.Write(
-                    "$('#divNewPositionFolders').hide(); $('#divNewPositionRoles').hide(); $('#divNewPositionTypes').hide();");
+            var ha = empl.HasAccountValid;
+            Dir.AccessEthernetChange =
+
+                ha && !empl.ExistDirectionsAfterChangePost(int.Parse(Dir.Id)) && type == (int)DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи
+
+                || !ha && !empl.Workplaces.Any(x=>x.IsComputeredWorkPlace) && type == (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте
+
+                || !ha && type == (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы
+
+                || !ha && type == (int) DirectionsTypeBitEnum.РабочееМестоВОфисе
+
+                || !ha && type == (int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса;
+
+            efAccessEthernet.IsDisabled = true;
+
+            if (Dir.IsNew)
+            {
+                var aef = Dir.AccessEthernetChange ? "1" : "0";
+
+                if (Dir.AccessEthernetField.ValueString != aef)
+                {
+                    Dir.AccessEthernetField.ValueString = aef;
+                    accessEthernetWasChange = true;
+                }
+                
+            }
             else
-                JS.Write(
-                    "$('#divNewPositionFolders').show(); $('#divNewPositionRoles').show(); $('#divNewPositionTypes').show();");
+            {
+                if (Dir.AccessEthernetChange && Dir.AccessEthernetField.ValueString != "1")
+                {
+                    Dir.AccessEthernetField.ValueString = "1";
+                    accessEthernetWasChange = true;
+                }
+                else if (Dir.AccessEthernetField.ValueString == "1")
+                    Dir.AccessEthernetChange = true;
+
+            }
+
+            if (accessEthernetWasChange)
+            {
+                Dir.IsModified = true;              
+                JS.Write("v4_SetSaveButtonDisabled(false);");
+            }
+            
+
+            if (accessEthernetWasChange)
+                SetEthernetData();
         }
 
         /// <summary>
@@ -2691,68 +3093,24 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <summary>
         ///     Заполнение скрытых полей сотрудника
         /// </summary>
-        private void SetSotrudikHiddenField()
+        private void FillRedirectNumber()
         {
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                Dir.SotrudnikPostField.ValueString = "";
-                Dir.SupervisorField.ValueString = "";
                 Dir.RedirectNumField.ValueString = "";
                 return;
-            }
-
-            var dt = Dir.SupervisorData;
-            if (dt.Rows.Count != 0)
-            {
-                Dir.SotrudnikPostField.Value = dt.Rows[0]["ДолжностьСотрудника"];
-                Dir.SupervisorField.Value = dt.Rows[0]["КодРуководителя"];
-            }
-            else
-            {
-                Dir.SotrudnikPostField.ValueString = "";
-                Dir.SupervisorField.ValueString = "";
             }
 
             if (Dir.SotrudnikField.ValueString.Length > 0 && Dir.RedirectNumField.ValueString.Length == 0)
                 Dir.RedirectNumField.Value = Dir.Sotrudnik.GetMobilePhone();
         }
 
-        /*
-         После провеки поведения формы с общими сотрудниками - УДАЛИТЬ!!!
-        /// <summary>
-        ///     Сотрудники, входящие в группу посменной работы вместе с указанным сотрудником
-        /// </summary>
-        /// <param name="userID">Код сотрудника</param>
-        /// <returns>Список сотрудников</returns>
-         private List<Employee> GetListCommonEmployeesByIds(string userID)
-        {
-            var userList = new List<Employee>();
-            var sqlParams = new Dictionary<string, object> {{"@Id", userID}};
-            using (var dbReader = new DBReader(SQLQueries.SELECT_ОбщихСотрудников, CommandType.Text, Config.DS_user,
-                sqlParams))
-            {
-                if (dbReader.HasRows)
-                    while (dbReader.Read())
-                    {
-                        var tempUser = new Employee(false);
-                        tempUser.LoadFromDbReader(dbReader, true);
-                        userList.Add(tempUser);
-                    }
-            }
-
-            return userList;
-        }*/
-
         /// <summary>
         ///     Установка обязательности имени почтового ящика
         /// </summary>
         private void SetRequiredMailName()
         {
-            var accessEthernet = Dir.AccessEthernetField.ValueString.Length == 0
-                ? 0
-                : Dir.AccessEthernetField.ValueInt;
-
-            if (accessEthernet == 1)
+            if (Dir.AccessEthernetChange)
                 efMailName.IsRequired = Dir.MailNameField.ValueString.Length == 0;
             else
                 efMailName.IsRequired = false;
@@ -2763,33 +3121,49 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// </summary>
         private void SetRequiredLogin()
         {
-            var accessEthernet = Dir.AccessEthernetField.ValueString.Length == 0
-                ? 0
-                : Dir.AccessEthernetField.ValueInt;
-
-            if (accessEthernet == 1)
+            if (Dir.AccessEthernetChange)
                 efLogin.IsRequired = Dir.LoginField.ValueString.Length == 0;
             else
                 efLogin.IsRequired = false;
+
+            efLogin.RefreshRequired = true;
         }
 
         /// <summary>
         ///     Установка значения поля объекта WorkPlaceTypeField из нескольких контролов
         /// </summary>
         /// <param name="bit">Что изменили</param>
-        private void SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum bit)
+        private bool SetWorkPlaceType(DirectionsTypeBitEnum bit)
         {
             var bitMask = (int) bit;
-
+            
             Dir.WorkPlaceTypeField.ValueString = bitMask == 0 ? "" : bitMask.ToString();
+
+            if (Dir.IsNew)
+            {
+                var idDoc = ValidationMessages.CheckExistsDirection(this, new StringWriter(), Dir);
+
+                if (idDoc != -1)
+                {
+                    ShowConfirm(Dir.Resx.GetString("DIRECTIONS_Msg_ExistDirection")  + Environment.NewLine + Dir.Resx.GetString("DIRECTIONS_Msg_ExistDirection1"), Dir.Resx.GetString("DIRECTIONS_Msg_Title"), Resx.GetString("CONFIRM_StdCaptionYes"), Resx.GetString("CONFIRM_StdCaptionNo"), $"directions_goTo({idDoc});", $"directions_goTo(-1);", "efSotrudnik_0", 403); 
+                    return false;
+                }
+            }
+
             GetWorkPlaceType();
 
             //Убираем DECT
-            if (Dir.WorkPlaceTypeField.ValueString.Length == 0 ||
-                Dir.WorkPlaceTypeField.ValueString.Length > 0 && (Dir.WorkPlaceTypeField.ValueInt & 1) != 1)
+            if (Dir.WorkPlaceTypeField.ValueString.Length == 0 || Dir.WorkPlaceTypeField.ValueString == "0" ||
+                Dir.WorkPlaceTypeField.ValueString.Length > 0 && Dir.WorkPlaceTypeField.ValueInt !=
+                (int) DirectionsTypeBitEnum.РабочееМестоВОфисе)
                 if (Dir.PhoneEquipField.ValueString.Length > 0 &&
                     (Dir.PhoneEquipField.ValueInt & 2) == 2)
                     SetPhoneEquip(2, "0");
+
+            SetDocumentName();
+            DisplayFilterWorkPlace();
+            RefreshPositionAdvancedGrantsAvailable();
+            return true;
         }
 
         /// <summary>
@@ -2797,42 +3171,71 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// </summary>
         private void GetWorkPlaceType()
         {
+            if (!V4IsPostBack)
+                if (Dir.WorkPlaceField.ValueString.Length > 0 && Dir.WorkPlaceTypeField.ValueString.Length == 0)
+                    Dir.WorkPlaceTypeField.Value = (int) DirectionsTypeBitEnum.РабочееМестоВОфисе;
+
             var bitMask = Dir.WorkPlaceTypeField.ValueInt;
 
-            if ((bitMask & 1) == 1)
-                rdWorkPlaceType1.Value = "1";
-            else rdWorkPlaceType1.Value = "";
+            if (bitMask == (int) DirectionsTypeBitEnum.РабочееМестоВОфисе
+                || bitMask == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                rdWorkPlaceType1.Value = ((int) DirectionsTypeBitEnum.РабочееМестоВОфисе).ToString();
+            else
+                rdWorkPlaceType1.Value = "";
 
-            if ((bitMask & 2) == 2) rdWorkPlaceType2.Value = "2";
-            else rdWorkPlaceType2.Value = "";
 
-            if ((bitMask & 4) == 4) rdWorkPlaceType4.Value = "4";
-            else rdWorkPlaceType4.Value = "";
+            rdWorkPlaceType3.Value =
+                bitMask == (int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса
+                    ? ((int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса).ToString()
+                    : "";
+
+            rdWorkPlaceType5.Value =
+                bitMask == (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы
+                    ? ((int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы).ToString()
+                    : "";
+
+            rdWorkPlaceType6.Value =
+               bitMask == (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте
+                   ? ((int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте).ToString()
+                   : "";
         }
 
-        /// <summary>
-        ///     Возврат возможности выбора что требуется организовать
-        /// </summary>
-        private void ClearCommonEmployeeNoLogin()
+        private void SetDocumentName()
         {
-            rdWorkPlaceType1.IsDisabled = false;
-            rdWorkPlaceType2.IsDisabled = false;
-            rdWorkPlaceType4.IsDisabled = false;
+            var oldDocumentName = Dir.DocumentName ?? "";
+            switch (Dir.WorkPlaceTypeField.ValueInt)
+            {
+                case (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто:
+                    Dir.DocumentName = DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто
+                        .GetAttribute<Specifications.DirectionsType>().DocumentName;
+                    break;
+                case (int) DirectionsTypeBitEnum.РабочееМестоВОфисе:
+                    Dir.DocumentName = DirectionsTypeBitEnum.РабочееМестоВОфисе
+                        .GetAttribute<Specifications.DirectionsType>().DocumentName;
+                    break;
+                case (int) DirectionsTypeBitEnum.РабочееМестоВнеОфиса:
+                    Dir.DocumentName = DirectionsTypeBitEnum.РабочееМестоВнеОфиса
+                        .GetAttribute<Specifications.DirectionsType>().DocumentName;
+                    break;
+                case (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы:
+                    Dir.DocumentName = DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы
+                        .GetAttribute<Specifications.DirectionsType>().DocumentName;
+                    break;
+                case (int) DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи:
+                    Dir.DocumentName = DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи
+                        .GetAttribute<Specifications.DirectionsType>().DocumentName;
+                    break;
+                case (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте:
+                    Dir.DocumentName = DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте
+                        .GetAttribute<Specifications.DirectionsType>().DocumentName;
+                    break;
+                default:
+                    Dir.DocumentName = "";
+                    break;
+            }
 
-            GetWorkPlaceType();
-        }
-
-        /// <summary>
-        ///     Внешний вид формы, если сотрудник входит в группу посменной работы, общий сотрудник которой не имеет логина
-        /// </summary>
-        private void DisplayCommonEmployeeNoLogin()
-        {
-            rdWorkPlaceType4.Value = "4";
-            Dir.WorkPlaceTypeField.Value = 4;
-            Dir.AccessEthernetField.Value = 1;
-
-            SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.УчетнаяЗаписьБезРабочегоМеста);
-            rdWorkPlaceType1.IsDisabled = rdWorkPlaceType2.IsDisabled = rdWorkPlaceType4.IsDisabled = true;
+            if (oldDocumentName != Dir.DocumentName)
+                RefreshDocTitle();
         }
 
 
@@ -2841,8 +3244,130 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// </summary>
         private void DisplayDataWorkPlace()
         {
-            JS.Write("directions_Data_WP({0}, {1}, {2});",
-                Dir.WorkPlaceTypeField.ValueInt, Dir.AccessEthernetField.ValueInt, _isCommonEmployeeNoLogin ? 0 : 1);
+            var bitMask = Dir.WorkPlaceTypeField.ValueInt;
+            var hasAccount = 0;
+            if (Dir.SotrudnikField.ValueString.Length > 0 && !Dir.Sotrudnik.Unavailable && Dir.Sotrudnik.HasAccountValid)
+                hasAccount = 1;
+
+            JS.Write("directions_Data_WP({0}, {1}, {2}, {3});",
+                bitMask,
+                Dir.AccessEthernetChange ? 1 : 0,
+                _isCommonEmployeeNoLogin ? 0 : 1,
+                hasAccount);
+        }
+
+        private void DisplayFilterWorkPlace()
+        {
+            var hide = Dir.WorkPlaceTypeField.ValueInt != (int) DirectionsTypeBitEnum.РабочееМестоВОфисе;
+            if (hide) JS.Write("$('.filterWP').hide();");
+        }
+
+        /// <summary>
+        ///     Функция определения, какой вид указания можно создавать
+        /// </summary>
+        private void DetermineWorkPlaceType()
+        {
+            var empl = Dir.Sotrudnik;
+            var radio4Vis = true;
+            var radio6Vis = true;
+
+            if (empl == null || empl.Unavailable) return;
+
+            // сотрудник является группой посменной работы
+            if (empl.IsGroupWork)
+            {
+                Dir.SotrudnikField.ValueString = "";
+                SotrudnikClearInfo(2);
+
+                ShowMessage(
+                    string.Format(
+                        "Сотрудник {0} является группой посменной работы. Создать указание на группу посменной работы невозможно!",
+                        empl.FIO),
+                    Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, $"{efSotrudnik.HtmlID}_0");
+                return;
+            }
+
+            //входит в группу посменной работы
+            if (!string.IsNullOrEmpty(empl.CommonEmployeeID))
+            {
+                var group = new Employee(empl.CommonEmployeeID);
+
+                //если группа с логином
+                if (group.HasAccount_)
+                {
+                    Dir.SotrudnikField.ValueString = "";
+                    SotrudnikClearInfo(2);
+
+                    ShowMessage(
+                        string.Format(
+                            "Сотрудник {0} входит в группу посменной работы {1}, которая имеет собственную учетную запись. Создать указание невозможно!",
+                            empl.FullName, group.FullName),
+                        Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, $"{efSotrudnik.HtmlID}_0");
+                    return;
+                }
+
+                //группа не имеет логина
+                _isCommonEmployeeNoLogin = true;
+
+                //сотрудник имеет учетную запись
+                if (empl.HasAccountValid)
+                {
+                    Dir.SotrudnikField.ValueString = "";
+                    SotrudnikClearInfo(2);
+
+                    ShowMessage(
+                        string.Format(
+                            "Сотрудник {0} входит в группу посменной работы {1}, и уже имеет учетную запись. Создать указание невозможно!",
+                            empl.FullName, group.FullName),
+                        Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Warning, $"{efSotrudnik.HtmlID}_0");
+                    return;
+                }
+
+
+                if (!SetWorkPlaceType(DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы)) return;
+
+                efSotrudnik.RenderNtf();
+
+                SetAccessEthernetState();
+                DisplayDataWorkPlace();
+
+                SetRequiredLogin();
+                SetRequiredMailName();
+                DisplayDataEthernet();
+
+                RefreshWorkPlaceTypeInfo();
+                return;
+            }
+
+            var ha = empl.HasAccountValid;
+
+            if (ha || empl.Workplaces.Any(x => x.IsComputeredWorkPlace))
+                radio6Vis = false;
+
+
+            //TODO: Выяснить когда заполняется
+            //SetSotrudikHiddenField();
+
+            if (!ha || (ha && empl.ExistDirectionsAfterChangePost(int.Parse(Dir.Id))))
+                radio4Vis = false;
+
+            JS.Write("$(\".radio1\").show();");
+            JS.Write("$(\".radio3\").show();");
+
+            if (radio4Vis)
+                JS.Write("$(\".radio4\").show();");
+            else
+                JS.Write("$(\".radio4\").hide();");
+
+            if (radio6Vis)
+                JS.Write("$(\".radio6\").show();");
+            else
+                JS.Write("$(\".radio6\").hide();");
+
+            JS.Write("$(\"#divWorkPlaceList_Data\").html('');");
+            JS.Write("$(\"#divWorkPlaceList_Data\").hide();$(\"#divWorkPlaceList_Link\").hide();");
+
+            JS.Write("directions_SetInfoWorkPlaceType();");
         }
 
         /// <summary>
@@ -2860,10 +3385,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         ///     Отображение информации, связанной доступом к корпоративной сети
         /// </summary>
         private void DisplayDataEthernet()
-        {
+        {            
             JS.Write("directions_Data_Lan({0},{1});",
-                Dir.SotrudnikField.ValueString.Length > 0 ? Dir.AccessEthernetField.ValueInt : 0,
-                _isCommonEmployeeNoLogin ? 0 : 1);
+                Dir.AccessEthernetChange ? 1 : 0, 1);
         }
 
         /// <summary>
@@ -2903,6 +3427,13 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
             if ((bitMask & 8) == 8) efPhoneIPCam.Value = "1";
             else efPhoneIPCam.Value = "0";
+
+            if (!V4IsPostBack)
+            {
+                efPhoneDesk.OriginalValue = efPhoneDesk.Value;
+                efPhoneDect.OriginalValue = efPhoneDect.Value;
+                efPhoneIPCam.OriginalValue = efPhoneIPCam.Value;
+            }
         }
 
         /// <summary>
@@ -2911,8 +3442,8 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void DisplayPhoneLinkExit()
         {
             var display = "none";
-            var bit = Dir.PhoneEquipField.ValueInt;
-            if ((bit & 1) == 1 || (bit & 2) == 2) display = "inline-table";
+            if (Dir.PhoneEquipField.ValueInt > 0)
+                display = "inline-table";
 
             JS.Write("var objDiv = document.getElementById('divPLExit'); if (objDiv) objDiv.style.display ='{0}';",
                 display);
@@ -2924,10 +3455,28 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void DisplayMobilPhone()
         {
             var display = 0;
-            var bit = Dir.PhoneEquipField.ValueInt;
-            if ((bit & 1) == 1 || (bit & 2) == 2) display = 1;
+            if (Dir.PhoneEquipField.ValueInt > 0)
+                display = 1;
+
+            if (!string.IsNullOrEmpty(Dir.SotrudnikField.ValueString) && Dir.Sotrudnik.SimRequired
+                || Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто
+                || Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи
+                || Dir.WorkPlaceTypeField.ValueInt == (int) DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы
+                || Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте
+            ) display = 0;
+
+            if (display == 1)
+                FillRedirectNumber();
+
+            RefreshMobilPhoneRequired(display);
 
             JS.Write("directions_Data_MobilPhone({0});", display);
+        }
+
+        private void RefreshMobilPhoneRequired(int display)
+        {
+            if (Dir.RedirectNumField.ValueString.Length == 0 && display == 1 &&
+                Dir.SotrudnikField.ValueString.Length > 0) efRedirectNum.IsRequired = !Dir.Sotrudnik.SimRequired;
         }
 
         /// <summary>
@@ -2960,6 +3509,13 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
             if ((bitMask & 4) == 4) efNotebook.Value = "1";
             else efNotebook.Value = "0";
+
+
+            if (!V4IsPostBack)
+            {
+                efComputer.OriginalValue = efComputer.Value;
+                efNotebook.OriginalValue = efNotebook.Value;
+            }
         }
 
         /// <summary>
@@ -2972,27 +3528,285 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                 Config.location_search, parameters, false, 0, 800, 600);
         }
 
+        private void AdvSearchWorkPlaceTo()
+        {
+            var parameters = "WorkPlace=1&hidemenu=1";
+            ReturnDialogResult.ShowAdvancedDialogSearch(this, "directions_AdvSearchWorkPlaceTo", "",
+                Config.location_search, parameters, false, 0, 800, 600);
+        }
+
+        private void SetWorkPlaceTo(string value, string label, bool setValue)
+        {
+            if (value.Length == 0) return;
+
+            if (setValue)
+            {
+                var bitMask = (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто;
+
+                Dir.WorkPlaceToField.Value = value;
+                Dir.WorkPlaceTypeField.Value = bitMask;
+                Dir.IsModified = true;
+            }
+
+            RefreshWorkPlace8_LinkInfo(label, setValue);
+            SetWorkPlaceInfo(2);
+            RefreshSotrudnikCadrWorkPlaces();
+            CloseInfoDialogWorkPlace();
+        }
+
+        private void SetWorkPlaceInfo(int inx)
+        {
+            if (Dir.SotrudnikField.ValueString.Length == 0) return;
+            var wp = inx == 1 ? Dir.WorkPlaceField.ValueString : Dir.WorkPlaceToField.ValueString;
+            if (string.IsNullOrEmpty(wp)) return;
+
+            var sqlParams = new Dictionary<string, object>
+                {{"@КодСотрудника", Dir.SotrudnikField.Value}, {"@КодРасположения", wp}};
+            var dt = DBManager.GetData(SQLQueries.SELECT_ID_ТипыОборудованияСотрудникаНаРасположении, Config.DS_user,
+                CommandType.Text, sqlParams);
+
+            if (dt.Rows.Count == 0) return;
+
+            var rows = dt.AsEnumerable();
+            var existComp = false;
+            var existPhone = false;
+            var existVideo = false;
+
+
+            if (rows.Any(x => int.Parse(x["ЕстьТелефонныйНомер"].ToString()) > 0))
+            {
+
+                existPhone = true;
+                SetPhoneEquip(1, "1");
+                var line = int.Parse(rows.Max(x => x["УслугиСвязи"]).ToString());
+
+                var lineValue = 0;
+                switch (line)
+                {
+                    case 0:
+                        lineValue = 1;
+                        break;
+                    case 4:
+                        lineValue = 15;
+                        break;
+                    default:
+                        lineValue = 7;
+                        break;
+                }
+
+                Dir.PhoneLinkField.Value = lineValue;
+
+                if (rows.Any(x => x["ТипОборудования"].ToString().Contains("Видеокамера")))
+                {
+                    existVideo = true;
+                    SetPhoneEquip(8, "1");
+                }
+
+                var phone = rows.FirstOrDefault(x => x["Переадресация"].ToString().Length > 0);
+                if (phone != null)
+                {
+                    Dir.RedirectNumField.ValueString = phone["Переадресация"].ToString();
+
+                    var direction = "";
+                    FormatingRedirectNumber(ref direction);
+                    RefreshMobilphoneArea(direction);
+                }
+                else
+                {
+                    RefreshMobilPhoneRequired(1);
+                }
+
+                DisplayDataPhoneDesk(true);
+            }
+
+            if (rows.Any(x => int.Parse(x["ЕстьХарактеристикиКомпьютера"].ToString()) > 0)) {
+                existComp = true;
+                SetCompType(2, "1");
+            }
+
+            if (rows.Any(x => x["ТипОборудования"].ToString().Contains("Notebook"))) {
+                existComp = true;
+                SetCompType(4, "1");
+            }
+
+            var advs = new List<string>();
+                        
+            foreach (var dr in rows)
+            {
+                var cnt = int.Parse(dr["N"].ToString());
+                var typeName = dr["ТипОборудования"];
+                var item = "{0}-{1}шт.";
+                switch (typeName)
+                {
+                    case "Компьютер":                        
+                    case "Монитор":
+                        if (existComp) cnt--;            
+                        break;
+                    case "Телефон":
+                        if (existPhone) cnt--;
+                        break;
+                    case "Видеокамера":
+                        if (existVideo) cnt--;
+                        break;                    
+                }
+
+                if (cnt <= 0) continue;
+
+                advs.Add(string.Format(item, typeName, cnt));
+            }
+
+            if (advs.Count > 0 )
+                Dir.AdvEquipField.ValueString = String.Join("; ", advs.ToArray());
+        }
+
+        private void CreateNewEmployeeWorkplace()
+        {
+            if (IsKadrovik() && Dir.Sotrudnik.Workplaces != null && !Dir.Sotrudnik.Workplaces.Any(x => x.Id.Equals(Dir.WorkPlaceField.ValueString)))
+            {
+                ShowConfirm(Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста_2_0") + Environment.NewLine + Dir.Resx.GetString("DIRECTIONS_Msg_СотрудникНетРабМеста_2"), "Сообщение", "Да", "Нет", "cmdasync(\"cmd\", \"CreateWorkPlace\");", "cmdasync(\"cmd\", \"ClearSotrudnik\");", "efSotrudnik_0", 400);
+
+            }
+
+        }
+
+        private void SetTransfer(string value, string label)
+        {
+            var employee = Dir.Sotrudnik;
+            var wps = employee.Workplaces.Count(x => x.IsOrganized);
+            if (wps == 1)
+            {
+                var wp = employee.Workplaces.FirstOrDefault(x => x.IsOrganized);
+                if (wp != null)
+                {
+                    SetWorkPlaceTo(wp.Id, wp.NamePath1, true);
+                    SetDocumentName();
+                    CreateNewEmployeeWorkplace();
+                    return;
+                }
+            }
+
+            RefreshWorkPlace8_LinkInfo(label, false);
+            var bitMask = (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто;
+            RenderWorkPlaceList(bitMask, false);
+            SetDocumentName();
+            CreateNewEmployeeWorkplace();
+        }
+
         /// <summary>
         ///     Установка выбранного рабочего места в поле объекта и обновление надписи на форме
         /// </summary>
         /// <param name="value">Идентификатор рабочего места</param>
         /// <param name="label">Название рабочего места</param>
-        private void SetWorkPlace(string value, string label)
+        /// <param name="checkCoWorkers">Проверять сотрудников на рабочем месте</param>
+        private void SetWorkPlace(string value, string label, bool checkCoWorkers)
         {
             if (value.Length == 0) return;
-            var l = GetObjectById(typeof(Location), value) as Location;
-            if (l != null && !l.Unavailable && l.IsOrganized)
+            if (Dir.WorkPlaceTypeField.ValueString.Length == 0) return;
+
+            Dir.WorkPlaceField.Value = value;
+            Dir.WorkPlaceToField.Value = null;
+
+            Dir.IsModified = true;
+
+            var employee = Dir.Sotrudnik;
+            var l = Dir.LocationWorkPlace;
+            if (l == null || l.Unavailable)
             {
-                ShowMessage(string.Format(Resx.GetString("DIRECTIONS_Msg_РаботаУжеОрганизована"), l.NamePath1),
-                    Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Information, "btnWPL_Add", 553, null,
-                    "cmdasync('cmd', 'AdvSearchWorkPlace');");
+                ShowMessage($"Рабочее место #{value} не найдено или не доступно!",
+                    Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Error);
                 return;
             }
 
-            Dir.WorkPlaceField.Value = value;
+            var wps = Dir.Sotrudnik.Workplaces;
+            var isOwnWp = wps.Any(x => x.Id == l.Id);
+
+            if (l.IsOrganized && Dir.Sotrudnik.HasAccountValid && !isOwnWp)
+            {
+                ShowMessage(
+                    string.Format(Dir.Resx.GetString("DIRECTIONS_Msg_РаботаУжеОрганизована"), l.NamePath1),
+                    Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Information, "btnWPL_Add", 553, null,
+                    "cmdasync('cmd', 'AdvSearchWorkPlace');");
+                Dir.WorkPlaceField.Value = "";
+                Dir.LoadedExternalProperties.Remove(Direction.CacheKey_LocationWorkPlace);
+                return;
+            }
+
+            if (l.IsGroupWorkplace)
+            {
+                ShowMessage(
+                    string.Format(Dir.Resx.GetString("DIRECTIONS_Msg_РабочееМестоГруппы"), l.NamePath1),
+                    Resx.GetString("CONFIRM_StdTitle"), MessageStatus.Information, "btnWPL_Add", 553, null,
+                    "cmdasync('cmd', 'AdvSearchWorkPlace');");
+                Dir.WorkPlaceField.Value = "";
+                Dir.LoadedExternalProperties.Remove(Direction.CacheKey_LocationWorkPlace);
+                return;
+            }
+
+            if (checkCoWorkers && l.CoWorkers.Count <= 1 &&
+                employee.Workplaces.Any(x => x.IsOrganized && x.Id != value))
+            {
+                var linkEmpl = "";
+                var linkLoc = "";
+
+                using (var w = new StringWriter())
+                {
+                    RenderLinkEmployee(w, $"le{employee.Id}", employee, NtfStatus.Empty, false);
+                    linkEmpl = w.ToString();
+                }
+
+                using (var w = new StringWriter())
+                {
+                    RenderLinkLocation(w, $"ll{l.Id}", l.Id, l.NamePath1_WhiteSpace, NtfStatus.Empty, "открыть расположение", "", "setworkplace");
+                    linkLoc = w.ToString();
+                }
+
+
+                ShowConfirm(
+                    $"Вы хотите организовать переезд сотрудника {linkEmpl} на рабочее место {linkLoc} или организовать ему там дополнительное рабочее место?",
+                    Resx.GetString("CONFIRM_StdTitle"),
+                    "Организовать переезд", "Организовать доп. рабочее место",
+                    $"directions_SetTransfer({l.Id}, '{HttpUtility.JavaScriptStringEncode(l.NamePath1)}');",
+                    $"directions_SetWorkPlace({l.Id},'{HttpUtility.JavaScriptStringEncode(l.NamePath1)}', 0);",
+                    "", 160, 240, 503, 153, true, false, "Отмена", "directions_SetWorkPlace1();");
+
+                return;
+            }
+
+            var enumValue = DirectionsTypeBitEnum.РабочееМестоВОфисе;
+            if (Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                enumValue = DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто;
+            else if (Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.РабочееМестоВнеОфиса)
+                enumValue = DirectionsTypeBitEnum.РабочееМестоВнеОфиса;
+            else if (Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы)
+                enumValue = DirectionsTypeBitEnum.УчетнаяЗаписьСотрудникаГруппы;
+            else if (Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи)
+                enumValue = DirectionsTypeBitEnum.ИзменениеУчетнойЗаписи;
+            else if (Dir.WorkPlaceTypeField.ValueInt == (int)DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте)
+                enumValue = DirectionsTypeBitEnum.УчетнаяЗаписьНаГостевомМесте;
+
+            if (!SetWorkPlaceType(enumValue)) return;
+
+
+
+            efSotrudnik.RenderNtf();
+
+            SetAccessEthernetState();
+            DisplayDataWorkPlace();
+
+
+            SetRequiredLogin();
+            SetRequiredMailName();
+            DisplayDataEthernet();
+
+            RefreshWorkPlaceTypeInfo();
 
             JS.Write("directions_CloseWorkPlaceList();");
-            RefreshWorkPlace(label);
+
+            RefreshSotrudnikCadrWorkPlaces();
+            CloseInfoDialogWorkPlace();
+
+            CreateNewEmployeeWorkplace();
+
         }
 
         /// <summary>
@@ -3000,9 +3814,38 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// </summary>
         private void ClearWorkPlace()
         {
-            Dir.WorkPlaceField.Value = "";
-            RefreshWorkPlace();
+            Dir.WorkPlaceField.Value = null;
+            Dir.WorkPlaceToField.Value = null;
+            CheckWorkplaceSelected();
+
+            RefreshWorkPlaceTypeInfo();
+
+            RefreshSotrudnikCadrWorkPlaces();
         }
+
+        private void CheckWorkplaceSelected()
+        {
+            if (Dir.WorkPlaceField.ValueString.Length == 0)
+            {
+                Dir.WorkPlaceTypeField.ValueString = "";
+                Dir.WorkPlaceToField.Value = null;
+                JS.Write("directions_clearRadio('divWorkPlaceType');");
+                DisplayDataWorkPlace();
+                JS.Write("directions_setElementFocus(\"RDT\",\"\",\"radio\");");
+                SetDocumentName();
+                return;
+            }
+
+            var bitMak = Dir.WorkPlaceTypeField.ValueInt;
+
+            if (Dir.WorkPlaceToField.ValueString.Length == 0
+                && bitMak == (int) DirectionsTypeBitEnum.ПереездНаДругоеРабочееМесто)
+                Dir.WorkPlaceTypeField.Value = (int) DirectionsTypeBitEnum.РабочееМестоВОфисе;
+
+            RefreshWorkPlaceTypeInfo();
+            SetDocumentName();
+        }
+
 
         /// <summary>
         ///     Проставление почтового домена по-умолчанию для выбранного сотрудника
@@ -3057,7 +3900,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
             if (Dir.SotrudnikField.ValueString.Length == 0)
             {
-                ShowMessage($"{Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
+                ShowMessage($"{Dir.Resx.GetString("DIRECTIONS_Msg_Err_НетСотрудника")}!", efSotrudnik,
                     Resx.GetString("CONFIRM_StdTitle"));
                 return;
             }
@@ -3067,33 +3910,19 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
             if (!empl.Unavailable)
             {
-                if (empl.Login.Length > 0) return;
+                if (empl.HasAccountValid) return;
 
                 fl = true;
-                var name = empl.Login;
-                if (empl.Login.Length > 0)
-                {
-                    w.Write("<div noWrap>");
-                    w.Write("<nobr>");
-                    w.Write(
-                        "<a id='imgMN_0' tabindex=0 onkeydown='var key=v4_getKeyCode(event); if(key == 13 || key == 32) directions_SetMailName(\"{0}\");' onclick='directions_SetMailName(\"{0}\");'><img src='/styles/backtolist.gif' border='0'/></a>",
-                        HttpUtility.JavaScriptStringEncode(name));
-                    w.Write("<span class='marginL'>");
-                    w.Write(HttpUtility.HtmlEncode(name));
-                    w.Write("</span>");
-                    w.Write("</nobr>");
-                    w.Write("</div>");
-                }
-
 
                 if (empl.FirstNameEn.Length > 0 && empl.LastNameEn.Length > 0)
                 {
-                    name = $"{(empl.FirstNameEn.Length > 0 ? empl.FirstNameEn + "." : "")}{empl.LastNameEn}".Replace(" ", "");
+                    var name = $"{(empl.FirstNameEn.Length > 0 ? empl.FirstNameEn + "." : "")}{empl.LastNameEn}"
+                        .Replace(" ", "");
                     w.Write("<div noWrap>");
                     w.Write("<nobr>");
                     w.Write(
                         "<a id='imgMN_{1}' tabindex=0 onkeydown='var key=v4_getKeyCode(event); if(key == 13 || key == 32) directions_SetMailName(\"{0}\");' onclick='directions_SetMailName(\"{0}\");'><img src='/styles/backtolist.gif' border='0'/></a>",
-                        HttpUtility.JavaScriptStringEncode(name), string.IsNullOrEmpty(empl.Login) ? 0 : 1);
+                        HttpUtility.JavaScriptStringEncode(name), 1);
                     w.Write("<span class='marginL'>");
                     w.Write(HttpUtility.HtmlEncode(name));
                     w.Write("</span>");
@@ -3109,11 +3938,11 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
                     {
                         new Notification
                         {
-                            Message = Resx.GetString("DIRECTIONS_Msg_Err_MailBox"),
+                            Message = Dir.Resx.GetString("DIRECTIONS_Msg_Err_MailBox"),
                             Status = NtfStatus.Error,
                             SizeIsNtf = false,
                             DashSpace = false,
-                            Description = Resx.GetString("DIRECTIONS_Msg_Err_MailBox_Title")
+                            Description = Dir.Resx.GetString("DIRECTIONS_Msg_Err_MailBox_Title")
                         }
                     });
 
@@ -3200,12 +4029,13 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// <summary>
         ///     Очистка информации о сотруднике
         /// </summary>
-        private void SotrudnikClearInfo(bool clearRadio)
+        /// <param name="clearRadio">0 - не очищать; 1-серверная очистка; 2-серверная и клиентская очистка</param>
+        private void SotrudnikClearInfo(int clearRadio)
         {
+            Dir.AccessEthernetChange = false;
             Dir.WorkPlaceTypeField.Value = null;
             Dir.WorkPlaceField.Value = null;
-            Dir.SotrudnikPostField.Value = null;
-            Dir.SupervisorField.Value = null;
+            Dir.WorkPlaceToField.Value = null;
 
             Dir.PhoneEquipField.Value = null;
             Dir.RedirectNumField.Value = null;
@@ -3216,7 +4046,6 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
             Dir.AdvEquipField.Value = null;
             Dir.AdvInfoField.Value = null;
-
 
             Dir.AccessEthernetField.Value = null;
             Dir.LoginField.Value = null;
@@ -3234,22 +4063,29 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
             _isCommonEmployeeNoLogin = false;
             efAccessEthernet.IsDisabled = rdWorkPlaceType1.IsDisabled =
-                rdWorkPlaceType2.IsDisabled = rdWorkPlaceType4.IsDisabled = false;
+                rdWorkPlaceType3.IsDisabled = rdWorkPlaceType5.IsDisabled = false;
 
             JS.Write("$(\"#divWorkPlace\").html('');");
             JS.Write("$(\"#divWorkPlace2\").html('');");
+            JS.Write("$(\"#divWorkPlace4\").html('');");
 
-            if (clearRadio)
+            SetDocumentName();
+
+            if (clearRadio > 0)
             {
                 DisplayDataWorkPlace();
                 DisplayMobilPhone();
-                RefreshWorkPlace();
+                RefreshWorkPlaceTypeInfo();
                 RefreshPositionCommonFolders();
                 RefreshPositionRoles();
                 RefreshPositionTypes();
                 RefreshPositionAdvancedGrantsAvailable();
 
-                JS.Write("directions_clearRadio('divWorkPlaceType');");
+                rdWorkPlaceType1.Value = "";
+                rdWorkPlaceType3.Value = "";
+                rdWorkPlaceType5.Value = "";
+
+                if (clearRadio == 2) JS.Write("directions_clearRadio('divWorkPlaceType');");
             }
         }
 
@@ -3257,35 +4093,26 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         ///     Получение информации о сотруднике и заполнение соотвествующих элементов управления
         /// </summary>
         private void SotrudnikSetInfo()
-        {
-            var empl = Dir.Sotrudnik;
+        {           
 
-            if (Dir.SotrudnikField.ValueString.Length == 0 || empl == null || empl.Unavailable)
+            if (Dir.SotrudnikField.ValueString.Length == 0 || Dir.Sotrudnik == null || Dir.Sotrudnik.Unavailable)
             {
                 Dir.Description = "";
                 return;
             }
+            var empl = Dir.Sotrudnik;
+                      
 
-            if (_isCommonEmployeeNoLogin)
-                DisplayCommonEmployeeNoLogin();
-            else
-                ClearCommonEmployeeNoLogin();
-
-            Dir.SotrudnikLanguageField.Value = empl.Language;
-            //SetWorkPlaceType(DirectionsWorkPlaceTypeBitEnum.УчетнаяЗаписьБезРабочегоМеста, empl.IsVPNGroup || _isCommonEmployeeNoLogin  ? "1" : "0");
-
-            Dir.AccessEthernetField.ValueString = empl.Login.Length > 0 || empl.IsVPNGroup || empl.IsInternetGroup ||
-                                                  _isCommonEmployeeNoLogin
-                ? "1"
-                : "0";
-
-            SetAccessEthernetDisabled();
+            SetAccessEthernetState();
 
             DisplayDataWorkPlace();
-            DisplayDataEthernet();
-            SetEthernetData();
 
-            Dir.Description = empl.FIO;
+            SetRequiredLogin();
+            SetRequiredMailName();
+            DisplayDataEthernet();
+
+            Dir.SotrudnikLanguageField.Value = empl.Language;
+            Dir.Description = string.IsNullOrEmpty(Dir.Description)? empl.FIO: Dir.Description;
         }
 
         /// <summary>
@@ -3294,34 +4121,48 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void SetEthernetData()
         {
             var empl = Dir.Sotrudnik;
-            if (empl == null) return;
+            if (empl == null || empl.Unavailable) return;
 
-            if (empl.Login.Length > 0)
+            if (empl.HasAccount_)
                 Dir.LoginField.Value = empl.Login;
             else
                 Dir.LoginField.Value = GetFreeLogin();
 
 
-            if (empl.Email.Length > 0)
-            {
+            if (empl.Email.Length > 0 )
+            {               
                 var inx = empl.Email.IndexOf("@", StringComparison.Ordinal);
-                Dir.MailNameField.Value = empl.Email.Substring(0, inx);
-                Dir.DomainField.Value = empl.Email.Substring(inx + 1).ToLower();
+                var mailName = empl.Email.Substring(0, inx);
+                var domainName = empl.Email.Substring(inx + 1).ToLower();
+                var domainNameIsCorrect = empl.CheckEmailDomainName(domainName, Dir.DomainNames);
+
+                if (empl.HasAccountValid && domainNameIsCorrect)
+                {
+                    Dir.MailNameField.Value = mailName;
+                    Dir.DomainField.Value = domainName;
+                }
             }
 
-            if (Dir.MailNameField.ValueString.Length == 0 && Dir.LoginField.ValueString.Length > 0)
-                Dir.MailNameField.Value = $"{(empl.FirstNameEn.Length>0? empl.FirstNameEn+".":"")}{empl.LastNameEn}".Replace(" ","");
+            if (string.IsNullOrEmpty(Dir.MailNameField.ValueString) && !string.IsNullOrEmpty(Dir.LoginField.ValueString))
+                Dir.MailNameField.Value =
+                    $"{(empl.FirstNameEn.Length > 0 ? empl.FirstNameEn + "." : "")}{empl.LastNameEn}".Replace(" ", "");
 
-            if (Dir.DomainField.ValueString.Length == 0)
+            if (string.IsNullOrEmpty(Dir.DomainField.ValueString))
                 SetDefaultDomainByEmployee();
+            
+            if (string.IsNullOrEmpty(Dir.SotrudnikLanguageField.ValueString))
+                Dir.SotrudnikLanguageField.ValueString = empl.Language;
 
-            if (empl.DisplayName.Length > 0)
-                Dir.DisplayNameField.Value = empl.DisplayName;
 
             FillPositionAdvancedGrantsByEmployee(empl);
             FillPositionCommonFoldersByEmployee(empl);
             FillPositionRolesByEmployee(empl);
             FillPositionTypesByEmployee(empl);
+
+            efLang.RefreshRequired = true;
+            efLogin.RefreshRequired = true;
+            efMailName.RefreshRequired = true;
+            efDomain.RefreshRequired = true;
         }
 
         /// <summary>
@@ -3331,7 +4172,7 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         {
             RefreshPhoto();
 
-            RefreshSotrudnikAOrg();
+            RefreshSotrudnikPost();
             RefreshSotrudnikFinOrg();
             RefreshCommonEmployee();
 
@@ -3344,9 +4185,9 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
 
             SotrudnikSetInfo();
 
-            efLogin.RenderNtf();
-            efMailName.RenderNtf();
+            DisplayAdvInfo();
         }
+
 
         /// <summary>
         ///     Получение информации о сотруднике "как/вместо" и заполение соотвествующих элементов управления
@@ -3354,13 +4195,14 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         private void SotrudnikParentSetInfo()
         {
             if (Dir.SotrudnikParentField.ValueString.Length == 0) return;
+
             ClearDocumentPositions();
+            FillPositionAdvancedGrantsByEmployee(Dir.SotrudnikParent);
             FillPositionCommonFoldersByEmployee(Dir.SotrudnikParent);
             FillPositionRolesByEmployee(Dir.SotrudnikParent);
             FillPositionTypesByEmployee(Dir.SotrudnikParent);
             if (!Dir.IsNew)
-            {
-                //ValidateDataFillCorrect();
+            {                
                 Dir.Save(true);
                 Dir.SaveDocumentPositions(true);
                 DocumentToControls();
@@ -3372,9 +4214,75 @@ DIRECTIONS_FORM_ADVINFO_Title:""{15}""
         /// </summary>
         private void ClearDocumentPositions()
         {
+            Dir.PositionAdvancedGrants.Clear();
             Dir.PositionTypes.Clear();
             Dir.PositionRoles.Clear();
             Dir.PositionCommonFolders.Clear();
+        }
+
+        private void CloseInfoDialogWorkPlace()
+        {
+            JS.Write("directions_clearData = false; directions_CloseInfoWorkPlaceType();");
+        }
+
+
+        /// <summary>
+        /// Является ли текущий пользователь Кадровик
+        /// </summary>
+        /// <returns></returns>
+        private bool IsKadrovik()
+        {
+            var isKadrovik = CurrentUser.HasRole((int)Kesco.Lib.BaseExtention.Enums.Corporate.Role.Кадровик, 0);
+
+            if (!isKadrovik)
+            {
+                var persons = Dir.Sotrudnik.PersonsIds(7);
+                persons.ForEach(x =>
+                {
+                    if (!isKadrovik)
+                        isKadrovik = CurrentUser.HasRole((int)Kesco.Lib.BaseExtention.Enums.Corporate.Role.Кадровик, x);
+                    else return;
+
+                });
+            }
+
+            return isKadrovik;
+        }
+
+        private void CreateWorkPlace() {
+
+            if (string.IsNullOrEmpty(Dir.SotrudnikField.ValueString))
+            {
+                ShowMessage("Невозиожно создать рабочее место, т.к. не указан сотрудник!", "Ошибка", MessageStatus.Error);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(Dir.WorkPlaceField.ValueString))
+            {
+                ShowMessage("Невозиожно создать рабочее место, т.к. не выбрано рабочее место!", "Ошибка", MessageStatus.Error);
+                return;
+            }
+
+            var sqlParams = new Dictionary<string, object>
+                {
+                    { "@КодСотрудника", Dir.SotrudnikField.ValueInt},
+                    { "@КодРасположения",  Dir.WorkPlaceField.ValueInt}
+                };
+
+            try
+            {
+                DBManager.ExecuteNonQuery(SQLQueries.INSERT_РабочееМестоСотруднику, CommandType.Text, Config.DS_user, sqlParams);
+            }
+            catch (Exception ex)
+            {
+                ShowMessage(ex.Message, "Error", MessageStatus.Error);
+                return;
+            }
+            finally
+            {
+                RefreshNotification();
+            }
+
         }
 
         #endregion
